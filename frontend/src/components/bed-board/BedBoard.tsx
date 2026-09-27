@@ -92,7 +92,7 @@ export function BedBoard({ board }: BedBoardProps) {
         <WardTitle board={board} />
         <div
           data-keep-detail
-          className="ward-status pointer-events-auto absolute bottom-5 left-5 z-20"
+          className="ward-status pointer-events-auto absolute bottom-4 left-4 z-20"
         >
           <WardStatusBar
             bedCounts={countBedsByWorstVerdict(board.beds)}

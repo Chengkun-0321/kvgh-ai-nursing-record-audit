@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 
 import { AppSidebar } from "@/components/app-shell/AppSidebar";
+import { AppStatusCapsule } from "@/components/app-shell/AppStatusCapsule";
 import { AppTopBar } from "@/components/app-shell/AppTopBar";
 import { MobileTabBar } from "@/components/app-shell/MobileTabBar";
 import { getCurrentUser } from "@/lib/api/users";
@@ -31,11 +32,12 @@ export default async function WorkspaceLayout({
         跳至主要內容
       </a>
       <AppTopBar user={user} pendingBedCount={pendingBedCount} />
+      <AppStatusCapsule user={user} pendingBedCount={pendingBedCount} />
       <div className="flex">
         <AppSidebar pendingBedCount={pendingBedCount} />
         <main
           id="main-content"
-          className="min-w-0 flex-1 pb-[calc(3.5rem+env(safe-area-inset-bottom))] lg:pb-0"
+          className="min-w-0 flex-1 pb-[calc(3.5rem+env(safe-area-inset-bottom))] lg:pt-toolbar lg:pb-0"
         >
           {children}
         </main>

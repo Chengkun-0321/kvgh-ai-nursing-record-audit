@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 
 import { cn } from "@/lib/utils";
 
+import { BrandLink } from "./BrandLink";
 import {
   isNavItemActive,
   NAV_DISABLED_HINT,
@@ -73,15 +74,22 @@ function SidebarItem({ item, isActive, badgeCount }: SidebarItemProps) {
   );
 }
 
-/** 桌機側欄（浮動的淺色液態玻璃卡片，疊在滿版病房之上）：xl 以上顯示完整名稱，lg 收成圖示列，lg 以下改用底部分頁列。 */
+/**
+ * 桌機側欄：滿高浮動的淺色液態玻璃卡片，疊在滿版病房之上，最上方放系統標誌（桌機不顯示頂列）。
+ * xl 以上顯示完整名稱，lg 收成圖示列，lg 以下改用頂列與底部分頁列。
+ */
 export function AppSidebar({ pendingBedCount }: AppSidebarProps) {
   const pathname = usePathname();
 
   return (
     <nav
       aria-label="主要導覽"
-      className="glass sticky top-[calc(var(--spacing-topbar)+1rem)] z-30 m-4 hidden h-[calc(100dvh-var(--spacing-topbar)-2rem)] w-rail shrink-0 rounded-panel px-3 py-4 shadow-float lg:block xl:w-sidebar"
+      className="glass sticky top-4 z-30 m-4 hidden h-[calc(100dvh-2rem)] w-rail shrink-0 rounded-panel px-3 py-4 shadow-float lg:block xl:w-sidebar"
     >
+      <BrandLink
+        className="mb-4 min-h-14 justify-center px-1.5 xl:justify-start"
+        labelClassName="sr-only xl:not-sr-only"
+      />
       <ul className="flex flex-col gap-2">
         {NAV_ITEMS.map((item) => (
           <li key={item.label}>

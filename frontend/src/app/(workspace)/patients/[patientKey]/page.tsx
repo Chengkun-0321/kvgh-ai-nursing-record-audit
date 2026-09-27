@@ -18,7 +18,7 @@ export default async function PatientPage({ params }: PatientPageProps) {
   }
 
   return (
-    <div className="glass relative mx-auto mt-6 max-w-3xl rounded-panel p-6 shadow-float max-lg:mx-4 lg:mt-8">
+    <div className="glass relative mx-auto mt-6 max-w-3xl rounded-panel p-6 shadow-float max-lg:mx-4">
       <Link
         href="/"
         className="-ml-2 inline-flex min-h-11 pressable items-center gap-1 rounded-xl px-2 text-body text-ink-secondary focus-ring hover:text-ink"

@@ -1,21 +1,44 @@
 import { MAP_LIMITS, type MapArea, type MapBounds } from "./wardMap";
 
-// 安全區：病房場景鋪滿整個視窗，頂列、側欄與手機分頁列疊在場景上，以 CSS 定義扣除後的範圍
+// 安全區：病房場景鋪滿整個視窗，側欄、使用者膠囊與手機頂列／分頁列疊在場景上，以 CSS 定義扣除後的範圍
 const SAFE_AREA_SELECTOR = ".ward-safe";
 
 function getStage(viewport: HTMLElement): HTMLElement {
   return viewport.parentElement ?? viewport;
 }
 
-/** 右側詳情卡遮住的寬度（含間距）；沒開卡時為 0。 */
-function getOccludedRight(viewport: HTMLElement): number {
-  const panel =
-    getStage(viewport).querySelector<HTMLElement>("[data-map-detail]");
-  return panel ? panel.offsetWidth + MAP_LIMITS.panelGapPx : 0;
+/** 安全區扣掉 padding（病房適配留白）後的矩形；沒有安全區時退回整個地圖視窗。 */
+function getFitRect(viewport: HTMLElement): DOMRectReadOnly {
+  const safe =
+    getStage(viewport).querySelector<HTMLElement>(SAFE_AREA_SELECTOR);
+  if (!safe) return viewport.getBoundingClientRect();
+  const rect = safe.getBoundingClientRect();
+  const style = getComputedStyle(safe);
+  const top = parseFloat(style.paddingTop);
+  const left = parseFloat(style.paddingLeft);
+  return new DOMRectReadOnly(
+    rect.left + left,
+    rect.top + top,
+    rect.width - left - parseFloat(style.paddingRight),
+    rect.height - top - parseFloat(style.paddingBottom),
+  );
 }
 
 /**
- * 可放病房的區域（相對地圖視窗）：縮放範圍與初始視野用不扣詳情卡的版本，
+ * 右側詳情卡遮住適配區域的寬度（含間距）；沒開卡時為 0。
+ * 以版面位置（offsetLeft）計算，不受大卡進場的 transform 動畫影響。
+ */
+function getOccludedRight(viewport: HTMLElement, fit: DOMRectReadOnly): number {
+  const panel =
+    getStage(viewport).querySelector<HTMLElement>("[data-map-detail]");
+  const container = panel?.offsetParent;
+  if (!panel || !container) return 0;
+  const panelLeft = container.getBoundingClientRect().left + panel.offsetLeft;
+  return Math.max(0, fit.right - panelLeft + MAP_LIMITS.panelGapPx);
+}
+
+/**
+ * 可放病房的區域（相對地圖視窗，已扣適配留白）：縮放範圍與初始視野用不扣詳情卡的版本，
  * 平移夾限扣掉詳情卡，開卡時右側病床仍可拖到卡片左側。
  */
 export function measureMapArea(
@@ -23,16 +46,13 @@ export function measureMapArea(
   { withDetail }: { withDetail: boolean },
 ): MapArea {
   const view = viewport.getBoundingClientRect();
-  const safe =
-    getStage(viewport)
-      .querySelector<HTMLElement>(SAFE_AREA_SELECTOR)
-      ?.getBoundingClientRect() ?? view;
-  const occluded = withDetail ? getOccludedRight(viewport) : 0;
+  const fit = getFitRect(viewport);
+  const occluded = withDetail ? getOccludedRight(viewport, fit) : 0;
   return {
-    x: safe.left - view.left,
-    y: safe.top - view.top,
-    width: Math.max(1, safe.width - occluded),
-    height: Math.max(1, safe.height),
+    x: fit.left - view.left,
+    y: fit.top - view.top,
+    width: Math.max(1, fit.width - occluded),
+    height: Math.max(1, fit.height),
   };
 }
 

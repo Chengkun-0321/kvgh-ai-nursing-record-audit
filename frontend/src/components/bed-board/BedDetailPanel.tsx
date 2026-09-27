@@ -45,7 +45,7 @@ export function BedDetailPanel({
       animate={PANEL_MOTION.animate}
       exit={PANEL_MOTION.exit}
       transition={PANEL_TRANSITION}
-      className="glass pointer-events-auto absolute top-5 right-5 bottom-5 z-30 flex w-detail origin-right flex-col overflow-hidden rounded-card shadow-float"
+      className="glass pointer-events-auto absolute top-toolbar right-4 bottom-4 z-30 flex w-detail origin-right flex-col overflow-hidden rounded-card shadow-float"
     >
       <motion.div
         key={bed.bedCode}

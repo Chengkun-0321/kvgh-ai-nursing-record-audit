@@ -10,7 +10,8 @@ export const MAP_LIMITS = {
   zoomStep: 1.2,
   wheelSensitivity: 0.0015,
   focusPaddingPx: 24,
-  panelGapPx: 40,
+  // 開詳情卡時病房右緣與大卡的最小間距，與安全區的適配留白（lg 為 2rem）一致
+  panelGapPx: 32,
   wheelLinePx: 16,
   maxWheelDeltaPx: 150,
   // 低於此倍率時床號標籤只留圖示與床號，避免相鄰標籤重疊
