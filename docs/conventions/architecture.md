@@ -24,14 +24,14 @@ Next.js：病床總覽 → 點選病床顯示詳情 → 進入病患頁面 → �
 
 ### 各層職責與 import 限制
 
-| 層 | 職責 | 可 import | 不可 import |
-|---|---|---|---|
-| `api/` | HTTP 輸入輸出、驗證、狀態碼 | `schemas`、`services`、`api/deps`、`core` | `crud`、`models`、`db` |
-| `services/` | 商業邏輯、交易邊界、流程編排 | `crud`、`schemas`、`models`、`core`、其他 `services` | `api`、`fastapi` |
-| `crud/` | DB 查詢與寫入（不 commit） | `models`、`db`、`core` | `services`、`api`、`schemas` |
-| `models/` | ORM 定義 | `db/base`、`core/enums` | 其他 |
-| `schemas/` | Pydantic 資料結構 | `core/enums` | `models`、`crud`、`services` |
-| `core/` | 設定、例外、列舉、log、加解密 | 標準庫與第三方 | `app` 內其他模組 |
+| 層          | 職責                          | 可 import                                            | 不可 import                  |
+| ----------- | ----------------------------- | ---------------------------------------------------- | ---------------------------- |
+| `api/`      | HTTP 輸入輸出、驗證、狀態碼   | `schemas`、`services`、`api/deps`、`core`            | `crud`、`models`、`db`       |
+| `services/` | 商業邏輯、交易邊界、流程編排  | `crud`、`schemas`、`models`、`core`、其他 `services` | `api`、`fastapi`             |
+| `crud/`     | DB 查詢與寫入（不 commit）    | `models`、`db`、`core`                               | `services`、`api`、`schemas` |
+| `models/`   | ORM 定義                      | `db/base`、`core/enums`                              | 其他                         |
+| `schemas/`  | Pydantic 資料結構             | `core/enums`                                         | `models`、`crud`、`services` |
+| `core/`     | 設定、例外、列舉、log、加解密 | 標準庫與第三方                                       | `app` 內其他模組             |
 
 依賴方向：`api → services → crud → models`，不可反向。
 
@@ -62,15 +62,15 @@ services/
 
 ### 預期核心資料表
 
-| 表 | 用途 |
-|---|---|
-| `ingestion_batches` | 每次匯入的來源、日期、檔案 checksum、狀態 |
-| `ingestion_errors` | 單筆驗證失敗紀錄 |
-| 病患／紀錄相關表 | **待院方 JSON 格式確定後設計** |
-| `audit_runs` | 每次稽核批次（日期、規則集、模型、耗時、token 用量） |
-| `audit_findings` | 每位病患每條規則的 Verdict 與 Evidence |
-| `llm_configs` | 使用者設定的模型（API key 加密存放） |
-| `setting_change_logs` | 設定變更操作紀錄 |
+| 表                    | 用途                                                 |
+| --------------------- | ---------------------------------------------------- |
+| `ingestion_batches`   | 每次匯入的來源、日期、檔案 checksum、狀態            |
+| `ingestion_errors`    | 單筆驗證失敗紀錄                                     |
+| 病患／紀錄相關表      | **待院方 JSON 格式確定後設計**                       |
+| `audit_runs`          | 每次稽核批次（日期、規則集、模型、耗時、token 用量） |
+| `audit_findings`      | 每位病患每條規則的 Verdict 與 Evidence               |
+| `llm_configs`         | 使用者設定的模型（API key 加密存放）                 |
+| `setting_change_logs` | 設定變更操作紀錄                                     |
 
 ## 前端（Next.js App Router 標準結構）
 
@@ -78,11 +78,11 @@ services/
 
 ### 頁面（初步）
 
-| 路由 | 內容 |
-|---|---|
-| `/` | 病房病床總覽：每床一張病床圖片＋床號標籤，依最嚴重 Verdict 顯示狀態與光暈，可依狀態篩選；點選病床於右側（手機為 bottom sheet）顯示病患摘要與稽核結果 |
-| `/patients/[patientKey]` | 病患頁面：病患摘要、各規則稽核結果、Evidence 原文（內容待討論，目前為佔位頁） |
-| `/settings/llm` | LLM 模型設定（provider、model、API key、測試連線） |
+| 路由                     | 內容                                                                                                                                                               |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `/`                      | 病房地圖：Blender 場景模組依床數組成的 3D 場景搭配病床素材，可拖曳及縮放 50–200%；依最嚴重 Verdict 顯示光暈並篩選（淡化其餘床位）；點選病床於右側（手機為 bottom sheet）顯示病患摘要與稽核結果 |
+| `/patients/[patientKey]` | 病患頁面：病患摘要、各規則稽核結果、Evidence 原文（內容待討論，目前為佔位頁）                                                                                      |
+| `/settings/llm`          | LLM 模型設定（provider、model、API key、測試連線）                                                                                                                 |
 
 登入後的頁面放在 `app/(workspace)/`，共用工作區外框（頂列、側欄／底部分頁列）；登入頁（待決）之後放在此群組之外。UI 規範見 [ui-design.md](ui-design.md)。
 

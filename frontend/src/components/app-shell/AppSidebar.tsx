@@ -24,7 +24,7 @@ type SidebarItemProps = {
 };
 
 const ITEM_CLASS =
-  "relative flex min-h-11 items-center justify-center gap-3 rounded-xl px-3 text-body xl:justify-start";
+  "relative flex min-h-14 items-center justify-center gap-3 rounded-xl px-3 text-headline xl:justify-start";
 
 function SidebarItem({ item, isActive, badgeCount }: SidebarItemProps) {
   const Icon = item.icon;
@@ -51,7 +51,7 @@ function SidebarItem({ item, isActive, badgeCount }: SidebarItemProps) {
       <span
         aria-disabled="true"
         title={`${item.label}（${NAV_DISABLED_HINT}）`}
-        className={cn(ITEM_CLASS, "cursor-not-allowed text-ink/40")}
+        className={cn(ITEM_CLASS, "cursor-not-allowed text-on-chrome/40")}
       >
         {content}
       </span>
@@ -65,7 +65,7 @@ function SidebarItem({ item, isActive, badgeCount }: SidebarItemProps) {
       className={cn(
         ITEM_CLASS,
         "pressable focus-ring",
-        isActive ? "bg-fill font-semibold text-ink" : "text-ink hover:bg-fill",
+        isActive ? "nav-active font-semibold" : "hover:bg-chrome-fill",
       )}
     >
       {content}
@@ -73,16 +73,16 @@ function SidebarItem({ item, isActive, badgeCount }: SidebarItemProps) {
   );
 }
 
-/** 桌機側欄：xl 以上顯示完整名稱，lg 收成圖示列，lg 以下改用底部分頁列。 */
+/** 桌機側欄（浮動的液態玻璃）：xl 以上顯示完整名稱，lg 收成圖示列，lg 以下改用底部分頁列。 */
 export function AppSidebar({ pendingBedCount }: AppSidebarProps) {
   const pathname = usePathname();
 
   return (
     <nav
       aria-label="主要導覽"
-      className="sticky top-topbar hidden h-[calc(100dvh-var(--spacing-topbar))] w-rail shrink-0 glass-heavy px-3 py-4 lg:block xl:w-sidebar"
+      className="sidebar-chrome sticky top-topbar hidden h-[calc(100dvh-var(--spacing-topbar))] w-rail shrink-0 px-3 py-4 text-on-chrome lg:block xl:w-sidebar"
     >
-      <ul className="flex flex-col gap-1">
+      <ul className="flex flex-col gap-2">
         {NAV_ITEMS.map((item) => (
           <li key={item.label}>
             <SidebarItem

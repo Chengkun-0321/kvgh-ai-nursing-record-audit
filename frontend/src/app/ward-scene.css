@@ -1,0 +1,266 @@
+/* 場景與固定介面使用不同座標系；尺寸及色彩仍由語意 token 管理。 */
+
+/* 地圖控制器與病床疊層以 Web Animations 寫入以下變數；先註冊型別，各瀏覽器才會一致套用 */
+@property --map-scale {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 1;
+}
+@property --bed-hit-w {
+  syntax: "<length>";
+  inherits: true;
+  initial-value: 0px;
+}
+@property --bed-hit-h {
+  syntax: "<length>";
+  inherits: true;
+  initial-value: 0px;
+}
+@property --bed-label-x {
+  syntax: "<length>";
+  inherits: true;
+  initial-value: 0px;
+}
+@property --bed-label-y {
+  syntax: "<length>";
+  inherits: true;
+  initial-value: 0px;
+}
+.ward-stage {
+  height: calc(
+    100dvh - var(--spacing-topbar) - 3.5rem - env(safe-area-inset-bottom)
+  );
+  min-height: 26rem;
+}
+.ward-map {
+  touch-action: none;
+  overflow: clip;
+  cursor: grab;
+  user-select: none;
+  overscroll-behavior: contain;
+}
+.ward-map[data-dragging="true"],
+.ward-map[data-dragging="true"] button {
+  cursor: grabbing;
+}
+/* 尺寸＝場景外框投影（px，100% 縮放），由控制器寫入；首次定位前隱藏，避免標籤先疊在左上角 */
+.ward-world {
+  will-change: transform;
+}
+.ward-world:not([data-ready]) {
+  visibility: hidden;
+}
+.bed-hotspot {
+  width: var(--bed-hit-w);
+  height: var(--bed-hit-h);
+}
+/* 標籤底部中央對齊床頭上方；反向縮放讓字級不隨地圖縮放 */
+.bed-label {
+  position: absolute;
+  left: var(--bed-label-x);
+  top: var(--bed-label-y);
+  transform: translate(-50%, -100%);
+  transform-origin: 0 0;
+  scale: calc(1 / var(--map-scale));
+}
+/* 縮小檢視時判定文字改由圖示＋顏色表示（完整文字仍在 aria-label 與狀態列圖例） */
+.ward-world[data-zoom="compact"] .bed-label-verdict {
+  display: none;
+}
+.ward-room {
+  background-color: var(--color-scene-floor);
+  background-image:
+    linear-gradient(
+      var(--color-scene-floor-line),
+      var(--color-scene-floor-line)
+    ),
+    url("/images/scene/ward-floor.webp");
+  background-size:
+    auto,
+    36rem 36rem;
+  box-shadow: var(--shadow-room);
+  border-top: 0.7rem solid var(--color-scene-wall-cap);
+}
+.ward-beds {
+  grid-template-columns: repeat(var(--ward-columns, 3), minmax(0, 1fr));
+  row-gap: 2.5rem;
+}
+[data-columns="1"] {
+  --ward-columns: 1;
+}
+[data-columns="2"] {
+  --ward-columns: 2;
+}
+[data-columns="3"] {
+  --ward-columns: 3;
+}
+[data-columns="4"] {
+  --ward-columns: 4;
+}
+[data-columns="5"] {
+  --ward-columns: 5;
+}
+[data-columns="6"] {
+  --ward-columns: 6;
+}
+/* 床數很少時不將單床拉成整頁大小，地板仍延伸成完整空間。 */
+[data-columns="1"] .ward-beds {
+  max-width: 20rem;
+  margin-inline: auto;
+}
+.room-rear-wall {
+  background: linear-gradient(
+    to bottom,
+    var(--color-scene-wall-cap),
+    var(--color-scene-wall) 18%,
+    var(--color-scene-wall-shade)
+  );
+  box-shadow: inset 0 -0.4rem 0.7rem var(--color-scene-shadow);
+}
+.room-side-wall {
+  pointer-events: none;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1.3rem;
+  z-index: 2;
+  background: linear-gradient(
+    90deg,
+    var(--color-scene-wall-cap),
+    var(--color-scene-wall) 35%,
+    var(--color-scene-wall-shade)
+  );
+}
+.room-side-left {
+  left: 0;
+  box-shadow: 0.7rem 0 1rem var(--color-scene-shadow);
+}
+.room-side-right {
+  right: 0;
+  box-shadow: -0.7rem 0 1rem var(--color-scene-shadow);
+}
+.ambient-corridor {
+  background-color: var(--color-scene-floor);
+  background-image:
+    linear-gradient(
+      90deg,
+      var(--color-scene-ambient-cool) 0 12%,
+      transparent 12% 76%,
+      var(--color-scene-wall-shade) 76% 82%,
+      transparent 82%
+    ),
+    linear-gradient(
+      0deg,
+      transparent 60%,
+      var(--color-scene-wall-cap) 61% 69%,
+      var(--color-scene-ambient) 70%
+    ),
+    url("/images/scene/ward-floor.webp");
+  background-size: cover, cover, 30rem;
+  transform: scale(1.15) rotate(-4deg);
+}
+.sidebar-chrome {
+  background: linear-gradient(
+    to right,
+    var(--color-chrome),
+    var(--color-chrome) 70%,
+    transparent
+  );
+  backdrop-filter: blur(24px);
+}
+.nav-active {
+  background: var(--color-nav-selection);
+  box-shadow:
+    inset 0 0 0 1px var(--color-nav-border),
+    inset 0 1px 0 var(--color-on-chrome-secondary);
+}
+.ward-title {
+  width: min(100%, 32rem);
+  background: linear-gradient(110deg, var(--color-chrome), transparent);
+  text-shadow: 0 1px 8px var(--color-scene-shadow);
+}
+.map-controls {
+  right: 1.25rem;
+  bottom: 7.5rem;
+}
+.map-control-button {
+  @apply grid size-11 pressable place-items-center rounded-xl focus-ring hover:bg-chrome-fill disabled:opacity-35;
+}
+.ward-status {
+  max-width: calc(100% - 2.5rem);
+}
+@media (min-width: 64rem) and (max-width: 79.99rem) {
+  [data-detail-open="true"] .ward-status {
+    max-width: calc(100% - var(--spacing-detail) - 3.75rem);
+  }
+  [data-detail-open="true"] .ward-status button {
+    gap: 0.4rem;
+    padding-inline: 0.45rem;
+  }
+  [data-detail-open="true"] .ward-status svg {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ward-stage *,
+  .ward-stage *::before,
+  .ward-stage *::after {
+    transition-duration: 0s !important;
+  }
+}
+@media (min-width: 64rem) {
+  .ward-stage {
+    height: calc(100dvh - var(--spacing-topbar));
+  }
+  .map-controls {
+    bottom: 1.25rem;
+  }
+  [data-detail-open="true"] .map-controls {
+    right: calc(var(--spacing-detail) + 2.5rem);
+    bottom: 7.5rem;
+  }
+}
+@media (max-width: 39.99rem) {
+  .ward-room .ward-beds {
+    row-gap: 1.75rem;
+  }
+  .ward-room > .relative {
+    padding-inline: 0.6rem;
+  }
+  .room-side-wall {
+    width: 0.65rem;
+  }
+  .ward-status {
+    left: 0.75rem;
+    bottom: 0.75rem;
+    max-width: calc(100% - 1.5rem);
+  }
+  .ward-status [role="group"] {
+    gap: 0;
+    padding: 0.25rem;
+  }
+  .ward-status button {
+    gap: 0.35rem;
+    padding-inline: 0.4rem;
+  }
+  .ward-status svg {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+}
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+  .sidebar-chrome,
+  .ward-title {
+    background: var(--color-chrome-solid);
+    backdrop-filter: none;
+  }
+}
+
+@media (prefers-contrast: more) {
+  .sidebar-chrome,
+  .ward-title {
+    outline: 1px solid var(--color-on-chrome-secondary);
+    outline-offset: -1px;
+  }
+}

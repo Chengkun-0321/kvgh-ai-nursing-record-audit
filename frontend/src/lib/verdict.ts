@@ -82,21 +82,6 @@ export function countPendingBeds(beds: readonly BedStatus[]): number {
   return beds.filter((bed) => getWorstVerdict(bed.findings) !== "PASS").length;
 }
 
-/** 首頁預設選取的病床：最嚴重判定最高者，同級取床號順序最前。 */
-export function getDefaultSelectedBed(
-  beds: readonly BedStatus[],
-): BedStatus | undefined {
-  return beds.reduce<BedStatus | undefined>((selected, bed) => {
-    if (!selected) {
-      return bed;
-    }
-    const rank = SEVERITY_RANK[getWorstVerdict(bed.findings)];
-    return rank > SEVERITY_RANK[getWorstVerdict(selected.findings)]
-      ? bed
-      : selected;
-  }, undefined);
-}
-
 /** 判斷病床在目前篩選下是否應淡化（保留床位位置，不移除）。 */
 export function isBedDimmed(
   bed: BedStatus,

@@ -184,3 +184,24 @@ export const MOCK_WARD_BED_BOARDS: Record<string, WardBedBoard> = {
     ],
   },
 };
+
+// 開發用床數上限：與版面欄數上限 × 合理排數相當，避免誤輸入造成過大的場景
+const MAX_MOCK_BED_COUNT = 200;
+
+/** 開發用：以既有虛構病床循環產生指定床數，檢查 0／1／10／40／100 床的病房版面。 */
+export function createMockWardBedBoard(
+  base: WardBedBoard,
+  bedCount: number,
+): WardBedBoard {
+  const count = Math.min(Math.max(0, Math.floor(bedCount)), MAX_MOCK_BED_COUNT);
+  const beds = Array.from({ length: count }, (_, index) => {
+    const template = base.beds[index % base.beds.length];
+    if (!template) return undefined;
+    return {
+      ...template,
+      bedCode: `${base.wardCode}-${index + 1}`,
+      patient: { ...template.patient, patientKey: `pk_mock_${index + 1}` },
+    };
+  });
+  return { ...base, beds: beds.filter((bed) => bed !== undefined) };
+}

@@ -3,7 +3,7 @@
 使用 LLM 稽核護理師紀錄（入院護理評估、每日身體評估、過程紀錄、轉入／轉出摘要、給藥紀錄…）的完整性與一致性。
 流程：每日讀取病房資料 → 執行稽核規則 → 產出附 Evidence 的稽核結果 → 護理師／護理長確認。
 
-> 目前階段：`frontend/` 已初始化，Apple 風格工作區與首頁病床總覽使用前端假資料（`src/lib/api/`）；`backend/` 尚未初始化（步驟見 backend/CLAUDE.md）。
+> 目前階段：`frontend/` 已初始化，Apple 風格工作區與首頁病床總覽（Blender 場景模組＋React Three Fiber 的 3D 病房）使用前端假資料（`src/lib/api/`）；`backend/` 尚未初始化（步驟見 backend/CLAUDE.md）。
 
 ## 核心原則（領域）
 
@@ -17,7 +17,7 @@
 
 | 層 | 技術 |
 |---|---|
-| 前端 | Next.js（App Router）+ React + TypeScript + Tailwind CSS + Framer Motion |
+| 前端 | Next.js（App Router）+ React + TypeScript + Tailwind CSS + Framer Motion；病房場景用 three.js + React Three Fiber，模組由 Blender 腳本產生 |
 | 後端 | FastAPI + SQLAlchemy 2.0（async）+ Alembic + Pydantic v2 |
 | LLM | LiteLLM（唯一出口，模型由使用者於網頁設定） |
 | DB | SQLite（開發）→ PostgreSQL（正式），程式必須兩者皆可運作 |

@@ -17,7 +17,9 @@ import {
 } from "@/lib/motion";
 import type { BedStatus } from "@/types/ward";
 
+import { BED_DETAIL_PANEL_ID } from "./BedDetailPanel";
 import { BedDetailContent } from "./BedDetailContent";
+import { PatientPageLink } from "./PatientPageLink";
 
 type BedDetailSheetProps = {
   bed: BedStatus | undefined;
@@ -63,6 +65,7 @@ export function BedDetailSheet({
   return (
     <dialog
       ref={dialogRef}
+      id={isVisible ? BED_DETAIL_PANEL_ID : undefined}
       aria-labelledby={headingId}
       onCancel={(event) => {
         event.preventDefault();
@@ -121,6 +124,10 @@ export function BedDetailSheet({
                 bed={bed}
                 businessDate={businessDate}
                 headingId={headingId}
+              />
+              <PatientPageLink
+                patientKey={bed.patient.patientKey}
+                className="mt-5"
               />
             </div>
           </motion.div>

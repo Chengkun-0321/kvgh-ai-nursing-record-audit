@@ -51,3 +51,6 @@ logs/
 .DS_Store
 .idea/
 .vscode/
+
+# Blender 場景產生器快取（Poly Haven 下載、預覽 .blend）
+frontend/scripts/blender/.cache/

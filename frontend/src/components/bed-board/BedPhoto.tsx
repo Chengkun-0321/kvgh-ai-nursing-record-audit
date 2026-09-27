@@ -18,7 +18,7 @@ export function BedPhoto({ src, sizes, className }: BedPhotoProps) {
       width={BED_SPRITE_SIZE.width}
       height={BED_SPRITE_SIZE.height}
       sizes={sizes}
-      loading="eager"
+      loading="lazy"
       draggable={false}
       className={cn("h-auto w-full select-none", className)}
     />

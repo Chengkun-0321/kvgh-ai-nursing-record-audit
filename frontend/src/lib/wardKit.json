@@ -1,0 +1,87 @@
+{
+  "assetVersion": 1,
+  "view": {
+    "yawDeg": 13.7,
+    "pitchDeg": 36.5,
+    "pxPerMeter": 100
+  },
+  "grid": {
+    "snapM": 0.6,
+    "minColumns": 1,
+    "maxColumns": 14,
+    "targetAspect": 1.6
+  },
+  "bay": {
+    "widthM": 2.4,
+    "rowPitchM": 4.2,
+    "bedCenterM": 1.5,
+    "wallThicknessM": 0.2,
+    "backWallHeightM": 2.8,
+    "spineHeightM": 1.3
+  },
+  "edges": {
+    "sideWidthM": 1.8,
+    "frontDepthM": 0.6,
+    "sideWallHeightM": 1.2,
+    "slabDepthM": 0.3
+  },
+  "sprite": {
+    "widthPx": 480,
+    "heightPx": 580,
+    "planeWidthM": 2.106,
+    "anchorPx": {
+      "x": 254,
+      "y": 323
+    },
+    "labelAnchorPx": {
+      "x": 300,
+      "y": 52
+    },
+    "contentRectPx": {
+      "left": 58,
+      "top": 56,
+      "right": 422,
+      "bottom": 477
+    }
+  },
+  "modules": {
+    "bayBackwall": {
+      "file": "bay-backwall.glb"
+    },
+    "baySpine": {
+      "file": "bay-spine.glb"
+    },
+    "sideBackLeft": {
+      "file": "side-back-left.glb"
+    },
+    "sideBackRight": {
+      "file": "side-back-right.glb"
+    },
+    "sideLeft": {
+      "file": "side-left.glb"
+    },
+    "sideRight": {
+      "file": "side-right.glb"
+    },
+    "sideLeftAlt": {
+      "file": "side-left-alt.glb"
+    },
+    "sideRightAlt": {
+      "file": "side-right-alt.glb"
+    },
+    "frontLeft": {
+      "file": "front-left.glb"
+    },
+    "frontRight": {
+      "file": "front-right.glb"
+    },
+    "frontFill": {
+      "file": "front-fill.glb"
+    }
+  },
+  "decals": {
+    "bedShadow": {
+      "file": "bed-shadow.glb"
+    }
+  }
+}

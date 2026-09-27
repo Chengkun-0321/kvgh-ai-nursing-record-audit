@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "./ward-scene.css";
 
 /* 設計規範見 docs/conventions/ui-design.md；元件只使用這裡定義的語意 token */
 @theme {
@@ -33,19 +34,33 @@
   --text-tab--letter-spacing: 0.01em;
 
   /* 介面色 */
-  --color-canvas: #f5f5f7;
+  --color-canvas: #494b50;
   --color-surface: #ffffff;
   --color-ink: #1d1d1f;
-  --color-ink-secondary: #6e6e73;
+  /* 次要文字：疊在液態玻璃（背後可能是深色病床或光暈）上仍需 ≥4.5:1，因此比系統灰更深 */
+  --color-ink-secondary: #58585d;
   --color-fill: rgb(120 120 128 / 0.12);
   --color-fill-strong: rgb(120 120 128 / 0.2);
   --color-separator: rgb(0 0 0 / 0.08);
-  /* 藍色已是「無法判定」狀態色，主操作色改用石墨黑避免混淆 */
-  --color-accent: #1d1d1f;
+  /* 操作藍與判定藍使用獨立 token；狀態另以圖示、文字區分 */
+  --color-accent: #3972ce;
+  --color-brand-mark: #78cfff;
+  --color-chrome-solid: #42474f;
+  --color-nav-border: rgb(152 207 255 / 0.72);
+  --color-nav-selection: rgb(61 101 151 / 0.9);
   --color-accent-contrast: #ffffff;
   --color-badge: #e0241a;
   /* 模態遮罩：40% 黑，讓前景完整分離 */
   --color-scrim: rgb(0 0 0 / 0.4);
+
+  /* 液態玻璃：glass（內容卡片）與 chrome（導覽列、狀態列，略帶灰、較厚）；
+     不透明度已依最差背景（下方墊純黑）驗證文字對比 */
+  --color-glass: rgb(255 255 255 / 0.89);
+  --color-chrome: rgb(49 54 63 / 0.86);
+  --color-on-chrome: #ffffff;
+  --color-on-chrome-secondary: #e0e3e9;
+  --color-chrome-fill: rgb(255 255 255 / 0.09);
+  --color-chrome-fill-strong: rgb(255 255 255 / 0.17);
 
   /* Verdict 狀態色：主色用於圖示與光暈，strong 為白底可讀（≥4.5:1）的文字色 */
   --color-verdict-error: #ff3b30;
@@ -57,62 +72,152 @@
   --color-verdict-pass: #34c759;
   --color-verdict-pass-strong: #1f7a36;
 
-  /* 病房地面 */
-  --color-floor: #ebe9e5;
-  --color-floor-light: #f8f7f4;
+  /* 病房場景：Blender 產生器讀取這組色票作為 3D 材質（scripts/blender/kit/palette.py），色調取自概念圖；刻意避開 verdict 的紅黃藍綠色相 */
+  --color-scene-ambient: #62666c;
+  --color-scene-ambient-glow: #e4d7c1;
+  --color-scene-ambient-cool: #424b53;
+  --color-scene-vignette: rgb(90 78 64 / 0.12);
+  --color-scene-wall-cap: #9a9aa0;
+  --color-scene-wall: #d8c4b0;
+  --color-scene-wall-shade: #a58c73;
+  --color-scene-wall-outer: #7c7976;
+  --color-scene-panel: #cfae94;
+  --color-scene-panel-shade: #b0917a;
+  --color-scene-lamp: #fff6e8;
+  --color-scene-window: #f4efe6;
+  --color-scene-window-shade: #d8cfc0;
+  --color-scene-floor: #d7ccc3;
+  --color-scene-floor-light: #ebe5db;
+  --color-scene-floor-line: rgb(95 82 64 / 0.12);
+  --color-scene-wood: #94735a;
+  --color-scene-wood-top: #b39274;
+  --color-scene-wood-shade: #6f5845;
+  --color-scene-metal: #b9bcc0;
+  --color-scene-metal-dark: #4a4d52;
+  --color-scene-screen: #0f1316;
+  --color-scene-screen-line: #3ee08f;
+  --color-scene-screen-line-alt: #f5d547;
+  --color-scene-curtain: #c8d0d2;
+  --color-scene-curtain-fold: #9aa6aa;
+  --color-scene-bag: rgb(246 248 249 / 0.85);
+  --color-scene-fabric: #5b6d7d;
+  --color-scene-shadow: rgb(51 40 31 / 0.38);
 
   --radius-card: 1.25rem;
   --radius-panel: 1.75rem;
 
   --shadow-card: 0 1px 2px rgb(0 0 0 / 0.04), 0 4px 16px rgb(0 0 0 / 0.06);
   --shadow-float: 0 1px 3px rgb(0 0 0 / 0.06), 0 12px 40px rgb(0 0 0 / 0.12);
+  /* 病房模型浮在明亮環境上：近處銳利陰影＋遠處大範圍暖色柔影 */
+  --shadow-room:
+    0 2px 5px rgb(35 29 22 / 0.35), 0 28px 70px rgb(30 27 23 / 0.4);
+  --shadow-lamp: 0 0 10px 2px rgb(255 238 204 / 0.75);
 
-  --spacing-topbar: 3.5rem;
+  --spacing-topbar: 4.25rem;
   --spacing-rail: 4.5rem;
-  --spacing-sidebar: 15rem;
+  --spacing-sidebar: 13rem;
   --spacing-detail: 23rem;
 
   --ease-apple: cubic-bezier(0.25, 0.1, 0.25, 1);
 }
 
-/* 半透明材質：浮在內容上的功能層（頂列、狀態列、面板）。不可疊在另一層半透明材質上 */
+/*
+ * 液態玻璃（淺色）：大卡、面板等浮在場景上的內容層。不可疊在另一層半透明材質上。
+ * 元素本身需有定位（relative／sticky／absolute），邊緣高光畫在 ::before。
+ * 透明度動畫必須做在這個元素本身，不可做在祖先：祖先 opacity < 1 會讓 backdrop-filter 暫時失效。
+ */
 @utility glass {
-  background-color: rgb(255 255 255 / 0.72);
-  backdrop-filter: blur(24px) saturate(180%);
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.6);
+  background-color: var(--color-glass);
+  background-image: linear-gradient(
+    to bottom,
+    rgb(255 255 255 / 0.45),
+    rgb(255 255 255 / 0) 38%
+  );
+  backdrop-filter: blur(30px) saturate(190%);
+
+  /* 光線打在玻璃邊緣：上緣最亮、側邊漸弱、下緣微微反光 */
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    padding: 1px;
+    border-radius: inherit;
+    background: linear-gradient(
+      160deg,
+      rgb(255 255 255 / 0.95),
+      rgb(255 255 255 / 0.2) 30%,
+      rgb(255 255 255 / 0.05) 60%,
+      rgb(255 255 255 / 0.55)
+    );
+    mask:
+      linear-gradient(#000 0 0) content-box exclude,
+      linear-gradient(#000 0 0);
+    pointer-events: none;
+  }
 
   @media (prefers-reduced-transparency: reduce) {
     background-color: var(--color-surface);
+    background-image: none;
     backdrop-filter: none;
   }
 
   @media (prefers-contrast: more) {
     background-color: var(--color-surface);
+    background-image: none;
     backdrop-filter: none;
     outline: 1px solid var(--color-ink-secondary);
     outline-offset: -1px;
   }
 }
 
-/* 較厚的材質：分隔結構區塊（側欄） */
-@utility glass-heavy {
-  background-color: rgb(246 246 248 / 0.82);
-  backdrop-filter: blur(32px) saturate(160%);
+/* 較厚的液態玻璃：頂列、側欄、分頁列、狀態列、場景標籤等結構層；內部文字用 on-chrome 色 */
+@utility glass-chrome {
+  color: var(--color-on-chrome);
+  background-color: var(--color-chrome);
+  background-image: linear-gradient(
+    to bottom,
+    rgb(255 255 255 / 0.09),
+    rgb(255 255 255 / 0) 45%
+  );
+  backdrop-filter: blur(32px) saturate(180%);
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    padding: 1px;
+    border-radius: inherit;
+    background: linear-gradient(
+      160deg,
+      rgb(255 255 255 / 0.35),
+      rgb(255 255 255 / 0.25) 30%,
+      rgb(255 255 255 / 0.08) 60%,
+      rgb(255 255 255 / 0.15)
+    );
+    mask:
+      linear-gradient(#000 0 0) content-box exclude,
+      linear-gradient(#000 0 0);
+    pointer-events: none;
+  }
 
   @media (prefers-reduced-transparency: reduce) {
-    background-color: var(--color-canvas);
+    background-color: var(--color-chrome-solid);
+    background-image: none;
     backdrop-filter: none;
   }
 
   @media (prefers-contrast: more) {
-    background-color: var(--color-canvas);
+    background-color: var(--color-chrome-solid);
+    background-image: none;
     backdrop-filter: none;
-    outline: 1px solid var(--color-ink-secondary);
+    outline: 1px solid var(--color-on-chrome-secondary);
     outline-offset: -1px;
   }
 }
 
-/* 鍵盤焦點：石墨黑外框，所有可互動元素共用 */
+/* 鍵盤焦點：操作藍外框，所有可互動元素共用 */
 @utility focus-ring {
   &:focus-visible {
     outline: 2px solid var(--color-accent);
@@ -131,13 +236,63 @@
   }
 }
 
+/* 病房外的明亮環境：左上窗光、中央柔光、下緣淡淡陰影與暗角，全部靜態 */
+@utility scene-ambient {
+  background-color: var(--color-scene-ambient);
+  background-image:
+    radial-gradient(
+      ellipse 130% 110% at 50% 40%,
+      transparent 55%,
+      var(--color-scene-vignette)
+    ),
+    radial-gradient(
+      ellipse 50% 45% at 18% 0%,
+      var(--color-scene-ambient-glow),
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 60% 50% at 55% 40%,
+      var(--color-scene-ambient-glow),
+      transparent 75%
+    ),
+    radial-gradient(
+      ellipse 70% 35% at 50% 105%,
+      var(--color-scene-ambient-cool),
+      transparent 70%
+    );
+}
+
+/* 病房地板：大磁磚格線疊在中央暖光上 */
 @utility ward-floor {
-  background-color: var(--color-floor);
-  background-image: radial-gradient(
-    ellipse 80% 65% at 50% 30%,
-    var(--color-floor-light),
-    transparent 75%
-  );
+  background-color: var(--color-scene-floor);
+  background-image:
+    linear-gradient(var(--color-scene-floor-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--color-scene-floor-line) 1px, transparent 1px),
+    radial-gradient(
+      ellipse 75% 60% at 50% 35%,
+      var(--color-scene-floor-light),
+      transparent 75%
+    );
+  background-size:
+    3rem 3rem,
+    3rem 3rem,
+    100% 100%;
+  background-position: center top;
+}
+
+/* 窗戶百葉：水平細線 */
+@utility window-blinds {
+  background-image:
+    repeating-linear-gradient(
+      to bottom,
+      transparent 0 5px,
+      var(--color-scene-window-shade) 5px 6px
+    ),
+    linear-gradient(
+      to bottom,
+      var(--color-scene-window),
+      var(--color-scene-window-shade)
+    );
 }
 
 :root {

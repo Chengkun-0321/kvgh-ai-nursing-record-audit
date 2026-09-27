@@ -1,108 +1,117 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { AnimatePresence } from "motion/react";
+import { useCallback, useRef, useState } from "react";
 
-import { useOnMediaQueryMatch } from "@/hooks/useOnMediaQueryMatch";
+import { WardMap } from "@/components/ward-scene/WardMap";
+import { type DismissReason, useDismissable } from "@/hooks/useDismissable";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
+import { useWardSceneMode } from "@/hooks/useWebGLSupport";
 import { DESKTOP_MEDIA_QUERY } from "@/lib/constants";
-import { formatDate } from "@/lib/format";
 import {
   countBedsByWorstVerdict,
-  getDefaultSelectedBed,
-  isBedDimmed,
   type VerdictFilterValue,
 } from "@/lib/verdict";
+import { getBedButtonId } from "@/lib/wardMap";
 import type { WardBedBoard } from "@/types/ward";
 
-import { BedCard } from "./BedCard";
 import { BedDetailPanel } from "./BedDetailPanel";
 import { BedDetailSheet } from "./BedDetailSheet";
+import { WardBedGrid } from "./WardBedGrid";
+import { WardTitle } from "./WardTitle";
 import { WardStatusBar } from "./WardStatusBar";
 
 type BedBoardProps = {
   board: WardBedBoard;
 };
 
-/**
- * 病房病床總覽：床位區（依床號排列，對應實體位置）＋狀態列篩選＋病床詳情。
- * 桌機在右側顯示詳情面板；手機點選病床後以 bottom sheet 顯示。
- */
-export function BedBoard({ board }: BedBoardProps) {
-  const [activeFilter, setActiveFilter] = useState<VerdictFilterValue>("ALL");
-  const [selectedBedCode, setSelectedBedCode] = useState(
-    () => getDefaultSelectedBed(board.beds)?.bedCode,
-  );
-  const [hasUserSelected, setHasUserSelected] = useState(false);
-  const [isSheetOpen, setIsSheetOpen] = useState(false);
-  const closeSheet = useCallback(() => setIsSheetOpen(false), []);
-  // 視窗放大到桌機寬度時 sheet 會被隱藏，須一併關閉以解除背景 inert
-  useOnMediaQueryMatch(DESKTOP_MEDIA_QUERY, closeSheet);
+// 點到病床或狀態列不算「點外部」：切換病床、篩選時大卡保持開啟
+const KEEP_DETAIL_SELECTOR = "[data-keep-detail]";
 
+/** 病房總覽：3D 病房地圖（不支援 WebGL 時改用 2D 清單）＋狀態列篩選＋詳情卡。 */
+export function BedBoard({ board }: BedBoardProps) {
+  const isDesktop = useMediaQuery(DESKTOP_MEDIA_QUERY);
+  const { mode: sceneMode, reportSceneError } = useWardSceneMode();
+  const [activeFilter, setActiveFilter] = useState<VerdictFilterValue>("ALL");
+  const [selectedBedCode, setSelectedBedCode] = useState<string>();
+  const panelRef = useRef<HTMLElement>(null);
   const selectedBed = board.beds.find((bed) => bed.bedCode === selectedBedCode);
 
-  function handleSelectBed(bedCode: string) {
-    setSelectedBedCode(bedCode);
-    setHasUserSelected(true);
-    if (!window.matchMedia(DESKTOP_MEDIA_QUERY).matches) {
-      setIsSheetOpen(true);
-    }
+  const closeDetail = useCallback(
+    (reason: DismissReason | "button") => {
+      // 以按鈕或 Esc 關閉時把焦點送回原病床，鍵盤使用者不會失去位置
+      if (reason !== "outside" && selectedBedCode) {
+        document
+          .getElementById(getBedButtonId(selectedBedCode))
+          ?.focus({ preventScroll: true });
+      }
+      setSelectedBedCode(undefined);
+    },
+    [selectedBedCode],
+  );
+  useDismissable({
+    isActive: isDesktop && selectedBed !== undefined,
+    containerRef: panelRef,
+    keepSelector: KEEP_DETAIL_SELECTOR,
+    onDismiss: closeDetail,
+  });
+
+  function handleToggleBed(bedCode: string) {
+    setSelectedBedCode((current) =>
+      current === bedCode ? undefined : bedCode,
+    );
   }
 
   return (
-    <div className="flex gap-6 px-4 py-6 lg:px-8 lg:py-8">
-      <section
-        aria-labelledby="ward-title"
-        className="@container min-w-0 flex-1"
+    <div
+      className="ward-stage relative isolate"
+      data-detail-open={isDesktop && selectedBed ? "true" : "false"}
+    >
+      {sceneMode === "2d" ? (
+        <WardBedGrid
+          board={board}
+          selectedBedCode={selectedBedCode}
+          activeFilter={activeFilter}
+          onToggle={handleToggleBed}
+        />
+      ) : (
+        <WardMap
+          board={board}
+          selectedBedCode={selectedBedCode}
+          activeFilter={activeFilter}
+          isSceneEnabled={sceneMode === "3d"}
+          onToggle={handleToggleBed}
+          onBackgroundClick={() => closeDetail("outside")}
+          onSceneError={reportSceneError}
+        />
+      )}
+      <WardTitle board={board} />
+      <div
+        data-keep-detail
+        className="ward-status absolute bottom-5 left-5 z-20"
       >
-        <header>
-          <h1 id="ward-title" className="text-large-title">
-            {board.wardCode} 病房
-          </h1>
-          <p className="mt-1 text-body text-ink-secondary">
-            {board.wardName}｜共 {board.beds.length} 床｜稽核日期{" "}
-            <span className="tabular-nums">
-              {formatDate(board.businessDate)}
-            </span>
-          </p>
-        </header>
-
-        <div className="mt-6 flex flex-col rounded-panel ward-floor shadow-card">
-          {/* DOM 順序＝桌機視覺順序（狀態列浮在床位區底部）；手機版以 order 移到上方 */}
-          <ul className="grid grid-cols-2 gap-x-2 gap-y-3 p-3 lg:p-5 @xl:grid-cols-3 @xl:gap-x-4 @3xl:grid-cols-4 @5xl:grid-cols-5">
-            {board.beds.map((bed) => (
-              <li key={bed.bedCode}>
-                <BedCard
-                  bed={bed}
-                  isSelected={bed.bedCode === selectedBedCode}
-                  isDimmed={isBedDimmed(bed, activeFilter)}
-                  onSelect={handleSelectBed}
-                />
-              </li>
-            ))}
-          </ul>
-          <WardStatusBar
-            bedCounts={countBedsByWorstVerdict(board.beds)}
-            value={activeFilter}
-            onChange={setActiveFilter}
-            className="order-first m-3 lg:sticky lg:bottom-4 lg:z-20 lg:order-none lg:mx-5 lg:mt-0 lg:mb-5"
-          />
-        </div>
-      </section>
-
-      {selectedBed && (
-        <div className="sticky top-[calc(var(--spacing-topbar)+1.5rem)] hidden max-h-[calc(100dvh-var(--spacing-topbar)-3rem)] w-detail shrink-0 self-start overflow-y-auto rounded-panel lg:block">
+        <WardStatusBar
+          bedCounts={countBedsByWorstVerdict(board.beds)}
+          value={activeFilter}
+          onChange={setActiveFilter}
+        />
+      </div>
+      <AnimatePresence>
+        {isDesktop && selectedBed && (
           <BedDetailPanel
+            key="bed-detail"
+            ref={panelRef}
             bed={selectedBed}
             businessDate={board.businessDate}
-            shouldFade={hasUserSelected}
+            onClose={() => closeDetail("button")}
           />
-        </div>
-      )}
-
+        )}
+      </AnimatePresence>
       <BedDetailSheet
         bed={selectedBed}
         businessDate={board.businessDate}
-        isOpen={isSheetOpen}
-        onClose={closeSheet}
+        isOpen={!isDesktop && selectedBed !== undefined}
+        onClose={() => setSelectedBedCode(undefined)}
       />
     </div>
   );

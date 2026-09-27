@@ -31,9 +31,10 @@ rsync -a --ignore-existing frontend-init/ frontend/ && rm -rf frontend-init && c
 
 ## 核准依賴（其餘需先詢問）
 
-- 正式：`next`、`react`、`react-dom`、`motion`（Framer Motion 更名後的套件，`import { motion } from "motion/react"`）、`clsx`、`tailwind-merge`、`@phosphor-icons/react`（圖示，一律經 `src/components/ui/icons.ts` 引用）
-- 開發：`typescript`、`@types/node`、`@types/react`、`@types/react-dom`（create-next-app 預設）、`tailwindcss`、`@tailwindcss/postcss`、`eslint`、`eslint-config-next`、`prettier`、`prettier-plugin-tailwindcss`、`openapi-typescript`
-- 寫測試時：`vitest`、`@testing-library/react`、`@testing-library/jest-dom`、`jsdom`
+- 正式：`next`、`react`、`react-dom`、`motion`（Framer Motion 更名後的套件，`import { motion } from "motion/react"`）、`clsx`、`tailwind-merge`、`@phosphor-icons/react`（圖示，一律經 `src/components/ui/icons.ts` 引用）、`three`、`@react-three/fiber`（病房 3D 場景，見 [ADR 0003](../docs/adr/0003-ward-scene-3d.md)；`@react-three/drei` 已核准但目前不需要）
+- 開發：`typescript`、`@types/node`、`@types/react`、`@types/react-dom`（create-next-app 預設）、`tailwindcss`、`@tailwindcss/postcss`、`eslint`、`eslint-config-next`、`prettier`、`prettier-plugin-tailwindcss`、`openapi-typescript`、`@types/three`
+- 寫測試時：`vitest`（已安裝 4.x；npm 10 解析其選用 peer 會出錯，安裝時需加 `--legacy-peer-deps`）、`@testing-library/react`、`@testing-library/jest-dom`、`jsdom`
+- 3D 資源一律放在本專案（`public/models/`），不得從 CDN 載入 HDRI、Draco decoder 等（醫院內網）
 - 未經同意不引入 SWR、TanStack Query、Redux、Zustand、UI 元件庫等
 
 ## 目錄（Next.js App Router 標準結構）
@@ -41,12 +42,16 @@ rsync -a --ignore-existing frontend-init/ frontend/ && rm -rf frontend-init && c
 ```
 frontend/
 ├── public/
-│   └── images/beds/      # 病床素材 bed-{性別}-{年齡層}-{判定}.webp（使用者生成，僅為裝飾；見 ui-design.md）
+│   ├── images/           # beds 病床、patients 示意近景、scene 地板材質；見 ui-design.md
+│   └── models/ward/      # 病房場景模組 GLB（由 scripts/blender 產生，勿手改）
+├── scripts/
+│   └── blender/          # Blender 場景模組產生器（Python，於 Blender 內執行）
 └── src/
     ├── app/              # 路由；登入後頁面放 (workspace)/，共用工作區外框
     ├── components/
     │   ├── ui/           # 通用元件，無業務邏輯（SegmentedControl、icons…）
     │   ├── app-shell/    # 工作區外框：頂列、側欄、底部分頁列
+    │   ├── ward-scene/   # 病房 3D 場景（R3F）、DOM 病床按鈕層、地圖控制與視窗
     │   └── …             # 業務元件（BedCard、PatientSummary、AuditFindingList…）
     ├── hooks/            # useXxx
     ├── lib/              # api client、utils（cn）、motion variants、constants
@@ -79,12 +84,12 @@ frontend/
 
 ## Tailwind CSS（v4，CSS-first 設定）
 
-- design token 定義在 `src/app/globals.css` 的 `@theme`（清單與用途見 ui-design.md「Token」）；共用樣式以 `@utility` 定義（`glass`、`glass-heavy`、`focus-ring`、`pressable`、`ward-floor`）
-- 床位區依容器寬度排版（`@container` + `@xl:` 等），不依視窗寬度
+- design token 定義在 `src/app/globals.css` 的 `@theme`（清單與用途見 ui-design.md「Token」）；共用樣式以 `@utility` 定義（`glass`、`glass-chrome`、`focus-ring`、`pressable`、`scene-ambient`、`window-blinds`）
+- 病房版面由 `lib/wardLayout.ts` 只依床數決定（與 `scripts/blender/kit/layout.py` 同規則），開卡／縮放／篩選不重新排床；投影與相機換算在 `lib/wardProjection.ts`，尺寸單一來源為 `lib/wardKit.json`。地圖樣式在 `src/app/ward-scene.css`，控制器與病床按鈕以 Web Animations 更新 transform 與 CSS 變數（`useMapKeyframe`）。
 - 禁止 inline `style`、禁止任意色碼（`bg-[#…]`）；顏色、陰影、光暈一律走 token
 - 條件 class 用 `cn()`（`src/lib/utils.ts`，clsx + tailwind-merge）
 - Verdict 呈現必須「顏色 + icon + 文字」，不可只靠顏色
-- RWD：mobile-first；`lg` 以上顯示側欄與右側詳情面板，以下改用底部分頁列與 bottom sheet
+- RWD：mobile-first；`lg` 以上顯示側欄與右側詳情大卡（點選病床才出現），以下改用底部分頁列與 bottom sheet
 
 ## Framer Motion
 
@@ -153,5 +158,5 @@ frontend/
 ## 檢查
 
 ```bash
-npm run lint && npm run typecheck
+npm run lint && npm run typecheck && npm test
 ```

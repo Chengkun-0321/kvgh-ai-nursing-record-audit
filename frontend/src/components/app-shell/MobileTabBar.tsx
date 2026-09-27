@@ -48,7 +48,7 @@ function TabItem({ item, isActive, badgeCount }: TabItemProps) {
       <span
         aria-disabled="true"
         title={`${item.label}（${NAV_DISABLED_HINT}）`}
-        className={cn(TAB_CLASS, "text-ink/35")}
+        className={cn(TAB_CLASS, "text-on-chrome/35")}
       >
         {content}
       </span>
@@ -61,7 +61,7 @@ function TabItem({ item, isActive, badgeCount }: TabItemProps) {
       className={cn(
         TAB_CLASS,
         "pressable rounded-xl focus-ring",
-        isActive ? "font-semibold text-ink" : "text-ink-secondary",
+        isActive ? "font-semibold" : "font-medium text-on-chrome-secondary",
       )}
     >
       {content}
@@ -76,7 +76,7 @@ export function MobileTabBar({ pendingBedCount }: MobileTabBarProps) {
   return (
     <nav
       aria-label="主要導覽"
-      className="fixed inset-x-0 bottom-0 z-30 glass pb-[env(safe-area-inset-bottom)] lg:hidden"
+      className="glass-chrome fixed inset-x-0 bottom-0 z-30 pb-[env(safe-area-inset-bottom)] lg:hidden"
     >
       <ul className="grid grid-cols-5 px-2 pt-1">
         {NAV_ITEMS.map((item) => (
