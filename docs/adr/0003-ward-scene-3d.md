@@ -1,6 +1,6 @@
 # ADR 0003：病房場景改用 Blender 場景模組＋React Three Fiber
 
-- 狀態：提議
+- 狀態：提議（視角鎖定、單一 wardKit.json 的部分由 [0004](0004-ward-straight-view.md) 取代）
 - 日期：2026-09-27
 
 ## 背景

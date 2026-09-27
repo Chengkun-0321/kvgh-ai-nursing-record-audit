@@ -19,7 +19,7 @@ export function WardBedGrid({
   onToggle,
 }: WardBedGridProps) {
   return (
-    <div className="absolute inset-0 overflow-y-auto px-6 pt-36 pb-32">
+    <div className="pointer-events-auto absolute inset-0 overflow-y-auto px-6 pt-32 pb-28">
       {board.beds.length === 0 ? (
         <p className="mx-auto w-fit rounded-card bg-surface px-8 py-6 text-headline">
           目前沒有床位資料

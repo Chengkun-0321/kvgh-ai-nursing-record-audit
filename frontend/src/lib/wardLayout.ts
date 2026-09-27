@@ -1,9 +1,9 @@
 import type { BedStatus } from "@/types/ward";
 
-import { type KitModuleId, WARD_KIT } from "./wardKit";
+import type { KitModuleId, WardKit } from "./wardKit";
 
 /**
- * 病房版面：只依床數決定欄排數與模組擺放，判定結果、視窗大小都不參與，
+ * 病房版面：只依床數（與視角設定的尺寸）決定欄排數與模組擺放，判定結果、視窗大小都不參與，
  * 所以篩選、選床、縮放都不會重新排床。規則與 scripts/blender/kit/layout.py 一致，修改時兩邊需同步。
  */
 
@@ -24,14 +24,13 @@ export type WardLayout = WardGrid & {
   bounds: FloorBounds;
 };
 
-const { bay, edges, grid, view } = WARD_KIT;
-
-function clampColumns(columns: number): number {
+function clampColumns(columns: number, grid: WardKit["grid"]): number {
   return Math.min(Math.max(columns, grid.minColumns), grid.maxColumns);
 }
 
 /** 在接近目標畫面比例的欄數附近，挑空床位最少者；同數時取較接近理想值者。 */
-export function getWardGrid(bedCount: number): WardGrid {
+export function getWardGrid(bedCount: number, kit: WardKit): WardGrid {
+  const { bay, grid, view } = kit;
   const slots = Math.max(bedCount, 1);
   const rowScreenRatio =
     (bay.rowPitchM * Math.sin((view.pitchDeg * Math.PI) / 180)) / bay.widthM;
@@ -41,7 +40,7 @@ export function getWardGrid(bedCount: number): WardGrid {
     Math.abs(columns - ideal),
   ];
   const columns = [Math.floor(ideal), Math.ceil(ideal), Math.ceil(ideal) + 1]
-    .map(clampColumns)
+    .map((candidate) => clampColumns(candidate, grid))
     .reduce((best, candidate) => {
       const [emptyBest = 0, gapBest = 0] = cost(best);
       const [emptyNext = 0, gapNext = 0] = cost(candidate);
@@ -60,7 +59,11 @@ function getSideModuleIds(row: number): [KitModuleId, KitModuleId] {
     : ["sideLeftAlt", "sideRightAlt"];
 }
 
-function placeBays({ columns, rows }: WardGrid): ModulePlacement[] {
+function placeBays(
+  { columns, rows }: WardGrid,
+  kit: WardKit,
+): ModulePlacement[] {
+  const { bay } = kit;
   return Array.from({ length: columns * rows }, (_, index) => {
     const row = Math.floor(index / columns);
     const moduleId: KitModuleId = row === 0 ? "bayBackwall" : "baySpine";
@@ -72,7 +75,11 @@ function placeBays({ columns, rows }: WardGrid): ModulePlacement[] {
   });
 }
 
-function placeSides({ columns, rows }: WardGrid): ModulePlacement[] {
+function placeSides(
+  { columns, rows }: WardGrid,
+  kit: WardKit,
+): ModulePlacement[] {
+  const { bay, edges } = kit;
   return Array.from({ length: rows }, (_, row) => {
     const [left, right] = getSideModuleIds(row);
     const z = row * bay.rowPitchM;
@@ -83,7 +90,11 @@ function placeSides({ columns, rows }: WardGrid): ModulePlacement[] {
   }).flat();
 }
 
-function placeFront({ columns, rows }: WardGrid): ModulePlacement[] {
+function placeFront(
+  { columns, rows }: WardGrid,
+  kit: WardKit,
+): ModulePlacement[] {
+  const { bay, edges } = kit;
   const z = rows * bay.rowPitchM;
   const fills = Array.from({ length: columns }, (_, column) => ({
     moduleId: "frontFill" as const,
@@ -100,6 +111,7 @@ function placeFront({ columns, rows }: WardGrid): ModulePlacement[] {
 function placeBeds(
   bedCodes: readonly string[],
   { columns }: WardGrid,
+  { bay }: WardKit,
 ): BedSlot[] {
   return bedCodes.map((bedCode, index) => {
     const row = Math.floor(index / columns);
@@ -114,8 +126,10 @@ function placeBeds(
 
 export function buildWardLayout(
   beds: readonly Pick<BedStatus, "bedCode">[],
+  kit: WardKit,
 ): WardLayout {
-  const wardGrid = getWardGrid(beds.length);
+  const { bay, edges } = kit;
+  const wardGrid = getWardGrid(beds.length, kit);
   const bounds = {
     minX: -edges.sideWidthM,
     maxX: wardGrid.columns * bay.widthM + edges.sideWidthM,
@@ -126,11 +140,12 @@ export function buildWardLayout(
     beds: placeBeds(
       beds.map((bed) => bed.bedCode),
       wardGrid,
+      kit,
     ),
     modules: [
-      ...placeBays(wardGrid),
-      ...placeSides(wardGrid),
-      ...placeFront(wardGrid),
+      ...placeBays(wardGrid, kit),
+      ...placeSides(wardGrid, kit),
+      ...placeFront(wardGrid, kit),
     ],
     bounds,
   };

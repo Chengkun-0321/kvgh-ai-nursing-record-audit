@@ -68,12 +68,14 @@ export function BedBoard({ board }: BedBoardProps) {
       data-detail-open={isDesktop && selectedBed ? "true" : "false"}
     >
       {sceneMode === "2d" ? (
-        <WardBedGrid
-          board={board}
-          selectedBedCode={selectedBedCode}
-          activeFilter={activeFilter}
-          onToggle={handleToggleBed}
-        />
+        <div className="ward-safe">
+          <WardBedGrid
+            board={board}
+            selectedBedCode={selectedBedCode}
+            activeFilter={activeFilter}
+            onToggle={handleToggleBed}
+          />
+        </div>
       ) : (
         <WardMap
           board={board}
@@ -85,28 +87,31 @@ export function BedBoard({ board }: BedBoardProps) {
           onSceneError={reportSceneError}
         />
       )}
-      <WardTitle board={board} />
-      <div
-        data-keep-detail
-        className="ward-status absolute bottom-5 left-5 z-20"
-      >
-        <WardStatusBar
-          bedCounts={countBedsByWorstVerdict(board.beds)}
-          value={activeFilter}
-          onChange={setActiveFilter}
-        />
-      </div>
-      <AnimatePresence>
-        {isDesktop && selectedBed && (
-          <BedDetailPanel
-            key="bed-detail"
-            ref={panelRef}
-            bed={selectedBed}
-            businessDate={board.businessDate}
-            onClose={() => closeDetail("button")}
+      {/* 固定介面放在安全區內：病房鋪滿整個視窗，頂列與側欄疊在場景上 */}
+      <div className="ward-safe">
+        <WardTitle board={board} />
+        <div
+          data-keep-detail
+          className="ward-status pointer-events-auto absolute bottom-5 left-5 z-20"
+        >
+          <WardStatusBar
+            bedCounts={countBedsByWorstVerdict(board.beds)}
+            value={activeFilter}
+            onChange={setActiveFilter}
           />
-        )}
-      </AnimatePresence>
+        </div>
+        <AnimatePresence>
+          {isDesktop && selectedBed && (
+            <BedDetailPanel
+              key="bed-detail"
+              ref={panelRef}
+              bed={selectedBed}
+              businessDate={board.businessDate}
+              onClose={() => closeDetail("button")}
+            />
+          )}
+        </AnimatePresence>
+      </div>
       <BedDetailSheet
         bed={selectedBed}
         businessDate={board.businessDate}

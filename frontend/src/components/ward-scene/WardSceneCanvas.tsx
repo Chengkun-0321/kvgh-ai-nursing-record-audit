@@ -37,6 +37,7 @@ const CAMERA_OPTIONS = {
 
 /**
  * 病房 3D 場景：模組與床下陰影的光影已在 Blender 算好，這裡只以無光照材質顯示。
+ * 視角（正視／斜視）由 frame.view 決定；canvas 透明，病房外露出舞台的地坪底色。
  * `flat` 關閉色調映射、`frameloop="demand"` 只在相機移動或淡化時重繪。
  */
 export function WardSceneCanvas({
@@ -57,10 +58,11 @@ export function WardSceneCanvas({
       aria-hidden="true"
     >
       <Suspense fallback={null}>
-        <WardKitModules layout={layout} />
+        <WardKitModules layout={layout} kit={frame.view.kit} />
         <BedSpriteLayer
           beds={beds}
           slots={layout.beds}
+          view={frame.view}
           activeFilter={activeFilter}
         />
         {/* 放在 Suspense 內最後：R3F 根層 Suspense 在模型載入前會隱藏子樹，放外面時掛載 effect 不會執行 */}

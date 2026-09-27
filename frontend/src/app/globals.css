@@ -34,7 +34,7 @@
   --text-tab--letter-spacing: 0.01em;
 
   /* 介面色 */
-  --color-canvas: #494b50;
+  --color-canvas: #f5f5f7;
   --color-surface: #ffffff;
   --color-ink: #1d1d1f;
   /* 次要文字：疊在液態玻璃（背後可能是深色病床或光暈）上仍需 ≥4.5:1，因此比系統灰更深 */
@@ -44,23 +44,13 @@
   --color-separator: rgb(0 0 0 / 0.08);
   /* 操作藍與判定藍使用獨立 token；狀態另以圖示、文字區分 */
   --color-accent: #3972ce;
-  --color-brand-mark: #78cfff;
-  --color-chrome-solid: #42474f;
-  --color-nav-border: rgb(152 207 255 / 0.72);
-  --color-nav-selection: rgb(61 101 151 / 0.9);
   --color-accent-contrast: #ffffff;
   --color-badge: #e0241a;
   /* 模態遮罩：40% 黑，讓前景完整分離 */
   --color-scrim: rgb(0 0 0 / 0.4);
 
-  /* 液態玻璃：glass（內容卡片）與 chrome（導覽列、狀態列，略帶灰、較厚）；
-     不透明度已依最差背景（下方墊純黑）驗證文字對比 */
+  /* 淺色液態玻璃：頂列、側欄、標題、狀態列、縮放控制、詳情卡共用；不透明度已依最差背景（下方墊純黑）驗證文字對比 */
   --color-glass: rgb(255 255 255 / 0.89);
-  --color-chrome: rgb(49 54 63 / 0.86);
-  --color-on-chrome: #ffffff;
-  --color-on-chrome-secondary: #e0e3e9;
-  --color-chrome-fill: rgb(255 255 255 / 0.09);
-  --color-chrome-fill-strong: rgb(255 255 255 / 0.17);
 
   /* Verdict 狀態色：主色用於圖示與光暈，strong 為白底可讀（≥4.5:1）的文字色 */
   --color-verdict-error: #ff3b30;
@@ -102,6 +92,9 @@
   --color-scene-bag: rgb(246 248 249 / 0.85);
   --color-scene-fabric: #5b6d7d;
   --color-scene-shadow: rgb(51 40 31 / 0.38);
+  /* 病房外的地坪（滿版舞台背景）：比室內地板暗、低彩度，讓病房像放在建築樓層裡 */
+  --color-scene-apron: #aea79f;
+  --color-scene-apron-light: #c3bcb3;
 
   --radius-card: 1.25rem;
   --radius-panel: 1.75rem;
@@ -122,7 +115,7 @@
 }
 
 /*
- * 液態玻璃（淺色）：大卡、面板等浮在場景上的內容層。不可疊在另一層半透明材質上。
+ * 液態玻璃（淺色）：頂列、側欄、分頁列、標題、狀態列、縮放控制與詳情大卡。不可疊在另一層半透明材質上。
  * 元素本身需有定位（relative／sticky／absolute），邊緣高光畫在 ::before。
  * 透明度動畫必須做在這個元素本身，不可做在祖先：祖先 opacity < 1 會讓 backdrop-filter 暫時失效。
  */
@@ -171,52 +164,6 @@
   }
 }
 
-/* 較厚的液態玻璃：頂列、側欄、分頁列、狀態列、場景標籤等結構層；內部文字用 on-chrome 色 */
-@utility glass-chrome {
-  color: var(--color-on-chrome);
-  background-color: var(--color-chrome);
-  background-image: linear-gradient(
-    to bottom,
-    rgb(255 255 255 / 0.09),
-    rgb(255 255 255 / 0) 45%
-  );
-  backdrop-filter: blur(32px) saturate(180%);
-
-  &::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    z-index: 1;
-    padding: 1px;
-    border-radius: inherit;
-    background: linear-gradient(
-      160deg,
-      rgb(255 255 255 / 0.35),
-      rgb(255 255 255 / 0.25) 30%,
-      rgb(255 255 255 / 0.08) 60%,
-      rgb(255 255 255 / 0.15)
-    );
-    mask:
-      linear-gradient(#000 0 0) content-box exclude,
-      linear-gradient(#000 0 0);
-    pointer-events: none;
-  }
-
-  @media (prefers-reduced-transparency: reduce) {
-    background-color: var(--color-chrome-solid);
-    background-image: none;
-    backdrop-filter: none;
-  }
-
-  @media (prefers-contrast: more) {
-    background-color: var(--color-chrome-solid);
-    background-image: none;
-    backdrop-filter: none;
-    outline: 1px solid var(--color-on-chrome-secondary);
-    outline-offset: -1px;
-  }
-}
-
 /* 鍵盤焦點：操作藍外框，所有可互動元素共用 */
 @utility focus-ring {
   &:focus-visible {
@@ -234,32 +181,6 @@
   &:active:not(:disabled, [aria-disabled="true"]) {
     scale: 0.97;
   }
-}
-
-/* 病房外的明亮環境：左上窗光、中央柔光、下緣淡淡陰影與暗角，全部靜態 */
-@utility scene-ambient {
-  background-color: var(--color-scene-ambient);
-  background-image:
-    radial-gradient(
-      ellipse 130% 110% at 50% 40%,
-      transparent 55%,
-      var(--color-scene-vignette)
-    ),
-    radial-gradient(
-      ellipse 50% 45% at 18% 0%,
-      var(--color-scene-ambient-glow),
-      transparent 70%
-    ),
-    radial-gradient(
-      ellipse 60% 50% at 55% 40%,
-      var(--color-scene-ambient-glow),
-      transparent 75%
-    ),
-    radial-gradient(
-      ellipse 70% 35% at 50% 105%,
-      var(--color-scene-ambient-cool),
-      transparent 70%
-    );
 }
 
 /* 病房地板：大磁磚格線疊在中央暖光上 */

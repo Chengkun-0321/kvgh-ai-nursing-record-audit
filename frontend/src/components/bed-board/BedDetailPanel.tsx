@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "motion/react";
+import { motion, useIsPresent } from "motion/react";
 import { type Ref, useId } from "react";
 
 import { XIcon } from "@/components/ui/icons";
@@ -32,18 +32,20 @@ export function BedDetailPanel({
   ref,
 }: BedDetailPanelProps) {
   const headingId = useId();
+  // 退場動畫期間就不再算作遮擋，地圖可立即回到填滿畫面
+  const isPresent = useIsPresent();
 
   return (
     <motion.aside
       ref={ref}
-      data-map-detail
+      data-map-detail={isPresent || undefined}
       id={BED_DETAIL_PANEL_ID}
       aria-labelledby={headingId}
       initial={PANEL_MOTION.initial}
       animate={PANEL_MOTION.animate}
       exit={PANEL_MOTION.exit}
       transition={PANEL_TRANSITION}
-      className="glass absolute top-5 right-5 bottom-5 z-30 flex w-detail origin-right flex-col overflow-hidden rounded-card shadow-float"
+      className="glass pointer-events-auto absolute top-5 right-5 bottom-5 z-30 flex w-detail origin-right flex-col overflow-hidden rounded-card shadow-float"
     >
       <motion.div
         key={bed.bedCode}

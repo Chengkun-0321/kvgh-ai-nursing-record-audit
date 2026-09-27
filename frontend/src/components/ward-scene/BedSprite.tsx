@@ -7,25 +7,21 @@ import type { MeshBasicMaterial, Texture } from "three";
 
 import { BED_DIM_TRANSITION, DIMMED_BED_OPACITY } from "@/lib/motion";
 import type { FloorPoint } from "@/lib/wardLayout";
-import { getSpritePlane, VIEW_ROTATION } from "@/lib/wardProjection";
+import { getSpritePlane, type WardView } from "@/lib/wardProjection";
 
 type BedSpriteProps = {
   anchor: FloorPoint;
+  view: WardView;
   texture: Texture;
   isDimmed: boolean;
 };
 
 const SPRITE_RENDER_ORDER = 2;
-const SPRITE_ROTATION = [
-  VIEW_ROTATION.x,
-  VIEW_ROTATION.y,
-  VIEW_ROTATION.z,
-  VIEW_ROTATION.order,
-] as const;
 
 /** 病床去背圖：正對相機的平面，與相機視角校準一致，看起來就像擺在床位上。 */
-export function BedSprite({ anchor, texture, isDimmed }: BedSpriteProps) {
-  const plane = useMemo(() => getSpritePlane(anchor), [anchor]);
+export function BedSprite({ anchor, view, texture, isDimmed }: BedSpriteProps) {
+  const plane = useMemo(() => getSpritePlane(anchor, view), [anchor, view]);
+  const { rotation } = view;
   const materialRef = useRef<MeshBasicMaterial>(null);
   const invalidate = useThree((state) => state.invalidate);
   const shouldReduceMotion = useReducedMotion();
@@ -48,7 +44,7 @@ export function BedSprite({ anchor, texture, isDimmed }: BedSpriteProps) {
   return (
     <mesh
       position={plane.center}
-      rotation={SPRITE_ROTATION}
+      rotation={[rotation.x, rotation.y, rotation.z, rotation.order]}
       renderOrder={SPRITE_RENDER_ORDER}
     >
       <planeGeometry args={[plane.width, plane.height]} />

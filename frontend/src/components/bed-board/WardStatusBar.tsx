@@ -21,7 +21,7 @@ type WardStatusBarProps = {
 };
 
 /**
- * 各狀態床數統計（液態玻璃），同時是篩選開關；再點一次已選取的項目即回到全部。
+ * 各狀態床數統計（淺色液態玻璃），同時是篩選開關；再點一次已選取的項目即回到全部。
  * 選取底色以 spring 在項目間滑動。
  */
 export function WardStatusBar({
@@ -37,7 +37,7 @@ export function WardStatusBar({
       role="group"
       aria-label="依稽核狀態篩選病床"
       className={cn(
-        "glass-chrome relative grid grid-cols-4 gap-1 rounded-card p-1.5 shadow-float",
+        "glass relative grid grid-cols-4 gap-1 rounded-card p-1.5 shadow-float",
         className,
       )}
     >
@@ -54,7 +54,7 @@ export function WardStatusBar({
             onClick={() => onChange(isActive ? "ALL" : verdict)}
             className={cn(
               "relative flex min-h-11 pressable items-center gap-2 rounded-xl px-2 py-2 focus-ring disabled:opacity-40 sm:gap-3 sm:px-3",
-              !isActive && "hover:bg-chrome-fill",
+              !isActive && "hover:bg-fill",
             )}
           >
             {isActive && (
@@ -62,23 +62,16 @@ export function WardStatusBar({
                 layoutId={indicatorLayoutId}
                 transition={SPRING_DEFAULT}
                 aria-hidden="true"
-                className="absolute inset-0 rounded-xl bg-surface shadow-card"
+                className="absolute inset-0 rounded-xl bg-fill-strong"
               />
             )}
             <VerdictIcon verdict={verdict} className="relative size-7" />
             <span className="relative flex flex-col items-start">
-              <span
-                className={cn(
-                  "text-title tabular-nums",
-                  isActive && "text-ink",
-                )}
-              >
-                {count}
-              </span>
+              <span className="text-title tabular-nums">{count}</span>
               <span
                 className={cn(
                   "text-caption font-medium whitespace-nowrap @xl:text-footnote",
-                  isActive ? "text-ink" : "text-on-chrome-secondary",
+                  isActive ? "text-ink" : "text-ink-secondary",
                 )}
               >
                 {VERDICT_LABELS[verdict]}

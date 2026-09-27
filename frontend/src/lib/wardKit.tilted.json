@@ -1,5 +1,9 @@
 {
+  "id": "tilted",
   "assetVersion": 1,
+  "style": "leftLook",
+  "modelDir": "/models/ward",
+  "spriteDir": "/images/beds",
   "view": {
     "yawDeg": 13.7,
     "pitchDeg": 36.5,
@@ -24,6 +28,12 @@
     "frontDepthM": 0.6,
     "sideWallHeightM": 1.2,
     "slabDepthM": 0.3
+  },
+  "bedProxy": {
+    "halfWidthM": 0.47,
+    "halfLengthM": 1.05,
+    "headHeightM": 0.8,
+    "footHeightM": 0.65
   },
   "sprite": {
     "widthPx": 480,

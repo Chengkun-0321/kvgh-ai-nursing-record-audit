@@ -56,13 +56,13 @@ def place_glb_modules(target: bpy.types.Collection, placements: list, kit: dict)
     sources = {}
     for placement in placements:
         if placement.module_id not in sources:
-            path = config.MODEL_OUT_DIR / kit["modules"][placement.module_id]["file"]
+            path = config.model_dir(kit) / kit["modules"][placement.module_id]["file"]
             sources[placement.module_id] = import_source(path, use_alpha=False)
         instance(target, sources[placement.module_id], placement.x, placement.z)
 
 
 def place_bed_shadows(target: bpy.types.Collection, anchors: list, kit: dict) -> None:
     """每床一片床下陰影貼花。"""
-    source = import_source(config.MODEL_OUT_DIR / kit["decals"]["bedShadow"]["file"], use_alpha=True)
+    source = import_source(config.model_dir(kit) / kit["decals"]["bedShadow"]["file"], use_alpha=True)
     for x, z in anchors:
         instance(target, source, x, z)

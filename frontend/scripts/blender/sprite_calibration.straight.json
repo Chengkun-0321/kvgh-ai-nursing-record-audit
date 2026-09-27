@@ -1,0 +1,16 @@
+{
+  "overlaySprites": [
+    "bed-m-middle-pass.webp",
+    "bed-f-elder-error.webp",
+    "bed-f-young-warning.webp"
+  ],
+  "pitchDeg": 60,
+  "casterSpanM": { "width": 0.78, "length": 1.1 },
+  "pointsPx": {
+    "casterFrontLeft": [100, 490],
+    "casterFrontRight": [339, 490],
+    "headboardTopLeft": [135, 60],
+    "headboardTopRight": [322, 60]
+  },
+  "labelLiftPx": 24
+}

@@ -1,6 +1,7 @@
 """病床代理物：相機看不到，只負責投射陰影，讓去背圖病床「落地」。
 
-尺寸取自去背圖校準（腳輪間距約 0.84 × 1.9 m，床尾板高約 0.65 m）。
+尺寸取自設定檔 bedProxy（依各視角去背圖的床體比例校準；斜視角約 0.94 × 2.1 m，
+正視角的生成圖床身較短，約 0.96 × 1.1 m）。
 """
 
 import bpy
@@ -8,17 +9,23 @@ import bpy
 from ..geometry import box
 from . import part
 
-HALF_WIDTH_M = 0.47
-HALF_LENGTH_M = 1.05
+BASE_TOP_M = 0.3
+MATTRESS_TOP_M = 0.55
+# 床架底座比床面內縮，陰影邊緣才有層次
+BASE_INSET_M = (0.05, 0.1)
+BOARD_DEPTH_M = 0.06
 
 
-def bed_proxy(col: bpy.types.Collection, x: float, z: float) -> list:
-    """(x, z) 為床心；床頭朝 -Z。"""
+def bed_proxy(col: bpy.types.Collection, anchor: tuple, dims: dict) -> list:
+    """anchor 為床心 (x, z)；床頭朝 -Z。"""
+    x, z = anchor
+    hw, hl = dims["halfWidthM"], dims["halfLengthM"]
+    bw, bl = hw - BASE_INSET_M[0], hl - BASE_INSET_M[1]
     objects = [
-        box("bed_proxy_base", (x - 0.42, 0.12, z - 0.95), (x + 0.42, 0.3, z + 0.95), part(col, "metalDark")),
-        box("bed_proxy_mattress", (x - HALF_WIDTH_M, 0.3, z - HALF_LENGTH_M + 0.05), (x + HALF_WIDTH_M, 0.55, z + HALF_LENGTH_M - 0.05), part(col, "wall")),
-        box("bed_proxy_head", (x - HALF_WIDTH_M, 0.3, z - HALF_LENGTH_M), (x + HALF_WIDTH_M, 0.8, z - HALF_LENGTH_M + 0.06), part(col, "wall")),
-        box("bed_proxy_foot", (x - HALF_WIDTH_M, 0.3, z + HALF_LENGTH_M - 0.06), (x + HALF_WIDTH_M, 0.65, z + HALF_LENGTH_M), part(col, "wall")),
+        box("bed_proxy_base", (x - bw, 0.12, z - bl), (x + bw, BASE_TOP_M, z + bl), part(col, "metalDark")),
+        box("bed_proxy_mattress", (x - hw, BASE_TOP_M, z - hl + 0.05), (x + hw, MATTRESS_TOP_M, z + hl - 0.05), part(col, "wall")),
+        box("bed_proxy_head", (x - hw, BASE_TOP_M, z - hl), (x + hw, dims["headHeightM"], z - hl + BOARD_DEPTH_M), part(col, "wall")),
+        box("bed_proxy_foot", (x - hw, BASE_TOP_M, z + hl - BOARD_DEPTH_M), (x + hw, dims["footHeightM"], z + hl), part(col, "wall")),
     ]
     for obj in objects:
         obj.visible_camera = False

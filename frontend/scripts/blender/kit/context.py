@@ -35,10 +35,10 @@ def build_context_ward(kit: dict) -> ContextWard:
 
 def pick_target(ward: ContextWard, module_id: str, kit: dict) -> tuple[layout.Placement, list]:
     """同一模組有多個擺放時，取最靠近病房中央者（四周都有鄰居，光照最具代表性）。"""
-    center_x = ward.columns * kit["bay"]["widthM"] / 2
-    center_z = ward.rows * kit["bay"]["rowPitchM"] / 2
+    width, pitch = kit["bay"]["widthM"], kit["bay"]["rowPitchM"]
+    center_x, center_z = ward.columns * width / 2, ward.rows * pitch / 2
     candidates = [entry for entry in ward.modules if entry[0].module_id == module_id]
-    return min(candidates, key=lambda e: (e[0].x + 1.2 - center_x) ** 2 + (e[0].z + 2.1 - center_z) ** 2)
+    return min(candidates, key=lambda e: (e[0].x + width / 2 - center_x) ** 2 + (e[0].z + pitch / 2 - center_z) ** 2)
 
 
 def all_objects(ward: ContextWard) -> list:

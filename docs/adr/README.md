@@ -29,4 +29,5 @@
 |---|---|---|
 | [0001](0001-sqlite-to-postgresql.md) | DB 由 SQLite 過渡到 PostgreSQL | 採用 |
 | [0002](0002-llm-phi-policy.md) | 病患資料外送 LLM 政策（暫行） | 採用（暫行） |
-| [0003](0003-ward-scene-3d.md) | 病房場景改用 Blender 場景模組＋React Three Fiber | 提議 |
+| [0003](0003-ward-scene-3d.md) | 病房場景改用 Blender 場景模組＋React Three Fiber | 提議（視角與設定檔部分由 0004 取代） |
+| [0004](0004-ward-straight-view.md) | 病房地圖預設改為正視角，保留斜視角切換，場景滿版 | 提議 |

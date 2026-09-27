@@ -4,20 +4,26 @@ import {
   getKeyCommand,
   getPointerPair,
   getRevealOffset,
+  getScaleRange,
   getWheelZoomFactor,
+  getZoomAvailability,
   INITIAL_CAMERA,
   MAP_LIMITS,
+  type MapArea,
   type MapCamera,
   type MapPoint,
   type MapSize,
+  type ScaleRange,
   zoomAt,
 } from "./wardMap";
-import { measureMapBounds } from "./wardMapBounds";
+import { measureMapArea, measureMapBounds } from "./wardMapBounds";
 
 type MapElements = {
   viewport: HTMLElement;
   world: HTMLElement;
   onScale: (scale: number) => void;
+  /** 視窗或病房尺寸改變時通知新的縮放範圍（不在每次重繪時觸發）。 */
+  onScaleRange: (range: ScaleRange) => void;
   onBackgroundClick: () => void;
   /** 每次重繪（已在 rAF 內）同步通知 3D 相機，DOM 疊層與場景才會在同一幀移動。 */
   onPaint: (camera: MapCamera) => void;
@@ -26,6 +32,7 @@ type MapElements = {
 /** 原生指標事件管理地圖，繪製使用 Web Animations，不將座標寫入 React inline style。 */
 export class WardMapController {
   private camera = { ...INITIAL_CAMERA };
+  private range: ScaleRange = { min: 0, max: MAP_LIMITS.maxScale };
   private pointers = new Map<number, MapPoint>();
   private origin: MapPoint = { x: 0, y: 0 };
   private dragged = false;
@@ -42,10 +49,14 @@ export class WardMapController {
     this.observer.observe(elements.viewport);
   }
 
-  private get viewportSize() {
-    const { viewport } = this.elements;
-    const bounds = measureMapBounds(viewport);
-    return { width: bounds.right, height: viewport.clientHeight };
+  /** 安全區（地圖視窗扣掉疊在場景上的外框）：決定縮放範圍與初始視野。 */
+  private get fitArea(): MapArea {
+    return measureMapArea(this.elements.viewport, { withDetail: false });
+  }
+
+  /** 平移範圍再扣掉詳情卡遮住的寬度，開卡時右側病床仍可拖到卡片左側。 */
+  private get panArea(): MapArea {
+    return measureMapArea(this.elements.viewport, { withDetail: true });
   }
 
   private get worldSize(): MapSize {
@@ -63,8 +74,18 @@ export class WardMapController {
     this.refreshBounds();
   }
 
+  /** 重算縮放範圍；原本已縮到最小時，視窗改變後仍維持完整顯示整個病房。 */
+  private updateRange() {
+    const wasAtMin = !getZoomAvailability(this.camera.scale, this.range)
+      .canZoomOut;
+    this.range = getScaleRange(this.fitArea, this.worldSize);
+    if (wasAtMin) this.camera = { ...this.camera, scale: this.range.min };
+    this.elements.onScaleRange(this.range);
+  }
+
   private refreshBounds() {
     if (this.worldSize.width === 0) return;
+    this.updateRange();
     if (!this.hasInitialView) {
       this.hasInitialView = true;
       this.reset();
@@ -83,7 +104,7 @@ export class WardMapController {
   }
 
   private move(camera: MapCamera) {
-    this.camera = clampCamera(camera, this.viewportSize, this.worldSize);
+    this.camera = clampCamera(camera, this.panArea, this.worldSize, this.range);
     cancelAnimationFrame(this.frame);
     this.frame = requestAnimationFrame(() => this.paint());
   }
@@ -109,16 +130,19 @@ export class WardMapController {
 
   /** 工具列與鍵盤共用同一縮放入口。 */
   zoom(factor: number, point?: MapPoint) {
-    const { width, height } = this.viewportSize;
-    this.move(
-      zoomAt(this.camera, point ?? { x: width / 2, y: height / 2 }, factor),
-    );
+    const { x, y, width, height } = this.panArea;
+    const anchor = point ?? { x: x + width / 2, y: y + height / 2 };
+    this.move(zoomAt(this.camera, anchor, factor, this.range));
   }
 
-  /** 回到整個病房置中的初始視野。 */
+  /** 遮擋範圍改變（例如關閉詳情卡）後重新夾限，病房外不留空白。 */
+  refresh() {
+    if (this.hasInitialView) this.move(this.camera);
+  }
+
+  /** 回到整個病房剛好填滿安全區的初始視野。 */
   reset() {
-    const bounds = measureMapBounds(this.elements.viewport);
-    this.move(getInitialCamera(bounds, this.worldSize));
+    this.move(getInitialCamera(this.fitArea, this.worldSize));
   }
 
   /** 選取或鍵盤聚焦的病床保持可見，包括右側詳情卡遮住的區域。 */
@@ -195,6 +219,7 @@ export class WardMapController {
       this.camera,
       before.center,
       after.distance / before.distance,
+      this.range,
     );
     this.move({
       ...camera,

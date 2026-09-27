@@ -14,12 +14,13 @@ CAP_THICKNESS_M = 0.03
 OUTER_SKIN_M = 0.03
 
 
-def floor_slab(col: bpy.types.Collection, width_m: float, depth_m: float) -> list:
-    """上層地磚面加下層灰色樓板，前緣與右緣剖面才看得出切口。"""
-    return [
-        box("floor", (0, -FLOOR_FINISH_M, 0), (width_m, 0, depth_m), part(col, "floor")),
-        box("slab", (0, -SLAB_THICKNESS_M, 0), (width_m, -FLOOR_FINISH_M, depth_m), part(col, "wallOuter")),
-    ]
+def floor_slab(col: bpy.types.Collection, size_m: tuple, slab_m: float = SLAB_THICKNESS_M) -> list:
+    """上層地磚面加下層灰色樓板，前緣與右緣剖面才看得出切口；slab_m 為 0 時只建地磚面。"""
+    width_m, depth_m = size_m
+    objects = [box("floor", (0, -FLOOR_FINISH_M, 0), (width_m, 0, depth_m), part(col, "floor"))]
+    if slab_m > FLOOR_FINISH_M:
+        objects.append(box("slab", (0, -slab_m, 0), (width_m, -FLOOR_FINISH_M, depth_m), part(col, "wallOuter")))
+    return objects
 
 
 def wall(col: bpy.types.Collection, lo: tuple, hi: tuple) -> list:
@@ -32,6 +33,12 @@ def wall(col: bpy.types.Collection, lo: tuple, hi: tuple) -> list:
 def outer_skin_x(col: bpy.types.Collection, x: float, height_m: float, depth_m: float) -> list:
     """朝 +X 的外牆面（右側牆外側會被相機看到），貼一層灰色。"""
     return [box("wall_outer", (x, -SLAB_THICKNESS_M, 0), (x + OUTER_SKIN_M, height_m, depth_m), part(col, "wallOuter"))]
+
+
+def outer_skin_z(col: bpy.types.Collection, x_range: tuple, height_m: float, face_z: float) -> list:
+    """朝 +Z 的剖面牆外側（正視角的前緣矮牆），貼一層灰色。"""
+    lo, hi = (x_range[0], 0, face_z), (x_range[1], height_m, face_z + OUTER_SKIN_M)
+    return [box("wall_outer", lo, hi, part(col, "wallOuter"))]
 
 
 def end_cap_z(col: bpy.types.Collection, x_range: tuple, height_m: float, face_z: float) -> list:

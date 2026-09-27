@@ -1,8 +1,10 @@
 """床位空間模組（bay）：第 0 排靠全高後牆，其餘排靠床頭隔屏。
 
 模組原點在地板左後角；床本身是前端的去背圖，這裡只建周邊設施。
-道具左右配置依相機 yaw 決定：相機略朝左看，高物件的投影往左後方延伸，
+道具左右配置依相機 yaw 決定：斜視角相機略朝左看，高物件的投影往左後方延伸，
 所以監視器、床頭櫃放左側，點滴架、陪病椅放右側，才不會遮到後排病床。
+正視角（style＝symmetric）高物件只往正後方投影、落在床頭牆上，沿用同一配置；
+隔簾平面在正視角會變成一條線，改為收攏在床頭端的短布褶。
 """
 
 import bpy
@@ -18,6 +20,7 @@ from ..props.window import light_strip
 CURTAIN_TOP_M = 2.35
 SPINE_CURTAIN_TOP_M = 1.8
 CURTAIN_DEPTH_M = 1.4
+BUNCHED_CURTAIN_DEPTH_M = 0.6
 ACCENT_HALF_WIDTH_M = 0.62
 
 
@@ -32,23 +35,33 @@ def _bedside(col: bpy.types.Collection, bay: dict, face_z: float) -> list:
     ]
 
 
-def _curtain(col: bpy.types.Collection, face_z: float, top_y: float) -> list:
-    return privacy_curtain(col, 0.04, (face_z + 0.05, face_z + CURTAIN_DEPTH_M), top_y)
+def curtain_depth(kit: dict) -> float:
+    """隔簾沿床長方向的範圍：斜視角展開，正視角收攏在床頭端。"""
+    return BUNCHED_CURTAIN_DEPTH_M if kit["style"] == "symmetric" else CURTAIN_DEPTH_M
+
+
+def _curtain(col: bpy.types.Collection, kit: dict, top_y: float) -> list:
+    face_z = kit["bay"]["wallThicknessM"]
+    return privacy_curtain(col, 0.04, (face_z + 0.05, face_z + curtain_depth(kit)), top_y)
+
+
+def _floor(col: bpy.types.Collection, kit: dict) -> list:
+    return structure.floor_slab(col, (kit["bay"]["widthM"], kit["bay"]["rowPitchM"]), kit["edges"]["slabDepthM"])
 
 
 def build_backwall_bay(col: bpy.types.Collection, kit: dict) -> list:
     """第 0 排床位：全高後牆、深色木飾板、牆頂燈帶。"""
     bay = kit["bay"]
-    width, depth, face_z, height = bay["widthM"], bay["rowPitchM"], bay["wallThicknessM"], bay["backWallHeightM"]
+    width, face_z, height = bay["widthM"], bay["wallThicknessM"], bay["backWallHeightM"]
     mid = width / 2
     return [
-        *structure.floor_slab(col, width, depth),
+        *_floor(col, kit),
         *structure.wall(col, (0, 0, 0), (width, height, face_z)),
         *wood_accent(col, (mid - ACCENT_HALF_WIDTH_M, mid + ACCENT_HALF_WIDTH_M), (0.7, 2.15), face_z),
         *headwall_rail(col, (0.28, width - 0.28), 1.3, face_z + 0.025),
         *light_strip(col, (0.0, width), height - 0.12, face_z),
         *wall_monitor(col, 0.36, 1.62, face_z),
-        *_curtain(col, face_z, CURTAIN_TOP_M),
+        *_curtain(col, kit, CURTAIN_TOP_M),
         *_bedside(col, bay, face_z),
     ]
 
@@ -56,14 +69,14 @@ def build_backwall_bay(col: bpy.types.Collection, kit: dict) -> list:
 def build_spine_bay(col: bpy.types.Collection, kit: dict) -> list:
     """第 1 排之後：矮隔屏當床頭牆，隔簾較低以免遮住後排。"""
     bay = kit["bay"]
-    width, depth, face_z, height = bay["widthM"], bay["rowPitchM"], bay["wallThicknessM"], bay["spineHeightM"]
+    width, face_z, height = bay["widthM"], bay["wallThicknessM"], bay["spineHeightM"]
     mid = width / 2
     return [
-        *structure.floor_slab(col, width, depth),
+        *_floor(col, kit),
         *structure.wall(col, (0, 0, 0), (width, height, face_z)),
         *wood_accent(col, (mid - ACCENT_HALF_WIDTH_M, mid + ACCENT_HALF_WIDTH_M), (0.35, height - 0.05), face_z),
         *headwall_rail(col, (0.28, width - 0.28), height - 0.32, face_z + 0.025),
         *wall_monitor(col, 0.36, height - 0.18, face_z),
-        *_curtain(col, face_z, SPINE_CURTAIN_TOP_M),
+        *_curtain(col, kit, SPINE_CURTAIN_TOP_M),
         *_bedside(col, bay, face_z),
     ]

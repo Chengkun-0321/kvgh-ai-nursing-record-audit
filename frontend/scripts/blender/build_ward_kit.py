@@ -1,8 +1,8 @@
 """建置病房場景模組：逐一在病房環境中用 Cycles 算圖，投影成貼圖後匯出 GLB。
 
-執行（輸出到 frontend/public/models/ward/）：
+執行（輸出到設定檔 modelDir，例如正視角為 frontend/public/models/ward-straight/）：
     /Applications/Blender.app/Contents/MacOS/Blender --background --factory-startup \
-        --python frontend/scripts/blender/build_ward_kit.py -- [--only baySpine bedShadow] [--samples 256] [--device METAL]
+        --python frontend/scripts/blender/build_ward_kit.py -- [--view straight|tilted] [--only baySpine bedShadow] [--samples 256] [--device METAL]
 """
 
 import argparse
@@ -18,19 +18,20 @@ from kit.geometry import box  # noqa: E402
 from kit.props import part  # noqa: E402
 from kit.props.bed_proxy import bed_proxy  # noqa: E402
 
-RENDER_DIR = config.CACHE_DIR / "renders"
 BED_SHADOW_ID = "bedShadow"
-SHADOW_HALF_SIZE_M = (0.85, 1.45)
+# shadow catcher 比病床代理物每邊多出的範圍（公尺），容納柔和陰影的外緣
+SHADOW_MARGIN_M = (0.38, 0.4)
 
 
 def parse_args() -> argparse.Namespace:
     """解析 `--` 之後的參數。"""
     parser = argparse.ArgumentParser(prog="build_ward_kit")
+    parser.add_argument("--view", choices=config.VIEW_IDS, default=config.DEFAULT_VIEW)
     parser.add_argument("--only", nargs="*", default=None, help="只建置指定模組 id")
-    parser.add_argument("--out", type=Path, default=config.MODEL_OUT_DIR)
+    parser.add_argument("--out", type=Path, default=None, help="預設為設定檔的 modelDir")
     parser.add_argument("--samples", type=int, default=256)
     parser.add_argument("--device", default="METAL", help="METAL／CUDA／OPTIX／CPU")
-    parser.add_argument("--ppm", type=float, default=200.0, help="貼圖每公尺像素（100% 縮放為 80）")
+    parser.add_argument("--ppm", type=float, default=200.0, help="貼圖每公尺像素（100% 縮放為 pxPerMeter）")
     return parser.parse_args(config.script_args())
 
 
@@ -38,8 +39,9 @@ def render_png(name: str, frame: projection.ScreenFrame, kit: dict, keep_alpha: 
     """算圖後補邊，回傳最終貼圖路徑。"""
     render_scene = bpy.context.scene
     projection.place_camera(render_scene, kit, frame)
-    raw_path, final_path = RENDER_DIR / f"{name}-raw.png", RENDER_DIR / f"{name}.png"
-    RENDER_DIR.mkdir(parents=True, exist_ok=True)
+    renders = config.render_dir(kit)
+    raw_path, final_path = renders / f"{name}-raw.png", renders / f"{name}.png"
+    renders.mkdir(parents=True, exist_ok=True)
     render_scene.render.filepath = str(raw_path)
     bpy.ops.render.render(write_still=True)
     pixels = image_post.dilate_edges(image_io.load_rgba(raw_path), keep_alpha=keep_alpha)
@@ -82,8 +84,9 @@ def build_bed_shadow(kit: dict, args: argparse.Namespace) -> None:
     for obj in context.all_objects(ward):
         obj.visible_camera, obj.visible_shadow = False, False
     collection = bpy.context.scene.collection.children["context"]
-    bed_proxy(collection, *anchor)
-    (hx, hz), (ax, az) = SHADOW_HALF_SIZE_M, anchor
+    bed_proxy(collection, anchor, kit["bedProxy"])
+    proxy, (mx, mz), (ax, az) = kit["bedProxy"], SHADOW_MARGIN_M, anchor
+    hx, hz = proxy["halfWidthM"] + mx, proxy["halfLengthM"] + mz
     catcher = box("bed_shadow", (ax - hx, 0.0, az - hz), (ax + hx, 0.001, az + hz), part(collection, "floor"))
     catcher.is_shadow_catcher = True
     frame = projection.fit_frame(projection.world_vertices([catcher]), kit, args.ppm)
@@ -95,7 +98,8 @@ def build_bed_shadow(kit: dict, args: argparse.Namespace) -> None:
 def main() -> None:
     """依序建置所有（或指定的）模組。"""
     args = parse_args()
-    kit = config.load_kit()
+    kit = config.load_kit(args.view)
+    args.out = args.out or config.model_dir(kit)
     targets = args.only or [*kit["modules"], BED_SHADOW_ID]
     for module_id in targets:
         if module_id == BED_SHADOW_ID:

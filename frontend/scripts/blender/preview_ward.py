@@ -2,7 +2,7 @@
 
 執行：
     /Applications/Blender.app/Contents/MacOS/Blender --background --factory-startup \
-        --python frontend/scripts/blender/preview_ward.py -- --beds 10 --out <輸出.png> [--engine cycles]
+        --python frontend/scripts/blender/preview_ward.py -- --beds 10 --out <輸出.png> [--view straight|tilted] [--engine cycles]
 同時另存 .blend 到 frontend/scripts/blender/.cache/preview/，可用 Blender 開啟檢視。
 """
 
@@ -21,13 +21,13 @@ from kit.modules import build_module  # noqa: E402
 from kit.props.bed_proxy import bed_proxy  # noqa: E402
 from kit.sprites import add_sprite  # noqa: E402
 
-PREVIEW_BLEND_PATH = config.CACHE_DIR / "preview" / "ward-preview.blend"
 ENGINES = ("eevee", "cycles")
 
 
 def parse_args() -> argparse.Namespace:
     """解析 `--` 之後的參數。"""
     parser = argparse.ArgumentParser(prog="preview_ward")
+    parser.add_argument("--view", choices=config.VIEW_IDS, default=config.DEFAULT_VIEW)
     parser.add_argument("--beds", type=int, default=10)
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--ppm", type=float, default=90.0, help="每公尺像素")
@@ -51,11 +51,11 @@ def place_modules(target: bpy.types.Collection, placements: list, kit: dict) -> 
 
 def place_sprites(target: bpy.types.Collection, anchors: list, kit: dict, with_proxy: bool) -> None:
     """依床序輪流使用 24 張去背圖，讓預覽涵蓋各種判定光暈。"""
-    sprites = sorted(config.BED_SPRITE_DIR.glob("*.webp"))
+    sprites = sorted(config.sprite_dir(kit).glob("*.webp"))
     for index, anchor in enumerate(anchors):
         add_sprite(target, sprites[(index * 5 + 3) % len(sprites)], anchor, kit)
         if with_proxy:
-            bed_proxy(target, *anchor)
+            bed_proxy(target, anchor, kit["bedProxy"])
 
 
 def assemble(ward: bpy.types.Collection, args: argparse.Namespace, kit: dict, grid: tuple[int, int]) -> None:
@@ -82,7 +82,7 @@ def configure_render(render_scene: bpy.types.Scene, args: argparse.Namespace) ->
 def main() -> None:
     """組裝、算圖、另存 .blend。"""
     args = parse_args()
-    kit = config.load_kit()
+    kit = config.load_kit(args.view)
     render_scene = scene.reset_scene()
     columns, rows = layout.ward_grid(args.beds, kit)
     ward = bpy.data.collections.new("ward")
@@ -92,8 +92,9 @@ def main() -> None:
     configure_render(render_scene, args)
     render_scene.render.filepath = str(args.out)
     bpy.ops.render.render(write_still=True)
-    PREVIEW_BLEND_PATH.parent.mkdir(parents=True, exist_ok=True)
-    bpy.ops.wm.save_as_mainfile(filepath=str(PREVIEW_BLEND_PATH))
+    blend_path = config.preview_blend_path(args.view)
+    blend_path.parent.mkdir(parents=True, exist_ok=True)
+    bpy.ops.wm.save_as_mainfile(filepath=str(blend_path))
     print(f"[preview] {args.beds} 床 → {columns}×{rows}，輸出 {args.out}")
 
 

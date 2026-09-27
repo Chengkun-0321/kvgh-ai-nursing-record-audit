@@ -1,12 +1,14 @@
-/** 地圖互動常數：縮放以預設病床尺寸為 100%，不改動床位順序。 */
+/** 地圖互動常數：縮放以預設病床尺寸為 100%，不改動床位順序；最小倍率依視窗動態計算（getScaleRange）。 */
 export const MAP_LIMITS = {
-  minScale: 0.5,
   maxScale: 2,
+  // 初始視野至少此倍率：窄螢幕完整顯示時病房會縮成一條，改從中央開始，仍可縮到完整顯示
+  minInitialScale: 0.5,
+  // 判斷是否已到縮放上下限時容許的相對誤差
+  scaleTolerance: 0.001,
   dragThresholdPx: 6,
   panStepPx: 64,
   zoomStep: 1.2,
   wheelSensitivity: 0.0015,
-  edgePaddingPx: 80,
   focusPaddingPx: 24,
   panelGapPx: 40,
   wheelLinePx: 16,
@@ -18,12 +20,15 @@ export const MAP_LIMITS = {
 export type MapPoint = { x: number; y: number };
 export type MapCamera = MapPoint & { scale: number };
 export type MapSize = { width: number; height: number };
+/** 地圖視窗內可放病房的區域（px）：扣掉疊在場景上的頂列、側欄等外框；x、y 為左上角。 */
+export type MapArea = MapPoint & MapSize;
 export type MapBounds = {
   left: number;
   top: number;
   right: number;
   bottom: number;
 };
+export type ScaleRange = { min: number; max: number };
 export const INITIAL_CAMERA: MapCamera = { x: 0, y: 0, scale: 1 };
 
 /** 病床按鈕的 DOM id；關閉大卡後用來把焦點送回原本的病床。 */
@@ -31,16 +36,33 @@ export function getBedButtonId(bedCode: string): string {
   return `bed-${bedCode}`;
 }
 
-/** 初始視野：整個病房放進可用範圍（最多 100%），放得下就置中，放不下就從左上開始。 */
-export function getInitialCamera(bounds: MapBounds, world: MapSize): MapCamera {
-  const width = bounds.right - bounds.left;
-  const height = bounds.bottom - bounds.top;
-  const fit = Math.min(width / world.width, height / world.height, 1);
-  const scale = Math.max(MAP_LIMITS.minScale, fit);
+/** 倍率是否已到上下限（容許浮點誤差）；縮放按鈕據此停用。 */
+export function getZoomAvailability(scale: number, range: ScaleRange) {
+  const tolerance = MAP_LIMITS.scaleTolerance;
+  return {
+    canZoomOut: scale > range.min * (1 + tolerance),
+    canZoomIn: scale < range.max * (1 - tolerance),
+  };
+}
+
+/** 縮放範圍：最小倍率剛好把整個病房放進可視區域，不能再縮小；床很少時上限不低於下限。 */
+export function getScaleRange(area: MapSize, world: MapSize): ScaleRange {
+  const min = Math.min(area.width / world.width, area.height / world.height);
+  return { min, max: Math.max(MAP_LIMITS.maxScale, min) };
+}
+
+function clampScale(scale: number, range: ScaleRange): number {
+  return Math.max(range.min, Math.min(range.max, scale));
+}
+
+/** 初始視野：以最小倍率完整顯示並置中於可視區域（窄螢幕另有倍率下限）。 */
+export function getInitialCamera(area: MapArea, world: MapSize): MapCamera {
+  const range = getScaleRange(area, world);
+  const scale = clampScale(MAP_LIMITS.minInitialScale, range);
   return {
     scale,
-    x: bounds.left + Math.max(0, (width - world.width * scale) / 2),
-    y: bounds.top + Math.max(0, (height - world.height * scale) / 2),
+    x: area.x + (area.width - world.width * scale) / 2,
+    y: area.y + (area.height - world.height * scale) / 2,
   };
 }
 
@@ -114,11 +136,9 @@ export function zoomAt(
   camera: MapCamera,
   anchor: MapPoint,
   factor: number,
+  range: ScaleRange,
 ): MapCamera {
-  const scale = Math.max(
-    MAP_LIMITS.minScale,
-    Math.min(MAP_LIMITS.maxScale, camera.scale * factor),
-  );
+  const scale = clampScale(camera.scale * factor, range);
   const ratio = scale / camera.scale;
   return {
     scale,
@@ -127,23 +147,25 @@ export function zoomAt(
   };
 }
 
-/** 保留少量可拖曳邊界，但不允許把整個病房拖出視窗。 */
+/** 單軸位移（相對可視區域起點）：病房比區域大時邊緣不能拖進區域，比區域小時置中。 */
+function clampAxis(offset: number, area: number, world: number): number {
+  const overflow = area - world;
+  if (overflow >= 0) return overflow / 2;
+  return Math.max(overflow, Math.min(0, offset));
+}
+
+/** 可視區域永遠落在病房範圍內（放不滿的軸置中）；外框後方露出的是病房外的地坪。 */
 export function clampCamera(
   camera: MapCamera,
-  viewport: MapSize,
+  area: MapArea,
   world: MapSize,
+  range: ScaleRange,
 ): MapCamera {
-  const pad = MAP_LIMITS.edgePaddingPx;
+  const scale = clampScale(camera.scale, range);
   return {
-    ...camera,
-    x: Math.max(
-      Math.min(0, viewport.width - world.width * camera.scale) - pad,
-      Math.min(pad, camera.x),
-    ),
-    y: Math.max(
-      Math.min(0, viewport.height - world.height * camera.scale) - pad,
-      Math.min(pad, camera.y),
-    ),
+    scale,
+    x: area.x + clampAxis(camera.x - area.x, area.width, world.width * scale),
+    y: area.y + clampAxis(camera.y - area.y, area.height, world.height * scale),
   };
 }
 

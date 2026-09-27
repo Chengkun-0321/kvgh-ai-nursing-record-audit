@@ -42,8 +42,8 @@ rsync -a --ignore-existing frontend-init/ frontend/ && rm -rf frontend-init && c
 ```
 frontend/
 ├── public/
-│   ├── images/           # beds 病床、patients 示意近景、scene 地板材質；見 ui-design.md
-│   └── models/ward/      # 病房場景模組 GLB（由 scripts/blender 產生，勿手改）
+│   ├── images/           # beds-straight／beds 病床（正視／斜視）、patients 示意近景、scene 地板材質；見 ui-design.md
+│   └── models/           # ward-straight／ward 病房場景模組 GLB（正視／斜視，由 scripts/blender 產生，勿手改）
 ├── scripts/
 │   └── blender/          # Blender 場景模組產生器（Python，於 Blender 內執行）
 └── src/
@@ -84,8 +84,8 @@ frontend/
 
 ## Tailwind CSS（v4，CSS-first 設定）
 
-- design token 定義在 `src/app/globals.css` 的 `@theme`（清單與用途見 ui-design.md「Token」）；共用樣式以 `@utility` 定義（`glass`、`glass-chrome`、`focus-ring`、`pressable`、`scene-ambient`、`window-blinds`）
-- 病房版面由 `lib/wardLayout.ts` 只依床數決定（與 `scripts/blender/kit/layout.py` 同規則），開卡／縮放／篩選不重新排床；投影與相機換算在 `lib/wardProjection.ts`，尺寸單一來源為 `lib/wardKit.json`。地圖樣式在 `src/app/ward-scene.css`，控制器與病床按鈕以 Web Animations 更新 transform 與 CSS 變數（`useMapKeyframe`）。
+- design token 定義在 `src/app/globals.css` 的 `@theme`（清單與用途見 ui-design.md「Token」）；共用樣式以 `@utility` 定義（`glass`、`focus-ring`、`pressable`、`ward-floor`、`window-blinds`）
+- 病房版面由 `lib/wardLayout.ts` 只依床數決定（與 `scripts/blender/kit/layout.py` 同規則），開卡／縮放／篩選不重新排床；投影與相機換算在 `lib/wardProjection.ts`，尺寸單一來源為各視角的 `lib/wardKit.<straight|tilted>.json`（預設正視，地圖控制列可切換斜視）。舞台鋪滿整個視窗，縮放、夾限與固定面板都以 `.ward-safe` 安全區為準。地圖樣式在 `src/app/ward-scene.css`，控制器與病床按鈕以 Web Animations 更新 transform 與 CSS 變數（`useMapKeyframe`）。
 - 禁止 inline `style`、禁止任意色碼（`bg-[#…]`）；顏色、陰影、光暈一律走 token
 - 條件 class 用 `cn()`（`src/lib/utils.ts`，clsx + tailwind-merge）
 - Verdict 呈現必須「顏色 + icon + 文字」，不可只靠顏色

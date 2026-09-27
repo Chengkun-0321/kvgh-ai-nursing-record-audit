@@ -3,7 +3,6 @@ import type { ReactNode } from "react";
 import { AppSidebar } from "@/components/app-shell/AppSidebar";
 import { AppTopBar } from "@/components/app-shell/AppTopBar";
 import { MobileTabBar } from "@/components/app-shell/MobileTabBar";
-import { WardAmbience } from "@/components/ward-scene/WardAmbience";
 import { getCurrentUser } from "@/lib/api/users";
 import { getWardBedBoard } from "@/lib/api/wards";
 import { DEFAULT_WARD_CODE } from "@/lib/constants";
@@ -25,7 +24,6 @@ export default async function WorkspaceLayout({
 
   return (
     <div className="min-h-dvh">
-      <WardAmbience />
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:rounded-full focus:bg-accent focus:px-4 focus:py-2 focus:text-accent-contrast"

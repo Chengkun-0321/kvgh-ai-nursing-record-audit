@@ -3,9 +3,10 @@
 import { useMemo, useState } from "react";
 
 import type { VerdictFilterValue } from "@/lib/verdict";
+import { DEFAULT_WARD_VIEW, WARD_KITS, type WardViewId } from "@/lib/wardKit";
 import { createCameraChannel } from "@/lib/wardMap";
 import { buildWardLayout } from "@/lib/wardLayout";
-import { getMapFrame, getMapSize } from "@/lib/wardProjection";
+import { createWardView, getMapFrame, getMapSize } from "@/lib/wardProjection";
 import type { WardBedBoard } from "@/types/ward";
 
 import { BedHotspotLayer } from "./BedHotspotLayer";
@@ -23,7 +24,10 @@ type WardMapProps = {
   onSceneError: () => void;
 };
 
-/** 病房地圖：版面只依床號清單計算，篩選、選床、縮放都不會重新排床。 */
+/**
+ * 病房地圖：版面只依床號清單與視角計算，篩選、選床、縮放都不會重新排床。
+ * 視角（正視／斜視）由地圖控制列切換，切換時重設視野。
+ */
 export function WardMap({
   board,
   selectedBedCode,
@@ -33,8 +37,14 @@ export function WardMap({
   onBackgroundClick,
   onSceneError,
 }: WardMapProps) {
-  const layout = useMemo(() => buildWardLayout(board.beds), [board.beds]);
-  const frame = useMemo(() => getMapFrame(layout.bounds), [layout]);
+  const [viewId, setViewId] = useState<WardViewId>(DEFAULT_WARD_VIEW);
+  const kit = WARD_KITS[viewId];
+  const view = useMemo(() => createWardView(kit), [kit]);
+  const layout = useMemo(
+    () => buildWardLayout(board.beds, kit),
+    [board.beds, kit],
+  );
+  const frame = useMemo(() => getMapFrame(view, layout.bounds), [view, layout]);
   const mapSize = useMemo(() => getMapSize(frame), [frame]);
   const [channel] = useState(createCameraChannel);
   const scene = isSceneEnabled ? (
@@ -54,6 +64,8 @@ export function WardMap({
         mapSize={mapSize}
         channel={channel}
         scene={scene}
+        viewId={viewId}
+        onViewChange={setViewId}
         selectedBedCode={selectedBedCode}
         onBackgroundClick={onBackgroundClick}
       >

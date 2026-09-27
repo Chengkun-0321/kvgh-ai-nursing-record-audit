@@ -56,10 +56,10 @@ export function BedCard({ bed, isSelected, isDimmed, onToggle }: BedCardProps) {
           layoutId="bed-selection"
           transition={SPRING_DEFAULT}
           aria-hidden="true"
-          className="absolute inset-x-[2cqw] top-[31cqw] bottom-[1cqw] rounded-[8cqw] bg-surface/40 ring-2 ring-accent/30"
+          className="absolute inset-x-[14cqw] top-[15cqw] bottom-[11cqw] rounded-[8cqw] bg-surface/40 ring-2 ring-accent/30"
         />
       )}
-      <span className="absolute top-[14cqw] left-[8cqw] w-[82cqw] transition-[translate,scale] duration-300 ease-apple group-hover:-translate-y-[0.5cqw] group-active:scale-97 group-active:duration-100">
+      <span className="absolute top-[8cqw] left-[10cqw] w-[80cqw] transition-[translate,scale] duration-300 ease-apple group-hover:-translate-y-[0.5cqw] group-active:scale-97 group-active:duration-100">
         <BedPhoto
           src={getBedSpriteSrc(bed.patient, verdict)}
           sizes={BED_CARD_IMAGE_SIZES}

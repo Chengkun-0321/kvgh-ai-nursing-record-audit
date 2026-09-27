@@ -15,4 +15,3 @@ export { WarningCircleIcon } from "@phosphor-icons/react/dist/ssr/WarningCircle"
 export { XIcon } from "@phosphor-icons/react/dist/ssr/X";
 export { MinusIcon } from "@phosphor-icons/react/dist/ssr/Minus";
 export { ArrowsOutSimpleIcon } from "@phosphor-icons/react/dist/ssr/ArrowsOutSimple";
-export { FirstAidIcon } from "@phosphor-icons/react/dist/ssr/FirstAid";

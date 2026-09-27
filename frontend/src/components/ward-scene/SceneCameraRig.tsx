@@ -9,7 +9,7 @@ import {
   type CameraPose,
   getSceneCameraPose,
   type MapFrame,
-  VIEW_ROTATION,
+  type WardView,
 } from "@/lib/wardProjection";
 
 type SceneCameraRigProps = {
@@ -17,13 +17,9 @@ type SceneCameraRigProps = {
   frame: MapFrame;
 };
 
-function applyPose(camera: Camera, pose: CameraPose) {
-  camera.rotation.set(
-    VIEW_ROTATION.x,
-    VIEW_ROTATION.y,
-    VIEW_ROTATION.z,
-    VIEW_ROTATION.order,
-  );
+function applyPose(camera: Camera, pose: CameraPose, view: WardView) {
+  const { rotation } = view;
+  camera.rotation.set(rotation.x, rotation.y, rotation.z, rotation.order);
   camera.position.set(...pose.position);
   if ("zoom" in camera && "updateProjectionMatrix" in camera) {
     camera.zoom = pose.zoom;
@@ -42,7 +38,8 @@ export function SceneCameraRig({ channel, frame }: SceneCameraRigProps) {
   useLayoutEffect(() => {
     const render = (mapCamera: MapCamera) => {
       const state = get();
-      applyPose(state.camera, getSceneCameraPose(mapCamera, state.size, frame));
+      const pose = getSceneCameraPose(mapCamera, state.size, frame);
+      applyPose(state.camera, pose, frame.view);
       state.advance(performance.now());
     };
     render(channel.getCurrent());
