@@ -62,6 +62,10 @@
 .ward-map[data-dragging="true"] button {
   cursor: grabbing;
 }
+/* 平移縮放期間 3D 畫面每幀重繪，疊在上面的玻璃每幀都要重新模糊；暫停模糊（保留半透明底色）讓弱 GPU 也能跟手，停止後恢復 */
+:root:has(.ward-map[data-moving]) .glass {
+  backdrop-filter: none;
+}
 /* 尺寸＝場景外框投影（px，100% 縮放），由控制器寫入；首次定位前隱藏，避免標籤先疊在左上角 */
 .ward-world {
   will-change: transform;
@@ -85,78 +89,6 @@
 /* 縮小檢視時判定文字改由圖示＋顏色表示（完整文字仍在 aria-label 與狀態列圖例） */
 .ward-world[data-zoom="compact"] .bed-label-verdict {
   display: none;
-}
-.ward-room {
-  background-color: var(--color-scene-floor);
-  background-image:
-    linear-gradient(
-      var(--color-scene-floor-line),
-      var(--color-scene-floor-line)
-    ),
-    url("/images/scene/ward-floor.webp");
-  background-size:
-    auto,
-    36rem 36rem;
-  box-shadow: var(--shadow-room);
-  border-top: 0.7rem solid var(--color-scene-wall-cap);
-}
-.ward-beds {
-  grid-template-columns: repeat(var(--ward-columns, 3), minmax(0, 1fr));
-  row-gap: 2.5rem;
-}
-[data-columns="1"] {
-  --ward-columns: 1;
-}
-[data-columns="2"] {
-  --ward-columns: 2;
-}
-[data-columns="3"] {
-  --ward-columns: 3;
-}
-[data-columns="4"] {
-  --ward-columns: 4;
-}
-[data-columns="5"] {
-  --ward-columns: 5;
-}
-[data-columns="6"] {
-  --ward-columns: 6;
-}
-/* 床數很少時不將單床拉成整頁大小，地板仍延伸成完整空間。 */
-[data-columns="1"] .ward-beds {
-  max-width: 20rem;
-  margin-inline: auto;
-}
-.room-rear-wall {
-  background: linear-gradient(
-    to bottom,
-    var(--color-scene-wall-cap),
-    var(--color-scene-wall) 18%,
-    var(--color-scene-wall-shade)
-  );
-  box-shadow: inset 0 -0.4rem 0.7rem var(--color-scene-shadow);
-}
-.room-side-wall {
-  pointer-events: none;
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 1.3rem;
-  z-index: 2;
-  background: linear-gradient(
-    90deg,
-    var(--color-scene-wall-cap),
-    var(--color-scene-wall) 35%,
-    var(--color-scene-wall-shade)
-  );
-}
-.room-side-left {
-  left: 0;
-  box-shadow: 0.7rem 0 1rem var(--color-scene-shadow);
-}
-.room-side-right {
-  right: 0;
-  box-shadow: -0.7rem 0 1rem var(--color-scene-shadow);
 }
 .map-controls {
   right: 1rem;
@@ -210,15 +142,6 @@
   }
 }
 @media (max-width: 39.99rem) {
-  .ward-room .ward-beds {
-    row-gap: 1.75rem;
-  }
-  .ward-room > .relative {
-    padding-inline: 0.6rem;
-  }
-  .room-side-wall {
-    width: 0.65rem;
-  }
   .ward-status {
     left: 0.75rem;
     bottom: 0.75rem;

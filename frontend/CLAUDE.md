@@ -32,7 +32,7 @@ rsync -a --ignore-existing frontend-init/ frontend/ && rm -rf frontend-init && c
 ## 核准依賴（其餘需先詢問）
 
 - 正式：`next`、`react`、`react-dom`、`motion`（Framer Motion 更名後的套件，`import { motion } from "motion/react"`）、`clsx`、`tailwind-merge`、`@phosphor-icons/react`（圖示，一律經 `src/components/ui/icons.ts` 引用）、`three`、`@react-three/fiber`（病房 3D 場景，見 [ADR 0003](../docs/adr/0003-ward-scene-3d.md)；`@react-three/drei` 已核准但目前不需要）
-- 開發：`typescript`、`@types/node`、`@types/react`、`@types/react-dom`（create-next-app 預設）、`tailwindcss`、`@tailwindcss/postcss`、`eslint`、`eslint-config-next`、`prettier`、`prettier-plugin-tailwindcss`、`openapi-typescript`、`@types/three`
+- 開發：`typescript`、`@types/node`、`@types/react`、`@types/react-dom`（create-next-app 預設）、`tailwindcss`、`@tailwindcss/postcss`、`eslint`、`eslint-config-next`、`prettier`、`prettier-plugin-tailwindcss`、`openapi-typescript`、`@types/three`、`babel-plugin-react-compiler`（React Compiler）
 - 寫測試時：`vitest`（已安裝 4.x；npm 10 解析其選用 peer 會出錯，安裝時需加 `--legacy-peer-deps`）、`@testing-library/react`、`@testing-library/jest-dom`、`jsdom`
 - 3D 資源一律放在本專案（`public/models/`），不得從 CDN 載入 HDRI、Draco decoder 等（醫院內網）
 - 未經同意不引入 SWR、TanStack Query、Redux、Zustand、UI 元件庫等
@@ -42,7 +42,7 @@ rsync -a --ignore-existing frontend-init/ frontend/ && rm -rf frontend-init && c
 ```
 frontend/
 ├── public/
-│   ├── images/           # beds-straight／beds 病床（正視／斜視）、patients 示意近景、scene 地板材質；見 ui-design.md
+│   ├── images/           # beds-straight／beds 病床（正視／斜視）、patients 示意近景；見 ui-design.md
 │   └── models/           # ward-straight／ward 病房場景模組 GLB（正視／斜視，由 scripts/blender 產生，勿手改）
 ├── scripts/
 │   └── blender/          # Blender 場景模組產生器（Python，於 Blender 內執行）
@@ -68,6 +68,7 @@ frontend/
 - Props 型別：`type BedCardProps = { … }`
 - 元件只負責呈現；資料轉換、判斷邏輯抽到 hooks 或 `lib/`
 - 元件 ≤ 150 行，超過就拆
+- `next.config.ts` 啟用 React Compiler（`reactCompiler: true`），元件與 hooks 由編譯器自動 memo：不手寫 `useMemo`／`useCallback`／`React.memo`；唯一例外是自建 GPU 資源等需要明確 identity 並搭配釋放的值（如 `KitModuleInstances` 的材質）
 
 ## 資料存取
 
@@ -84,7 +85,7 @@ frontend/
 
 ## Tailwind CSS（v4，CSS-first 設定）
 
-- design token 定義在 `src/app/globals.css` 的 `@theme`（清單與用途見 ui-design.md「Token」）；共用樣式以 `@utility` 定義（`glass`、`focus-ring`、`pressable`、`ward-floor`、`window-blinds`）
+- design token 定義在 `src/app/globals.css` 的 `@theme`（清單與用途見 ui-design.md「Token」）；共用樣式以 `@utility` 定義（`glass`、`focus-ring`、`pressable`）
 - 病房版面由 `lib/wardLayout.ts` 只依床數決定（與 `scripts/blender/kit/layout.py` 同規則），開卡／縮放／篩選不重新排床；投影與相機換算在 `lib/wardProjection.ts`，尺寸單一來源為各視角的 `lib/wardKit.<straight|tilted>.json`（預設正視，地圖控制列可切換斜視）。舞台鋪滿整個視窗，縮放、夾限與固定面板都以 `.ward-safe` 安全區為準。地圖樣式在 `src/app/ward-scene.css`，控制器與病床按鈕以 Web Animations 更新 transform 與 CSS 變數（`useMapKeyframe`）。
 - 禁止 inline `style`、禁止任意色碼（`bg-[#…]`）；顏色、陰影、光暈一律走 token
 - 條件 class 用 `cn()`（`src/lib/utils.ts`，clsx + tailwind-merge）

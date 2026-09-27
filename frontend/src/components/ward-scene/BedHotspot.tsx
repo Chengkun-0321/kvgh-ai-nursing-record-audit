@@ -1,12 +1,11 @@
 "use client";
 
-import { motion } from "motion/react";
 import { useRef } from "react";
 
+import { SelectionIndicator } from "@/components/ui/SelectionIndicator";
 import { VerdictIcon } from "@/components/VerdictIcon";
 import { BED_DETAIL_PANEL_ID } from "@/components/bed-board/BedDetailPanel";
-import { useMapKeyframe } from "@/hooks/useMapPlacement";
-import { SPRING_DEFAULT } from "@/lib/motion";
+import { useMapKeyframe } from "@/hooks/useMapKeyframe";
 import { cn } from "@/lib/utils";
 import {
   describeFindingCounts,
@@ -56,11 +55,9 @@ export function BedHotspot({
         className="group absolute inset-0 rounded-[2rem] outline-none"
       >
         {isSelected && (
-          <motion.span
+          <SelectionIndicator
             layoutId="bed-selection"
-            transition={SPRING_DEFAULT}
-            aria-hidden="true"
-            className="absolute inset-0 rounded-[2rem] bg-surface/10 ring-2 ring-accent/70"
+            className="rounded-[2rem] bg-surface/10 ring-2 ring-accent/70"
           />
         )}
         <span

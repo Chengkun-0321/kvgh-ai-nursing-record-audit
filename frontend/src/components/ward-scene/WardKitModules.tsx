@@ -1,7 +1,5 @@
 "use client";
 
-import { useMemo } from "react";
-
 import { getKitAssetUrl, type KitModuleId, type WardKit } from "@/lib/wardKit";
 import type { FloorPoint, WardLayout } from "@/lib/wardLayout";
 
@@ -22,15 +20,11 @@ function groupOrigins(layout: WardLayout): [KitModuleId, FloorPoint[]][] {
 
 /** 牆、地板、床邊設施等場景模組，以及每床的床下陰影。 */
 export function WardKitModules({ layout, kit }: WardKitModulesProps) {
-  const groups = useMemo(() => groupOrigins(layout), [layout]);
-  const bedAnchors = useMemo(
-    () => layout.beds.map((bed) => bed.anchor),
-    [layout],
-  );
+  const bedAnchors = layout.beds.map((bed) => bed.anchor);
 
   return (
     <>
-      {groups.map(([moduleId, origins]) => (
+      {groupOrigins(layout).map(([moduleId, origins]) => (
         <KitModuleInstances
           key={moduleId}
           url={getKitAssetUrl(kit, kit.modules[moduleId].file)}

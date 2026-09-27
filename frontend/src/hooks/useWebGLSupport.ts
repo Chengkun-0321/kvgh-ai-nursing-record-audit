@@ -1,6 +1,6 @@
 import { useState, useSyncExternalStore } from "react";
 
-export type WebGLSupport = "pending" | "supported" | "unsupported";
+type WebGLSupport = "pending" | "supported" | "unsupported";
 
 let cachedSupport: WebGLSupport | undefined;
 
@@ -12,6 +12,8 @@ function detectWebGL(): WebGLSupport {
   const context = canvas.getContext("webgl2", {
     failIfMajorPerformanceCaveat: true,
   });
+  // 偵測完立即釋放，避免多占一個 WebGL context（瀏覽器有數量上限）
+  context?.getExtension("WEBGL_lose_context")?.loseContext();
   return context ? "supported" : "unsupported";
 }
 
@@ -27,7 +29,7 @@ export function useWebGLSupport(): WebGLSupport {
   return useSyncExternalStore(subscribe, getSnapshot, () => "pending");
 }
 
-export type WardSceneMode = "pending" | "3d" | "2d";
+type WardSceneMode = "pending" | "3d" | "2d";
 
 function getSceneMode(support: WebGLSupport, hasError: boolean): WardSceneMode {
   if (hasError || support === "unsupported") return "2d";

@@ -1,6 +1,6 @@
 import Image from "next/image";
 
-import { getBedSpriteSize } from "@/lib/bedSprites";
+import { BED_CARD_SPRITE_SIZE } from "@/lib/bedSprites";
 import { cn } from "@/lib/utils";
 
 type BedPhotoProps = {
@@ -9,17 +9,14 @@ type BedPhotoProps = {
   className?: string;
 };
 
-// 2D 病床卡片使用預設視角（正視）的素材
-const BED_SPRITE_SIZE = getBedSpriteSize();
-
 /** 病床寫實圖片（透明背景，狀態光暈已繪入素材）。僅為裝飾，不代表實際病患。 */
 export function BedPhoto({ src, sizes, className }: BedPhotoProps) {
   return (
     <Image
       src={src}
       alt=""
-      width={BED_SPRITE_SIZE.width}
-      height={BED_SPRITE_SIZE.height}
+      width={BED_CARD_SPRITE_SIZE.width}
+      height={BED_CARD_SPRITE_SIZE.height}
       sizes={sizes}
       loading="lazy"
       draggable={false}

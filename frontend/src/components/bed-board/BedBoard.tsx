@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence } from "motion/react";
-import { useCallback, useRef, useState } from "react";
+import { useRef, useState } from "react";
 
 import { WardMap } from "@/components/ward-scene/WardMap";
 import { type DismissReason, useDismissable } from "@/hooks/useDismissable";
@@ -37,18 +37,15 @@ export function BedBoard({ board }: BedBoardProps) {
   const panelRef = useRef<HTMLElement>(null);
   const selectedBed = board.beds.find((bed) => bed.bedCode === selectedBedCode);
 
-  const closeDetail = useCallback(
-    (reason: DismissReason | "button") => {
-      // 以按鈕或 Esc 關閉時把焦點送回原病床，鍵盤使用者不會失去位置
-      if (reason !== "outside" && selectedBedCode) {
-        document
-          .getElementById(getBedButtonId(selectedBedCode))
-          ?.focus({ preventScroll: true });
-      }
-      setSelectedBedCode(undefined);
-    },
-    [selectedBedCode],
-  );
+  function closeDetail(reason: DismissReason | "button") {
+    // 以按鈕或 Esc 關閉時把焦點送回原病床，鍵盤使用者不會失去位置
+    if (reason !== "outside" && selectedBedCode) {
+      document
+        .getElementById(getBedButtonId(selectedBedCode))
+        ?.focus({ preventScroll: true });
+    }
+    setSelectedBedCode(undefined);
+  }
   useDismissable({
     isActive: isDesktop && selectedBed !== undefined,
     containerRef: panelRef,

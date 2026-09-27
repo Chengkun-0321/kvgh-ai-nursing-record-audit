@@ -1,7 +1,7 @@
 "use client";
 
 import { useLoader, useThree } from "@react-three/fiber";
-import { useLayoutEffect, useMemo, useRef } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import { type InstancedMesh, Matrix4 } from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 
@@ -26,6 +26,7 @@ export function KitModuleInstances({
   const gltf = useLoader(GLTFLoader, url);
   const invalidate = useThree((state) => state.invalidate);
   const meshRef = useRef<InstancedMesh>(null);
+  // 材質是自建的 GPU 資源，保留明確的 useMemo 確保 identity，並在更換或卸載時釋放；幾何沿用 GLTF 快取，不釋放
   const { geometry, material } = useMemo(
     () =>
       toUnlitMesh(
@@ -34,6 +35,7 @@ export function KitModuleInstances({
       ),
     [gltf, isDecal],
   );
+  useEffect(() => () => material.dispose(), [material]);
 
   useLayoutEffect(() => {
     const mesh = meshRef.current;

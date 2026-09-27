@@ -2,7 +2,7 @@
 
 import { useThree } from "@react-three/fiber";
 import { animate, useReducedMotion } from "motion/react";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useRef } from "react";
 import type { MeshBasicMaterial, Texture } from "three";
 
 import { BED_DIM_TRANSITION, DIMMED_BED_OPACITY } from "@/lib/motion";
@@ -20,7 +20,7 @@ const SPRITE_RENDER_ORDER = 2;
 
 /** 病床去背圖：正對相機的平面，與相機視角校準一致，看起來就像擺在床位上。 */
 export function BedSprite({ anchor, view, texture, isDimmed }: BedSpriteProps) {
-  const plane = useMemo(() => getSpritePlane(anchor, view), [anchor, view]);
+  const plane = getSpritePlane(anchor, view);
   const { rotation } = view;
   const materialRef = useRef<MeshBasicMaterial>(null);
   const invalidate = useThree((state) => state.invalidate);

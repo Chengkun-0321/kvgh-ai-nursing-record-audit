@@ -64,10 +64,7 @@
   --color-verdict-pass-strong: #1f7a36;
 
   /* 病房場景：Blender 產生器讀取這組色票作為 3D 材質（scripts/blender/kit/palette.py），色調取自概念圖；刻意避開 verdict 的紅黃藍綠色相 */
-  --color-scene-ambient: #62666c;
   --color-scene-ambient-glow: #e4d7c1;
-  --color-scene-ambient-cool: #424b53;
-  --color-scene-vignette: rgb(90 78 64 / 0.12);
   --color-scene-wall-cap: #9a9aa0;
   --color-scene-wall: #d8c4b0;
   --color-scene-wall-shade: #a58c73;
@@ -78,8 +75,6 @@
   --color-scene-window: #f4efe6;
   --color-scene-window-shade: #d8cfc0;
   --color-scene-floor: #d7ccc3;
-  --color-scene-floor-light: #ebe5db;
-  --color-scene-floor-line: rgb(95 82 64 / 0.12);
   --color-scene-wood: #94735a;
   --color-scene-wood-top: #b39274;
   --color-scene-wood-shade: #6f5845;
@@ -90,9 +85,7 @@
   --color-scene-screen-line-alt: #f5d547;
   --color-scene-curtain: #c8d0d2;
   --color-scene-curtain-fold: #9aa6aa;
-  --color-scene-bag: rgb(246 248 249 / 0.85);
   --color-scene-fabric: #5b6d7d;
-  --color-scene-shadow: rgb(51 40 31 / 0.38);
   /* 病房外的地坪（滿版舞台背景）：比室內地板暗、低彩度，讓病房像放在建築樓層裡 */
   --color-scene-apron: #aea79f;
   --color-scene-apron-light: #c3bcb3;
@@ -102,10 +95,6 @@
 
   --shadow-card: 0 1px 2px rgb(0 0 0 / 0.04), 0 4px 16px rgb(0 0 0 / 0.06);
   --shadow-float: 0 1px 3px rgb(0 0 0 / 0.06), 0 12px 40px rgb(0 0 0 / 0.12);
-  /* 病房模型浮在明亮環境上：近處銳利陰影＋遠處大範圍暖色柔影 */
-  --shadow-room:
-    0 2px 5px rgb(35 29 22 / 0.35), 0 28px 70px rgb(30 27 23 / 0.4);
-  --shadow-lamp: 0 0 10px 2px rgb(255 238 204 / 0.75);
 
   --spacing-topbar: 4.25rem;
   /* 桌機頂部工具列列高（上緣 1rem＋膠囊＋間隙）：側欄以外的頂部浮動層都在這一列，詳情卡與病患頁由此往下 */
@@ -184,39 +173,6 @@
   &:active:not(:disabled, [aria-disabled="true"]) {
     scale: 0.97;
   }
-}
-
-/* 病房地板：大磁磚格線疊在中央暖光上 */
-@utility ward-floor {
-  background-color: var(--color-scene-floor);
-  background-image:
-    linear-gradient(var(--color-scene-floor-line) 1px, transparent 1px),
-    linear-gradient(90deg, var(--color-scene-floor-line) 1px, transparent 1px),
-    radial-gradient(
-      ellipse 75% 60% at 50% 35%,
-      var(--color-scene-floor-light),
-      transparent 75%
-    );
-  background-size:
-    3rem 3rem,
-    3rem 3rem,
-    100% 100%;
-  background-position: center top;
-}
-
-/* 窗戶百葉：水平細線 */
-@utility window-blinds {
-  background-image:
-    repeating-linear-gradient(
-      to bottom,
-      transparent 0 5px,
-      var(--color-scene-window-shade) 5px 6px
-    ),
-    linear-gradient(
-      to bottom,
-      var(--color-scene-window),
-      var(--color-scene-window-shade)
-    );
 }
 
 :root {

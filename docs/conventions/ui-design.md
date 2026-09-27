@@ -31,7 +31,7 @@ token 實作在 `frontend/src/app/globals.css` 的 `@theme`；元件只用語意
 | 狀態色   | `verdict-{error,warning,review,pass}` 與 `-strong`                                       | 主色用於圖示；`-strong` 為白底 ≥4.5:1 的文字色                                                     |
 | 徽章     | `badge`                                                                                  | 待處理數字徽章（白字 ≥4.5:1）                                                                      |
 | 圓角     | `rounded-card`（20px）、`rounded-panel`（28px）                                          | 卡片／清單、面板／sheet                                                                            |
-| 陰影     | `shadow-card`、`shadow-float`、`shadow-room`、`shadow-lamp`                              | 一般卡片、浮動層（面板、狀態列、sheet）、病房模型、燈條光暈                                        |
+| 陰影     | `shadow-card`、`shadow-float`                                                          | 一般卡片、浮動層（面板、狀態列、sheet）                                        |
 | 尺寸     | `topbar`、`toolbar`、`rail`、`sidebar`、`detail`                                         | 手機頂列高度、桌機頂部工具列列高（詳情卡與病患頁由此往下）、側欄寬度（圖示列／完整）、詳情面板寬度 |
 
 ## 材質（液態玻璃）
@@ -43,6 +43,7 @@ token 實作在 `frontend/src/app/globals.css` 的 `@theme`；元件只用語意
 - 使用玻璃的元素本身必須有定位（`relative`／`sticky`／`absolute`／`fixed`），邊緣高光才會貼齊。
 - **透明度動畫要做在玻璃元素本身**，不可做在祖先：祖先 `opacity < 1` 會讓 `backdrop-filter` 暫時失效，動畫結束時畫面會跳一下。
 - 不可把玻璃疊在另一層玻璃上；玻璃內的清單、卡片、狀態膠囊改用實色 `surface`（淡色 tint 需先墊一層 `surface`）。
+- 地圖平移縮放期間（`.ward-map[data-moving]`，停止 150ms 後移除）玻璃暫停 `backdrop-filter`、保留半透明底色：3D 畫面每幀重繪時不必重新模糊，弱 GPU／VDI 也能跟手。
 - 對比以最差背景驗證：玻璃下墊純黑，主文字與次要文字都 ≥ 4.5:1（目前 ink 約 9.5:1、ink-secondary 約 5.1:1）。調整玻璃不透明度或文字色時須重新驗證。verdict `-strong` 文字色只放在實色 `surface` 上。
 - `prefers-reduced-transparency` 改為實色；`prefers-contrast: more` 加實線外框（已寫在 utility 內）。
 - 桌機沒有頂列：系統標誌放在側欄最上方，時間、待處理數與使用者放在右上角膠囊（`AppStatusCapsule`）；側欄、標題卡與膠囊對齊同一條上緣，浮動層之間與視窗邊緣的間距一律 1rem。
@@ -81,7 +82,7 @@ token 實作在 `frontend/src/app/globals.css` 的 `@theme`；元件只用語意
   - 正視時高物件只往正後方投影、落在床頭牆上，沿用同一左右配置。側牆正對相機的面看不到，左右都做矮牆。平面隔簾會變成一條線，改為收攏在床頭端的布褶。前緣為低矮剖面牆，不建樓板。
 - **效能**：
   - 同一模組以 `InstancedMesh` 一次繪製；`frameloop="demand"`，只在相機移動或淡化時重繪；DPR 最多 2。
-  - three.js 以 `next/dynamic`（`ssr: false`）拆成獨立 chunk。
+  - three.js 以 `React.lazy` 拆成獨立 chunk，水合後才載入。場景子樹以 `DeferredMount`（`useDeferredValue`）在背景渲染，載入期間不切換 Suspense fallback，避開 React 重新顯示內容時的 300ms 節流；目前視角素材與 GL 初始化同時下載，另一視角於首屏顯示後預載。
 - **內網**：不得從 CDN 載入任何資源，包括 HDRI、Draco decoder 與字型；GLB 內嵌 WebP 貼圖，不用 Draco。
 - **降級**：沒有 WebGL（`failIfMajorPerformanceCaveat`）或場景載入失敗時，改用 2D 病床清單（`WardBedGrid`＋`BedCard`）。開發時可用 `?scene=2d` 檢查。
 
@@ -122,7 +123,7 @@ token 實作在 `frontend/src/app/globals.css` 的 `@theme`；元件只用語意
   - 固定層：標題、狀態列、詳情卡、縮放與視角控制，都放在 `.ward-safe` 內（容器不接收指標事件，可互動的子元素加 `pointer-events-auto`）。
 - `WardMapController` 以 Web Animations 移動世界層，並在同一幀透過 camera channel 設定 3D 相機、立即 `advance()`，所以平移時 DOM 標籤與 3D 畫面不會錯位。
 - 最小倍率＝整個病房剛好完整放進「安全區扣掉適配留白」的範圍（不扣標題、狀態列，它們疊在病房上），不能再縮小；最大 200%（床很少時不低於最小倍率）。預設視野為最小倍率、置中於該範圍；窄螢幕完整顯示會過小，初始至少 50%。
-- 扣掉留白的安全區永遠落在病房範圍內：放大後病房邊緣最多拖到留白處，放不滿的軸置中，病房可滑到外框玻璃下方；開詳情卡時扣掉卡片寬度（與病房保留 `panelGapPx` 間距），右側病床仍可拖到卡片左側，關卡後重新夾限。量測在 `lib/wardMapBounds.ts`（`measureMapArea`）。
+- 扣掉留白的安全區永遠落在病房範圍內：放大後病房邊緣最多拖到留白處，放不滿的軸置中，病房可滑到外框玻璃下方；開詳情卡時扣掉卡片寬度（與病房保留 `panelGapPx` 間距），右側病床仍可拖到卡片左側，關卡後重新夾限。量測在 `lib/wardMapBounds.ts`（`measureMapMetrics`）；控制器快取量測值，只在手勢開始、視窗尺寸改變、選床或關卡時重新量測，拖曳與滾輪期間不強制 layout。
 - **視角切換**：縮放控制右側的「正視／斜視」（`ViewToggle`，`aria-pressed`，選取底色以 spring 滑動）。切換時不重新掛載地圖、焦點留在按鈕上；版面與相機改用該視角的設定檔，視野重設為完整顯示。
 - 滾輪以游標為錨點縮放，按住拖曳平移，雙指同時縮放／平移。Ctrl／Command 保留瀏覽器原生縮放。
 - 超過 6px 視為拖曳，不開啟病床；雙指與取消的手勢亦不選床。常數集中在 `lib/wardMap.ts`。
@@ -176,7 +177,6 @@ token 實作在 `frontend/src/app/globals.css` 的 `@theme`；元件只用語意
 
 ## 補充素材
 
-- `public/images/scene/ward-floor.webp`：GPT Image 生成的地板材質，只用於 2D 備援病房（`.ward-room`）；3D 場景的地磚由 Blender 程序材質產生。
 - `public/images/patients/patient-{m|f}-{young|middle|elder}.webp`：六款生成的人物近景，用於詳情卡，顯示「示意影像」，不代表真實病患外觀。
 
 ## 交付前檢查

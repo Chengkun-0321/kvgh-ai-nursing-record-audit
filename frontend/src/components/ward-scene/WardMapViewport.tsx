@@ -67,7 +67,7 @@ export function WardMapViewport({
       onScaleRange: setScaleRange,
       onBackgroundClick: () => backgroundClickRef.current(),
       onPaint: (camera) => {
-        world.dataset.ready = "true";
+        world.dataset.ready ??= "true";
         channel.publish(camera);
       },
     });

@@ -7,7 +7,7 @@ type DismissableOptions = {
   containerRef: RefObject<HTMLElement | null>;
   /** 點到符合此選擇器的元素不視為「外部」（例如切換到另一張病床） */
   keepSelector: string;
-  /** 需為穩定參考（以 `useCallback` 包裝），避免每次渲染重新訂閱 */
+  /** 需為穩定參考（React Compiler 會自動 memo），避免每次渲染重新訂閱 */
   onDismiss: (reason: DismissReason) => void;
 };
 

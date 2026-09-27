@@ -3,20 +3,23 @@ import {
   getInitialCamera,
   getKeyCommand,
   getPointerPair,
-  getRevealOffset,
+  getRevealDelta,
   getScaleRange,
   getWheelZoomFactor,
   getZoomAvailability,
   INITIAL_CAMERA,
   MAP_LIMITS,
-  type MapArea,
   type MapCamera,
   type MapPoint,
   type MapSize,
   type ScaleRange,
   zoomAt,
 } from "./wardMap";
-import { measureMapArea, measureMapBounds } from "./wardMapBounds";
+import {
+  type MapMetrics,
+  measureMapBounds,
+  measureMapMetrics,
+} from "./wardMapBounds";
 
 type MapElements = {
   viewport: HTMLElement;
@@ -29,16 +32,24 @@ type MapElements = {
   onPaint: (camera: MapCamera) => void;
 };
 
+// 以 duration 0、fill forwards 的 Web Animation 寫入樣式，不使用 React inline style
+const STILL: KeyframeAnimationOptions = { duration: 0, fill: "forwards" };
+
 /** 原生指標事件管理地圖，繪製使用 Web Animations，不將座標寫入 React inline style。 */
 export class WardMapController {
   private camera = { ...INITIAL_CAMERA };
   private range: ScaleRange = { min: 0, max: MAP_LIMITS.maxScale };
+  private worldSize: MapSize = { width: 0, height: 0 };
+  private cachedMetrics?: MapMetrics;
   private pointers = new Map<number, MapPoint>();
   private origin: MapPoint = { x: 0, y: 0 };
   private dragged = false;
   private hasInitialView = false;
   private frame = 0;
+  private paintedScale?: number;
+  private movingTimer = 0;
   private painting?: Animation;
+  private scaling?: Animation;
   private sizing?: Animation;
   private observer: ResizeObserver;
   private abort = new AbortController();
@@ -49,27 +60,26 @@ export class WardMapController {
     this.observer.observe(elements.viewport);
   }
 
-  /** 安全區（地圖視窗扣掉疊在場景上的外框）：決定縮放範圍與初始視野。 */
-  private get fitArea(): MapArea {
-    return measureMapArea(this.elements.viewport, { withDetail: false });
+  /**
+   * 視窗幾何（安全區、詳情卡遮擋）的快取：指標與滾輪等高頻事件只讀快取，
+   * 在手勢開始、尺寸改變、選床或關卡時才重新量測，避免每次事件都強制 layout。
+   */
+  private get metrics(): MapMetrics {
+    this.cachedMetrics ??= measureMapMetrics(this.elements.viewport);
+    return this.cachedMetrics;
   }
 
-  /** 平移範圍再扣掉詳情卡遮住的寬度，開卡時右側病床仍可拖到卡片左側。 */
-  private get panArea(): MapArea {
-    return measureMapArea(this.elements.viewport, { withDetail: true });
-  }
-
-  private get worldSize(): MapSize {
-    const { world } = this.elements;
-    return { width: world.offsetWidth, height: world.offsetHeight };
+  private invalidate() {
+    this.cachedMetrics = undefined;
   }
 
   /** 設定場景的地圖尺寸（px，100% 縮放）；第一次設定時套用初始視野。 */
   setWorldSize(size: MapSize) {
+    this.worldSize = size;
     this.sizing?.cancel();
     this.sizing = this.elements.world.animate(
       [{ width: `${size.width}px`, height: `${size.height}px` }],
-      { duration: 0, fill: "forwards" },
+      STILL,
     );
     this.refreshBounds();
   }
@@ -78,12 +88,13 @@ export class WardMapController {
   private updateRange() {
     const wasAtMin = !getZoomAvailability(this.camera.scale, this.range)
       .canZoomOut;
-    this.range = getScaleRange(this.fitArea, this.worldSize);
+    this.range = getScaleRange(this.metrics.fit, this.worldSize);
     if (wasAtMin) this.camera = { ...this.camera, scale: this.range.min };
     this.elements.onScaleRange(this.range);
   }
 
   private refreshBounds() {
+    this.invalidate();
     if (this.worldSize.width === 0) return;
     this.updateRange();
     if (!this.hasInitialView) {
@@ -99,12 +110,20 @@ export class WardMapController {
   }
 
   private local(event: { clientX: number; clientY: number }): MapPoint {
-    const rect = this.elements.viewport.getBoundingClientRect();
-    return { x: event.clientX - rect.left, y: event.clientY - rect.top };
+    const { clientOrigin } = this.metrics;
+    return {
+      x: event.clientX - clientOrigin.x,
+      y: event.clientY - clientOrigin.y,
+    };
   }
 
   private move(camera: MapCamera) {
-    this.camera = clampCamera(camera, this.panArea, this.worldSize, this.range);
+    this.camera = clampCamera(
+      camera,
+      this.metrics.pan,
+      this.worldSize,
+      this.range,
+    );
     cancelAnimationFrame(this.frame);
     this.frame = requestAnimationFrame(() => this.paint());
   }
@@ -112,67 +131,79 @@ export class WardMapController {
   private paint() {
     const { x, y, scale } = this.camera;
     this.painting?.cancel();
-    // --map-scale 讓床號標籤反向縮放，縮放時字級維持不變
     this.painting = this.elements.world.animate(
-      [
-        {
-          transform: `translate(${x}px, ${y}px) scale(${scale})`,
-          "--map-scale": String(scale),
-        },
-      ],
-      { duration: 0, fill: "forwards" },
+      [{ transform: `translate(${x}px, ${y}px) scale(${scale})` }],
+      STILL,
     );
-    this.elements.world.dataset.zoom =
-      scale < MAP_LIMITS.compactLabelScale ? "compact" : "regular";
-    this.elements.onScale(scale);
+    if (scale !== this.paintedScale) this.paintScale(scale);
     this.elements.onPaint(this.camera);
+  }
+
+  /** 倍率改變時才更新：--map-scale 讓床號標籤反向縮放、字級不變，純平移時標籤不必重算樣式。 */
+  private paintScale(scale: number) {
+    const { world } = this.elements;
+    this.paintedScale = scale;
+    this.scaling?.cancel();
+    this.scaling = world.animate([{ "--map-scale": String(scale) }], STILL);
+    const zoom = scale < MAP_LIMITS.compactLabelScale ? "compact" : "regular";
+    if (world.dataset.zoom !== zoom) world.dataset.zoom = zoom;
+    this.elements.onScale(scale);
+  }
+
+  /** 平移縮放期間標記 data-moving（CSS 暫停玻璃模糊）；停止後移除，並於下次手勢重新量測。 */
+  private markMoving() {
+    const { dataset } = this.elements.viewport;
+    if (!dataset.moving) dataset.moving = "true";
+    window.clearTimeout(this.movingTimer);
+    this.movingTimer = window.setTimeout(() => {
+      delete dataset.moving;
+      this.invalidate();
+    }, MAP_LIMITS.movingIdleMs);
+  }
+
+  private panBy(dx: number, dy: number, camera = this.camera) {
+    this.move({ ...camera, x: camera.x + dx, y: camera.y + dy });
   }
 
   /** 工具列與鍵盤共用同一縮放入口。 */
   zoom(factor: number, point?: MapPoint) {
-    const { x, y, width, height } = this.panArea;
+    const { x, y, width, height } = this.metrics.pan;
     const anchor = point ?? { x: x + width / 2, y: y + height / 2 };
     this.move(zoomAt(this.camera, anchor, factor, this.range));
   }
 
   /** 遮擋範圍改變（例如關閉詳情卡）後重新夾限，病房外不留空白。 */
   refresh() {
-    if (this.hasInitialView) this.move(this.camera);
+    if (!this.hasInitialView) return;
+    this.invalidate();
+    this.move(this.camera);
   }
 
   /** 回到整個病房剛好填滿安全區的初始視野。 */
   reset() {
-    this.move(getInitialCamera(this.fitArea, this.worldSize));
+    this.move(getInitialCamera(this.metrics.fit, this.worldSize));
   }
 
   /** 選取或鍵盤聚焦的病床保持可見，包括右側詳情卡遮住的區域。 */
   reveal(target: HTMLElement) {
-    const view = this.elements.viewport.getBoundingClientRect();
+    this.invalidate();
+    const { x, y } = this.metrics.clientOrigin;
     const rect = target.getBoundingClientRect();
-    const bounds = measureMapBounds(this.elements.viewport);
-    this.move({
-      ...this.camera,
-      x:
-        this.camera.x +
-        getRevealOffset(
-          rect.left - view.left,
-          rect.right - view.left,
-          bounds.left,
-          bounds.right,
-        ),
-      y:
-        this.camera.y +
-        getRevealOffset(
-          rect.top - view.top,
-          rect.bottom - view.top,
-          bounds.top,
-          bounds.bottom,
-        ),
-    });
+    const delta = getRevealDelta(
+      {
+        left: rect.left - x,
+        top: rect.top - y,
+        right: rect.right - x,
+        bottom: rect.bottom - y,
+      },
+      measureMapBounds(this.elements.viewport, this.metrics),
+    );
+    this.panBy(delta.x, delta.y);
   }
 
   private onDown = (event: PointerEvent) => {
     if (event.button !== 0) return;
+    if (this.pointers.size === 0) this.invalidate();
     const point = this.local(event);
     if (this.pointers.size === 0) {
       this.dragged = false;
@@ -202,12 +233,10 @@ export class WardMapController {
     )
       this.dragged = true;
     if (!this.dragged) return;
-    this.elements.viewport.dataset.dragging = "true";
-    this.move({
-      ...this.camera,
-      x: this.camera.x + point.x - previous.x,
-      y: this.camera.y + point.y - previous.y,
-    });
+    const { dataset } = this.elements.viewport;
+    if (!dataset.dragging) dataset.dragging = "true";
+    this.markMoving();
+    this.panBy(point.x - previous.x, point.y - previous.y);
   };
 
   private pinch(
@@ -215,17 +244,15 @@ export class WardMapController {
     after: NonNullable<ReturnType<typeof getPointerPair>>,
   ) {
     this.dragged = true;
+    this.markMoving();
     const camera = zoomAt(
       this.camera,
       before.center,
       after.distance / before.distance,
       this.range,
     );
-    this.move({
-      ...camera,
-      x: camera.x + after.center.x - before.center.x,
-      y: camera.y + after.center.y - before.center.y,
-    });
+    const { center } = after;
+    this.panBy(center.x - before.center.x, center.y - before.center.y, camera);
   }
 
   private onUp = (event: PointerEvent) => {
@@ -251,6 +278,7 @@ export class WardMapController {
     // 保留瀏覽器的 Ctrl／Command 縮放；普通滾輪只作用於病房。
     if (event.ctrlKey || event.metaKey) return;
     event.preventDefault();
+    this.markMoving();
     const factor = getWheelZoomFactor(
       event.deltaY,
       event.deltaMode,
@@ -264,14 +292,13 @@ export class WardMapController {
     const command = getKeyCommand(event.key);
     if (!command) return;
     event.preventDefault();
+    this.invalidate();
     if (command.type === "zoom") this.zoom(command.factor);
     if (command.type === "reset") this.reset();
     if (command.type !== "pan") return;
-    this.move({
-      ...this.camera,
-      x: this.camera.x + command.direction.x * MAP_LIMITS.panStepPx,
-      y: this.camera.y + command.direction.y * MAP_LIMITS.panStepPx,
-    });
+    const { direction } = command;
+    const step = MAP_LIMITS.panStepPx;
+    this.panBy(direction.x * step, direction.y * step);
   };
 
   private onFocus = (event: FocusEvent) => {
@@ -308,7 +335,9 @@ export class WardMapController {
     this.abort.abort();
     this.observer.disconnect();
     cancelAnimationFrame(this.frame);
+    window.clearTimeout(this.movingTimer);
     this.painting?.cancel();
+    this.scaling?.cancel();
     this.sizing?.cancel();
   }
 }

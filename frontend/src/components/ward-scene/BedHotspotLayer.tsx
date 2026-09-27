@@ -1,9 +1,9 @@
 "use client";
 
-import { useMemo, useRef } from "react";
+import { useRef } from "react";
 
 import { WARD_TITLE_ID } from "@/components/bed-board/WardTitle";
-import { useMapKeyframe } from "@/hooks/useMapPlacement";
+import { useMapKeyframe } from "@/hooks/useMapKeyframe";
 import { isBedDimmed, type VerdictFilterValue } from "@/lib/verdict";
 import type { WardLayout } from "@/lib/wardLayout";
 import {
@@ -47,9 +47,8 @@ export function BedHotspotLayer({
   onToggle,
 }: BedHotspotLayerProps) {
   const listRef = useRef<HTMLUListElement>(null);
-  const positions = useMemo(
-    () => layout.beds.map((slot) => getBedHotspot(slot.anchor, frame)),
-    [layout, frame],
+  const positions = layout.beds.map((slot) =>
+    getBedHotspot(slot.anchor, frame),
   );
   useMapKeyframe(listRef, getHotspotVars(frame));
 

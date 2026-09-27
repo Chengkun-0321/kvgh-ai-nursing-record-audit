@@ -1,8 +1,6 @@
 "use client";
 
-import { motion } from "motion/react";
-
-import { SPRING_DEFAULT } from "@/lib/motion";
+import { SelectionIndicator } from "@/components/ui/SelectionIndicator";
 import { cn } from "@/lib/utils";
 import type { WardViewId } from "@/lib/wardKit";
 
@@ -38,11 +36,9 @@ export function ViewToggle({ value, onChange }: ViewToggleProps) {
             )}
           >
             {isSelected && (
-              <motion.span
+              <SelectionIndicator
                 layoutId="map-view-indicator"
-                transition={SPRING_DEFAULT}
-                aria-hidden="true"
-                className="absolute inset-0 rounded-lg bg-surface shadow-card"
+                className="rounded-lg bg-surface shadow-card"
               />
             )}
             <span className="relative">{option.label}</span>

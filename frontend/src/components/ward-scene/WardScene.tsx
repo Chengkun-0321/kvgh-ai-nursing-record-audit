@@ -1,14 +1,14 @@
 "use client";
 
-import dynamic from "next/dynamic";
+import { lazy, Suspense } from "react";
 
+import { DeferredMount } from "./DeferredMount";
 import type { WardSceneCanvasProps } from "./WardSceneCanvas";
 import { WardSceneErrorBoundary } from "./WardSceneErrorBoundary";
 
-// three.js 只在瀏覽器執行，並拆成獨立 chunk，不影響首頁主程式大小
-const WardSceneCanvas = dynamic(
-  () => import("./WardSceneCanvas").then((mod) => mod.WardSceneCanvas),
-  { ssr: false },
+// three.js 拆成獨立 chunk，不影響首頁主程式大小；本元件只在水合後且支援 WebGL 時渲染，伺服器端不會載入
+const WardSceneCanvas = lazy(() =>
+  import("./WardSceneCanvas").then((mod) => ({ default: mod.WardSceneCanvas })),
 );
 
 type WardSceneProps = WardSceneCanvasProps & {
@@ -20,7 +20,11 @@ export function WardScene({ onError, ...canvasProps }: WardSceneProps) {
   return (
     <div className="pointer-events-none absolute inset-0" aria-hidden="true">
       <WardSceneErrorBoundary onError={onError}>
-        <WardSceneCanvas {...canvasProps} />
+        <Suspense fallback={null}>
+          <DeferredMount>
+            <WardSceneCanvas {...canvasProps} />
+          </DeferredMount>
+        </Suspense>
       </WardSceneErrorBoundary>
     </div>
   );

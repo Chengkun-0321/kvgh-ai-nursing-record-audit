@@ -1,10 +1,9 @@
 "use client";
 
-import { motion } from "motion/react";
 import { useId } from "react";
 
+import { SelectionIndicator } from "@/components/ui/SelectionIndicator";
 import { VerdictIcon } from "@/components/VerdictIcon";
-import { SPRING_DEFAULT } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 import {
   VERDICT_LABELS,
@@ -58,11 +57,9 @@ export function WardStatusBar({
             )}
           >
             {isActive && (
-              <motion.span
+              <SelectionIndicator
                 layoutId={indicatorLayoutId}
-                transition={SPRING_DEFAULT}
-                aria-hidden="true"
-                className="absolute inset-0 rounded-xl bg-fill-strong"
+                className="rounded-xl bg-fill-strong"
               />
             )}
             <VerdictIcon verdict={verdict} className="relative size-7" />

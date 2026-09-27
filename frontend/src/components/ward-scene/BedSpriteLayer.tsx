@@ -1,16 +1,12 @@
 "use client";
 
 import { useLoader } from "@react-three/fiber";
-import { useLayoutEffect, useMemo } from "react";
+import { useLayoutEffect } from "react";
 import { TextureLoader } from "three";
 
-import { getBedSpriteSrc } from "@/lib/bedSprites";
+import { getBedSpriteSources } from "@/lib/bedSprites";
 import { prepareSpriteTexture } from "@/lib/sceneAssets";
-import {
-  getWorstVerdict,
-  isBedDimmed,
-  type VerdictFilterValue,
-} from "@/lib/verdict";
+import { isBedDimmed, type VerdictFilterValue } from "@/lib/verdict";
 import type { BedSlot } from "@/lib/wardLayout";
 import type { WardView } from "@/lib/wardProjection";
 import type { BedStatus } from "@/types/ward";
@@ -31,14 +27,7 @@ export function BedSpriteLayer({
   view,
   activeFilter,
 }: BedSpriteLayerProps) {
-  const sources = useMemo(
-    () =>
-      beds.map((bed) =>
-        getBedSpriteSrc(bed.patient, getWorstVerdict(bed.findings), view.kit),
-      ),
-    [beds, view],
-  );
-  const uniqueSources = useMemo(() => [...new Set(sources)], [sources]);
+  const { sources, uniqueSources } = getBedSpriteSources(beds, view.kit);
   const textures = useLoader(TextureLoader, uniqueSources);
 
   useLayoutEffect(() => {

@@ -11,7 +11,7 @@ export const SPRING_DEFAULT: Transition = {
 };
 
 /** Bottom sheet 開關；拖曳放手後的退場沿用目前速度，所以不另設回彈。 */
-export const SPRING_SHEET: Transition = {
+const SPRING_SHEET: Transition = {
   type: "spring",
   bounce: 0,
   visualDuration: 0.3,
@@ -55,7 +55,7 @@ const SHEET_DISMISS_RATIO = 0.35;
  * @param velocityPxPerSecond 放手瞬間的速度（px/s）
  * @returns 還會繼續前進的距離（px）
  */
-export function projectMomentum(velocityPxPerSecond: number): number {
+function projectMomentum(velocityPxPerSecond: number): number {
   return (
     ((velocityPxPerSecond / 1000) * DECELERATION_RATE) / (1 - DECELERATION_RATE)
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 
 import type { VerdictFilterValue } from "@/lib/verdict";
 import { DEFAULT_WARD_VIEW, WARD_KITS, type WardViewId } from "@/lib/wardKit";
@@ -39,13 +39,8 @@ export function WardMap({
 }: WardMapProps) {
   const [viewId, setViewId] = useState<WardViewId>(DEFAULT_WARD_VIEW);
   const kit = WARD_KITS[viewId];
-  const view = useMemo(() => createWardView(kit), [kit]);
-  const layout = useMemo(
-    () => buildWardLayout(board.beds, kit),
-    [board.beds, kit],
-  );
-  const frame = useMemo(() => getMapFrame(view, layout.bounds), [view, layout]);
-  const mapSize = useMemo(() => getMapSize(frame), [frame]);
+  const layout = buildWardLayout(board.beds, kit);
+  const frame = getMapFrame(createWardView(kit), layout.bounds);
   const [channel] = useState(createCameraChannel);
   const scene = isSceneEnabled ? (
     <WardScene
@@ -61,7 +56,7 @@ export function WardMap({
   return (
     <>
       <WardMapViewport
-        mapSize={mapSize}
+        mapSize={getMapSize(frame)}
         channel={channel}
         scene={scene}
         viewId={viewId}

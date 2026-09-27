@@ -2,6 +2,7 @@
 
 import { motion } from "motion/react";
 
+import { SelectionIndicator } from "@/components/ui/SelectionIndicator";
 import { VerdictIcon } from "@/components/VerdictIcon";
 import { getBedSpriteSrc } from "@/lib/bedSprites";
 import { SPRING_DEFAULT } from "@/lib/motion";
@@ -52,11 +53,9 @@ export function BedCard({ bed, isSelected, isDimmed, onToggle }: BedCardProps) {
       )}
     >
       {isSelected && (
-        <motion.span
+        <SelectionIndicator
           layoutId="bed-selection"
-          transition={SPRING_DEFAULT}
-          aria-hidden="true"
-          className="absolute inset-x-[14cqw] top-[15cqw] bottom-[11cqw] rounded-[8cqw] bg-surface/40 ring-2 ring-accent/30"
+          className="inset-x-[14cqw] top-[15cqw] bottom-[11cqw] rounded-[8cqw] bg-surface/40 ring-2 ring-accent/30"
         />
       )}
       <span className="absolute top-[8cqw] left-[10cqw] w-[80cqw] transition-[translate,scale] duration-300 ease-apple group-hover:-translate-y-[0.5cqw] group-active:scale-97 group-active:duration-100">

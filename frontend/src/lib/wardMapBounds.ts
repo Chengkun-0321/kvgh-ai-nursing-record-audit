@@ -1,4 +1,9 @@
-import { MAP_LIMITS, type MapArea, type MapBounds } from "./wardMap";
+import {
+  MAP_LIMITS,
+  type MapArea,
+  type MapBounds,
+  type MapPoint,
+} from "./wardMap";
 
 // 安全區：病房場景鋪滿整個視窗，側欄、使用者膠囊與手機頂列／分頁列疊在場景上，以 CSS 定義扣除後的範圍
 const SAFE_AREA_SELECTOR = ".ward-safe";
@@ -37,38 +42,47 @@ function getOccludedRight(viewport: HTMLElement, fit: DOMRectReadOnly): number {
   return Math.max(0, fit.right - panelLeft + MAP_LIMITS.panelGapPx);
 }
 
-/**
- * 可放病房的區域（相對地圖視窗，已扣適配留白）：縮放範圍與初始視野用不扣詳情卡的版本，
- * 平移夾限扣掉詳情卡，開卡時右側病床仍可拖到卡片左側。
- */
-export function measureMapArea(
-  viewport: HTMLElement,
-  { withDetail }: { withDetail: boolean },
-): MapArea {
+/** 一次量出的地圖視窗幾何；控制器快取到下一次尺寸或遮擋改變，高頻指標事件不必強制 layout。 */
+export type MapMetrics = {
+  /** 地圖視窗左上角的 client 座標，換算指標位置用。 */
+  clientOrigin: MapPoint;
+  /** 縮放範圍與初始視野：安全區扣適配留白，不扣詳情卡。 */
+  fit: MapArea;
+  /** 平移夾限：再扣掉詳情卡遮住的寬度，開卡時右側病床仍可拖到卡片左側。 */
+  pan: MapArea;
+};
+
+/** 可放病房的區域（相對地圖視窗，已扣適配留白）。 */
+export function measureMapMetrics(viewport: HTMLElement): MapMetrics {
   const view = viewport.getBoundingClientRect();
   const fit = getFitRect(viewport);
-  const occluded = withDetail ? getOccludedRight(viewport, fit) : 0;
-  return {
+  const toArea = (occluded: number): MapArea => ({
     x: fit.left - view.left,
     y: fit.top - view.top,
     width: Math.max(1, fit.width - occluded),
     height: Math.max(1, fit.height),
+  });
+  return {
+    clientOrigin: { x: view.left, y: view.top },
+    fit: toArea(0),
+    pan: toArea(getOccludedRight(viewport, fit)),
   };
 }
 
 /** 固定標題、狀態列與詳情卡不屬於地圖，焦點移動需保留它們占用的空間（相對地圖視窗）。 */
-export function measureMapBounds(viewport: HTMLElement): MapBounds {
+export function measureMapBounds(
+  viewport: HTMLElement,
+  { clientOrigin, pan: area }: MapMetrics,
+): MapBounds {
   const stage = getStage(viewport);
-  const view = viewport.getBoundingClientRect();
-  const area = measureMapArea(viewport, { withDetail: true });
   const title = stage.querySelector<HTMLElement>(".ward-title");
   const status = stage.querySelector<HTMLElement>(".ward-status");
   const pad = MAP_LIMITS.focusPaddingPx;
   const titleBottom = title
-    ? title.getBoundingClientRect().bottom - view.top
+    ? title.getBoundingClientRect().bottom - clientOrigin.y
     : area.y;
   const statusTop = status
-    ? status.getBoundingClientRect().top - view.top
+    ? status.getBoundingClientRect().top - clientOrigin.y
     : area.y + area.height;
   return {
     left: area.x + pad,

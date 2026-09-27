@@ -1,3 +1,4 @@
+import { useLoader } from "@react-three/fiber";
 import {
   type BufferGeometry,
   type Group,
@@ -6,7 +7,14 @@ import {
   type MeshBasicMaterialParameters,
   SRGBColorSpace,
   Texture,
+  TextureLoader,
 } from "three";
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+
+import type { BedStatus } from "@/types/ward";
+
+import { getBedSpriteSources } from "./bedSprites";
+import { getKitAssetUrl, type WardKit } from "./wardKit";
 
 export type UnlitMesh = {
   geometry: BufferGeometry;
@@ -52,4 +60,22 @@ export function prepareSpriteTexture(texture: Texture): void {
   texture.colorSpace = SRGBColorSpace;
   texture.premultiplyAlpha = true;
   texture.needsUpdate = true;
+}
+
+/**
+ * 預先下載並解析某個視角的場景模組與病床去背圖，存入 R3F 載入快取；
+ * 之後切換到該視角時不必等待，場景不會短暫空白。
+ */
+export function preloadWardView(kit: WardKit, beds: readonly BedStatus[]) {
+  const files = [
+    ...Object.values(kit.modules).map((module) => module.file),
+    kit.decals.bedShadow.file,
+  ];
+  for (const file of files) {
+    useLoader.preload(GLTFLoader, getKitAssetUrl(kit, file));
+  }
+  useLoader.preload(
+    TextureLoader,
+    getBedSpriteSources(beds, kit).uniqueSources,
+  );
 }

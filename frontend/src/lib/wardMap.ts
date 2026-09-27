@@ -16,6 +16,8 @@ export const MAP_LIMITS = {
   maxWheelDeltaPx: 150,
   // 低於此倍率時床號標籤只留圖示與床號，避免相鄰標籤重疊
   compactLabelScale: 0.75,
+  // 平移縮放停止這麼久後才視為結束（恢復玻璃模糊、重新量測視窗）
+  movingIdleMs: 150,
 } as const;
 
 export type MapPoint = { x: number; y: number };
@@ -170,8 +172,8 @@ export function clampCamera(
   };
 }
 
-/** 只平移到可視範圍，不因選床或鍵盤焦點重新排版。 */
-export function getRevealOffset(
+/** 單軸：只平移到可視範圍，不因選床或鍵盤焦點重新排版。 */
+function getRevealOffset(
   start: number,
   end: number,
   minimum: number,
@@ -181,6 +183,14 @@ export function getRevealOffset(
   if (start < minimum) return minimum - start;
   if (end > maximum) return maximum - end;
   return 0;
+}
+
+/** 讓目標矩形（相對地圖視窗）完整落在可視範圍內所需的最小平移量。 */
+export function getRevealDelta(target: MapBounds, bounds: MapBounds): MapPoint {
+  return {
+    x: getRevealOffset(target.left, target.right, bounds.left, bounds.right),
+    y: getRevealOffset(target.top, target.bottom, bounds.top, bounds.bottom),
+  };
 }
 
 /** 雙指中點與距離共用同一座標系，移動中點時同時平移。 */

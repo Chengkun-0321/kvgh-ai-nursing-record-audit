@@ -1,10 +1,10 @@
 "use client";
 
-import { motion } from "motion/react";
 import { useId } from "react";
 
-import { SPRING_DEFAULT } from "@/lib/motion";
 import { cn } from "@/lib/utils";
+
+import { SelectionIndicator } from "./SelectionIndicator";
 
 export type SegmentOption<T extends string> = {
   value: T;
@@ -60,11 +60,9 @@ export function SegmentedControl<T extends string>({
             )}
           >
             {isSelected && (
-              <motion.span
+              <SelectionIndicator
                 layoutId={indicatorLayoutId}
-                transition={SPRING_DEFAULT}
-                aria-hidden="true"
-                className="absolute inset-0 rounded-lg bg-surface shadow-card"
+                className="rounded-lg bg-surface shadow-card"
               />
             )}
             <span className="relative">{option.label}</span>
