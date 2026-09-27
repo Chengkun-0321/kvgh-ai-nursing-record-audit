@@ -1,6 +1,7 @@
 # 前端規範（Next.js）
 
 > 通用規範見根目錄 [CLAUDE.md](../CLAUDE.md) 與 [docs/conventions/](../docs/conventions/)。本檔只列前端專屬事項。
+> UI 樣式、動畫、無障礙一律依 [ui-design.md](../docs/conventions/ui-design.md)（Apple 風格）。
 
 ## 環境：套件只裝在 `frontend/node_modules`
 
@@ -9,7 +10,7 @@
 - CLI 一律用專案內版本：`npm run <script>` 或 `npx <tool>`
 - 新增套件：`npm install --save-exact <pkg>`；`package-lock.json` 必須 commit
 
-### 初始化（尚未執行）
+### 初始化（已完成，保留供參考）
 
 於專案根目錄先在暫存目錄產生，再合併（保留既有 `CLAUDE.md`、`AGENTS.md`、`.npmrc`）：
 
@@ -23,10 +24,15 @@ rsync -a --ignore-existing frontend-init/ frontend/ && rm -rf frontend-init && c
 
 完成後套用下方「工具設定」。
 
+### Next.js 16 注意事項
+
+- API 與慣例可能與既有認知不同，撰寫前先查 `node_modules/next/dist/docs/`（例：`error.tsx` 的重試 prop 為 `retry`）
+- `next.config.ts` 設 `agentRules: false`：本目錄 `AGENTS.md` 是本檔的 symlink，避免 `next dev` 自動寫入英文區塊
+
 ## 核准依賴（其餘需先詢問）
 
-- 正式：`next`、`react`、`react-dom`、`motion`（Framer Motion 更名後的套件，`import { motion } from "motion/react"`）、`clsx`、`tailwind-merge`
-- 開發：`typescript`、`tailwindcss`、`@tailwindcss/postcss`、`eslint`、`eslint-config-next`、`prettier`、`prettier-plugin-tailwindcss`、`openapi-typescript`
+- 正式：`next`、`react`、`react-dom`、`motion`（Framer Motion 更名後的套件，`import { motion } from "motion/react"`）、`clsx`、`tailwind-merge`、`@phosphor-icons/react`（圖示，一律經 `src/components/ui/icons.ts` 引用）
+- 開發：`typescript`、`@types/node`、`@types/react`、`@types/react-dom`（create-next-app 預設）、`tailwindcss`、`@tailwindcss/postcss`、`eslint`、`eslint-config-next`、`prettier`、`prettier-plugin-tailwindcss`、`openapi-typescript`
 - 寫測試時：`vitest`、`@testing-library/react`、`@testing-library/jest-dom`、`jsdom`
 - 未經同意不引入 SWR、TanStack Query、Redux、Zustand、UI 元件庫等
 
@@ -35,10 +41,12 @@ rsync -a --ignore-existing frontend-init/ frontend/ && rm -rf frontend-init && c
 ```
 frontend/
 ├── public/
+│   └── images/beds/      # 病床素材 bed-{性別}-{年齡層}-{判定}.webp（使用者生成，僅為裝飾；見 ui-design.md）
 └── src/
-    ├── app/              # 路由：layout.tsx、page.tsx、loading.tsx、error.tsx
+    ├── app/              # 路由；登入後頁面放 (workspace)/，共用工作區外框
     ├── components/
-    │   ├── ui/           # 通用元件，無業務邏輯（Button、Card、Drawer、Badge…）
+    │   ├── ui/           # 通用元件，無業務邏輯（SegmentedControl、icons…）
+    │   ├── app-shell/    # 工作區外框：頂列、側欄、底部分頁列
     │   └── …             # 業務元件（BedCard、PatientSummary、AuditFindingList…）
     ├── hooks/            # useXxx
     ├── lib/              # api client、utils（cn）、motion variants、constants
@@ -71,21 +79,12 @@ frontend/
 
 ## Tailwind CSS（v4，CSS-first 設定）
 
-- design token 定義在 `src/app/globals.css` 的 `@theme`，例：
-
-```css
-@theme {
-  --color-verdict-pass: oklch(0.72 0.17 150);
-  --color-verdict-warning: oklch(0.8 0.16 80);
-  --color-verdict-error: oklch(0.63 0.22 25);
-  --color-verdict-review: oklch(0.65 0.03 260);
-}
-```
-
+- design token 定義在 `src/app/globals.css` 的 `@theme`（清單與用途見 ui-design.md「Token」）；共用樣式以 `@utility` 定義（`glass`、`glass-heavy`、`focus-ring`、`pressable`、`ward-floor`）
+- 床位區依容器寬度排版（`@container` + `@xl:` 等），不依視窗寬度
 - 禁止 inline `style`、禁止任意色碼（`bg-[#…]`）；顏色、陰影、光暈一律走 token
 - 條件 class 用 `cn()`（`src/lib/utils.ts`，clsx + tailwind-merge）
 - Verdict 呈現必須「顏色 + icon + 文字」，不可只靠顏色
-- RWD：mobile-first，使用 `sm` / `md` / `lg` 斷點
+- RWD：mobile-first；`lg` 以上顯示側欄與右側詳情面板，以下改用底部分頁列與 bottom sheet
 
 ## Framer Motion
 
@@ -93,13 +92,17 @@ frontend/
 - variants、duration、easing 集中於 `src/lib/motion.ts`，元件內不各自定義數值
 - 只動畫 `transform`、`opacity`；列表進出用 `AnimatePresence` / `layout`
 - 根 layout 以 `<MotionConfig reducedMotion="user">` 尊重使用者的減少動態設定
-- 動畫不可阻擋操作（Drawer 開關 ≤ 300ms）
+- 預設臨界阻尼 spring（`SPRING_DEFAULT`），動畫可中斷、不阻擋操作；sheet 開關約 300ms
+- 設了 `whileHover` 等 variant 標籤的元素不會繼承父層 `initial`／`animate`，需自行指定
+- 首屏資料不做進場淡入，避免 JS 載入前內容不可見
+- SSR 會輸出的日期時間一律經 `src/lib/format.ts`（`formatToParts` 自組字串）；直接 `Intl.format()` 在 Node 與瀏覽器的分隔字元不同，會造成 hydration 不符
 
 ## 無障礙
 
 - 可點擊元素用 `<button>` / `<a>`，禁止 `div onClick`
-- Drawer：可用 `Esc` 關閉；開啟時 focus 移入，關閉後還原
-- 純圖示按鈕需繁中 `aria-label`
+- Bottom sheet 用原生 `<dialog>` 的 `showModal()`：Esc 關閉、背景 inert、關閉後焦點回到觸發元素
+- 純圖示按鈕需繁中 `aria-label`；裝飾性圖示加 `aria-hidden="true"`
+- 觸控區 ≥ 44×44px；互動元素加 `focus-ring`
 
 ## 工具設定（初始化後套用）
 
@@ -118,7 +121,10 @@ frontend/
 `.prettierrc`：
 
 ```json
-{ "plugins": ["prettier-plugin-tailwindcss"] }
+{
+  "plugins": ["prettier-plugin-tailwindcss"],
+  "tailwindStylesheet": "./src/app/globals.css"
+}
 ```
 
 `eslint.config.mjs` 追加：

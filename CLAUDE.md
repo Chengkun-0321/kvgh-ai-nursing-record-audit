@@ -3,7 +3,7 @@
 使用 LLM 稽核護理師紀錄（入院護理評估、每日身體評估、過程紀錄、轉入／轉出摘要、給藥紀錄…）的完整性與一致性。
 流程：每日讀取病房資料 → 執行稽核規則 → 產出附 Evidence 的稽核結果 → 護理師／護理長確認。
 
-> 目前階段：規範已建立，`backend/`、`frontend/` 尚未初始化（初始化步驟見各自的 CLAUDE.md）。
+> 目前階段：`frontend/` 已初始化，Apple 風格工作區與首頁病床總覽使用前端假資料（`src/lib/api/`）；`backend/` 尚未初始化（步驟見 backend/CLAUDE.md）。
 
 ## 核心原則（領域）
 
@@ -59,6 +59,7 @@
 | 任務 | 必讀 |
 |---|---|
 | 任何程式撰寫 | [clean-code.md](docs/conventions/clean-code.md)、[architecture.md](docs/conventions/architecture.md) |
+| 前端 UI、樣式、動畫 | [ui-design.md](docs/conventions/ui-design.md)（依據 `.claude/skill/apple-design`、`.claude/skill/ui-ux-pro-max`） |
 | 新增／修改稽核規則 | [audit-rules.md](docs/conventions/audit-rules.md)、[llm.md](docs/conventions/llm.md) |
 | LLM 呼叫、prompt、模型設定 | [llm.md](docs/conventions/llm.md)、[security-privacy.md](docs/conventions/security-privacy.md) |
 | 資料匯入（假資料／中繼站 JSON） | [data-ingestion.md](docs/conventions/data-ingestion.md) |

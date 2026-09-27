@@ -1,0 +1,145 @@
+@import "tailwindcss";
+
+/* 設計規範見 docs/conventions/ui-design.md；元件只使用這裡定義的語意 token */
+@theme {
+  /* 系統字優先：Apple 裝置用 SF Pro／蘋方，其他平台退回思源黑體、微軟正黑體 */
+  --font-sans:
+    -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang TC",
+    "Noto Sans TC", "Microsoft JhengHei", system-ui, sans-serif;
+
+  /* 字級：字距隨字級調整（大字收緊、小字放寬），行高與字級成反比 */
+  --text-large-title: 2.125rem;
+  --text-large-title--line-height: 1.15;
+  --text-large-title--letter-spacing: -0.02em;
+  --text-large-title--font-weight: 700;
+  --text-title: 1.5rem;
+  --text-title--line-height: 1.2;
+  --text-title--letter-spacing: -0.015em;
+  --text-title--font-weight: 700;
+  --text-headline: 1.0625rem;
+  --text-headline--line-height: 1.35;
+  --text-headline--letter-spacing: -0.01em;
+  --text-headline--font-weight: 600;
+  --text-body: 0.9375rem;
+  --text-body--line-height: 1.5;
+  --text-footnote: 0.8125rem;
+  --text-footnote--line-height: 1.4;
+  --text-footnote--letter-spacing: 0.005em;
+  --text-caption: 0.75rem;
+  --text-caption--line-height: 1.35;
+  --text-caption--letter-spacing: 0.01em;
+  --text-tab: 0.6875rem;
+  --text-tab--line-height: 1.2;
+  --text-tab--letter-spacing: 0.01em;
+
+  /* 介面色 */
+  --color-canvas: #f5f5f7;
+  --color-surface: #ffffff;
+  --color-ink: #1d1d1f;
+  --color-ink-secondary: #6e6e73;
+  --color-fill: rgb(120 120 128 / 0.12);
+  --color-fill-strong: rgb(120 120 128 / 0.2);
+  --color-separator: rgb(0 0 0 / 0.08);
+  /* 藍色已是「無法判定」狀態色，主操作色改用石墨黑避免混淆 */
+  --color-accent: #1d1d1f;
+  --color-accent-contrast: #ffffff;
+  --color-badge: #e0241a;
+  /* 模態遮罩：40% 黑，讓前景完整分離 */
+  --color-scrim: rgb(0 0 0 / 0.4);
+
+  /* Verdict 狀態色：主色用於圖示與光暈，strong 為白底可讀（≥4.5:1）的文字色 */
+  --color-verdict-error: #ff3b30;
+  --color-verdict-error-strong: #d70015;
+  --color-verdict-warning: #ffcc00;
+  --color-verdict-warning-strong: #b25000;
+  --color-verdict-review: #007aff;
+  --color-verdict-review-strong: #0040dd;
+  --color-verdict-pass: #34c759;
+  --color-verdict-pass-strong: #1f7a36;
+
+  /* 病房地面 */
+  --color-floor: #ebe9e5;
+  --color-floor-light: #f8f7f4;
+
+  --radius-card: 1.25rem;
+  --radius-panel: 1.75rem;
+
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.04), 0 4px 16px rgb(0 0 0 / 0.06);
+  --shadow-float: 0 1px 3px rgb(0 0 0 / 0.06), 0 12px 40px rgb(0 0 0 / 0.12);
+
+  --spacing-topbar: 3.5rem;
+  --spacing-rail: 4.5rem;
+  --spacing-sidebar: 15rem;
+  --spacing-detail: 23rem;
+
+  --ease-apple: cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+/* 半透明材質：浮在內容上的功能層（頂列、狀態列、面板）。不可疊在另一層半透明材質上 */
+@utility glass {
+  background-color: rgb(255 255 255 / 0.72);
+  backdrop-filter: blur(24px) saturate(180%);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.6);
+
+  @media (prefers-reduced-transparency: reduce) {
+    background-color: var(--color-surface);
+    backdrop-filter: none;
+  }
+
+  @media (prefers-contrast: more) {
+    background-color: var(--color-surface);
+    backdrop-filter: none;
+    outline: 1px solid var(--color-ink-secondary);
+    outline-offset: -1px;
+  }
+}
+
+/* 較厚的材質：分隔結構區塊（側欄） */
+@utility glass-heavy {
+  background-color: rgb(246 246 248 / 0.82);
+  backdrop-filter: blur(32px) saturate(160%);
+
+  @media (prefers-reduced-transparency: reduce) {
+    background-color: var(--color-canvas);
+    backdrop-filter: none;
+  }
+
+  @media (prefers-contrast: more) {
+    background-color: var(--color-canvas);
+    backdrop-filter: none;
+    outline: 1px solid var(--color-ink-secondary);
+    outline-offset: -1px;
+  }
+}
+
+/* 鍵盤焦點：石墨黑外框，所有可互動元素共用 */
+@utility focus-ring {
+  &:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+}
+
+/* 按下即回饋：pointer-down 當下縮小，不等放開 */
+@utility pressable {
+  transition-property: scale, background-color, color, box-shadow;
+  transition-duration: 100ms;
+  transition-timing-function: var(--ease-apple);
+
+  &:active:not(:disabled, [aria-disabled="true"]) {
+    scale: 0.97;
+  }
+}
+
+@utility ward-floor {
+  background-color: var(--color-floor);
+  background-image: radial-gradient(
+    ellipse 80% 65% at 50% 30%,
+    var(--color-floor-light),
+    transparent 75%
+  );
+}
+
+:root {
+  color-scheme: light;
+}

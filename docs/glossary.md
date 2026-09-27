@@ -8,12 +8,23 @@
 | 中文 | 英文識別字 | 說明 |
 |---|---|---|
 | 病房 | `ward` | |
+| 病房名稱 | `ward_name` | 例：內科病房 |
 | 病床 | `bed` | |
+| 床號 | `bed_code` | 例：`W51-1` |
 | 病患 | `patient` | |
 | 病患匿名鍵 | `patient_key` | 系統內部匿名識別，log 只能用這個 |
+| 病患摘要 | `patient_summary` | 病床總覽所需的病患基本資料 |
+| 姓名 | `name` | 僅供畫面顯示，禁止寫入 log、例外訊息、URL |
+| 性別 | `sex` | `M` / `F` |
+| 年齡 | `age_years` | |
+| 年齡層 | `age_group` | `young`（< 45）/ `middle`（45–64）/ `elder`（≥ 65），僅用於選擇病床圖片 |
+| 入院日期 | `admission_date` | |
+| 住院天數 | `length_of_stay_days` | 業務日期與入院日期相差的日數 |
+| 診斷 | `diagnosis` | |
 | 住院 | `admission` | 一次住院期間 |
 | 護理長 | `head_nurse` | |
 | 護理師 | `nurse` | |
+| 目前使用者 | `current_user` | 登入的使用者（登入機制待決，目前為虛構資料） |
 
 ## 護理紀錄與臨床資料
 
@@ -47,6 +58,10 @@
 | 稽核批次 | `audit_run` | 一次每日稽核執行 |
 | 稽核結果 | `audit_finding` | 每位病患 × 每條規則一筆 |
 | 判定 | `verdict` | `PASS` / `WARNING` / `ERROR` / `NEEDS_REVIEW` |
+| 最嚴重判定 | `worst_verdict` | 一床所有稽核結果中最嚴重者，決定病床總覽的狀態顯示 |
+| 病床總覽 | `bed_board` | 首頁：病房內各床的稽核狀態 |
+| 待處理病床 | `pending_bed` | 最嚴重判定不是 `PASS` 的病床 |
+| 紀錄時間 | `recorded_at` | 稽核結果相關護理紀錄的紀錄時間 |
 | 證據 | `evidence` | 判定依據：來源、紀錄 ID、欄位、日期、原文片段 |
 | 判定引擎 | `engine` | `rule` / `llm` / `hybrid` |
 | 業務日期 | `business_date` | 稽核歸屬日，以 Asia/Taipei 計算 |

@@ -15,7 +15,7 @@ DB：原始批次紀錄 + 正規化病患資料
 audit_findings（Verdict + Evidence）
         │  api/v1
         ▼
-Next.js：病床總覽 → 點選病床開啟 Drawer → 病患摘要 + 稽核結果 + Evidence
+Next.js：病床總覽 → 點選病床顯示詳情 → 進入病患頁面 → 病患摘要 + 稽核結果 + Evidence
 ```
 
 ## 後端（FastAPI 標準分層）
@@ -80,9 +80,11 @@ services/
 
 | 路由 | 內容 |
 |---|---|
-| `/` | 病房病床總覽：每床一張卡片，依最嚴重 Verdict 顯示狀態與光暈 |
-| （Drawer） | 點選病床開啟：病患摘要、各規則稽核結果、Evidence 原文 |
+| `/` | 病房病床總覽：每床一張病床圖片＋床號標籤，依最嚴重 Verdict 顯示狀態與光暈，可依狀態篩選；點選病床於右側（手機為 bottom sheet）顯示病患摘要與稽核結果 |
+| `/patients/[patientKey]` | 病患頁面：病患摘要、各規則稽核結果、Evidence 原文（內容待討論，目前為佔位頁） |
 | `/settings/llm` | LLM 模型設定（provider、model、API key、測試連線） |
+
+登入後的頁面放在 `app/(workspace)/`，共用工作區外框（頂列、側欄／底部分頁列）；登入頁（待決）之後放在此群組之外。UI 規範見 [ui-design.md](ui-design.md)。
 
 ### 資料流
 
