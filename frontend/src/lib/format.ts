@@ -56,3 +56,14 @@ export function formatShortDateTime(isoDateTime: string): string {
   const { month, day, hour, minute } = toParts(new Date(isoDateTime));
   return `${month}/${day} ${hour}:${minute}`;
 }
+
+/** 將 ISO 8601 時間格式化為「14:20」。 */
+export function formatTime(isoDateTime: string): string {
+  const { hour, minute } = toParts(new Date(isoDateTime));
+  return `${hour}:${minute}`;
+}
+
+/** 將毫秒格式化為「2.4 秒」。 */
+export function formatSeconds(milliseconds: number): string {
+  return `${(milliseconds / 1000).toFixed(1)} 秒`;
+}

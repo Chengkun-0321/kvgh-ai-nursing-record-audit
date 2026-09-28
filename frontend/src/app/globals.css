@@ -46,12 +46,27 @@
   --color-accent: #3972ce;
   --color-accent-contrast: #ffffff;
   --color-badge: #e0241a;
+  /* 淺藍底＋深藍字：設定頁的主要按鈕、選取狀態與使用者訊息（不使用白字）；
+     accent-strong 在 accent-tint-strong 上約 5.9:1、白底約 7.9:1 */
+  --color-accent-tint: rgb(57 114 206 / 0.14);
+  --color-accent-tint-strong: rgb(57 114 206 / 0.22);
+  --color-accent-strong: #1f4f9e;
+  /* 刪除等破壞性操作與錯誤訊息；白底約 7.2:1、danger-tint 上約 6:1 */
+  --color-danger: #b3001b;
+  --color-danger-tint: rgb(215 0 21 / 0.1);
+  /* 輸入框外框：白底約 3.1:1，符合非文字元素 ≥3:1 */
+  --color-field-border: rgb(60 60 67 / 0.56);
   /* 模態遮罩：40% 黑，讓前景完整分離 */
   --color-scrim: rgb(0 0 0 / 0.4);
 
   /* 淺色液態玻璃：側欄、使用者膠囊、手機頂列、標題、狀態列、縮放控制、詳情卡共用；
      透出場景的暖色，不透明度已依最差背景（下方墊純黑）驗證 ink／ink-secondary 對比 */
   --color-glass: rgb(255 255 255 / 0.76);
+
+  /* 非地圖頁的靜態底色：暖灰加柔光，讓玻璃面板有東西可透；ink 約 12.8:1、ink-secondary 約 6.9:1 */
+  --color-backdrop: #e6e0d8;
+  --color-backdrop-glow: #f6f1ea;
+  --color-backdrop-cool: #dde3ea;
 
   /* Verdict 狀態色：主色用於圖示與光暈，strong 為白底可讀（≥4.5:1）的文字色 */
   --color-verdict-error: #ff3b30;
@@ -154,6 +169,22 @@
     outline: 1px solid var(--color-ink-secondary);
     outline-offset: -1px;
   }
+}
+
+/* 非地圖頁（設定等）的滿版底色：靜態、不動畫，只提供玻璃可透的柔和層次 */
+@utility page-backdrop {
+  background-color: var(--color-backdrop);
+  background-image:
+    radial-gradient(
+      60rem 40rem at 12% 0%,
+      var(--color-backdrop-glow),
+      transparent 70%
+    ),
+    radial-gradient(
+      50rem 36rem at 100% 100%,
+      var(--color-backdrop-cool),
+      transparent 70%
+    );
 }
 
 /* 鍵盤焦點：操作藍外框，所有可互動元素共用 */

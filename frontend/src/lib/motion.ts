@@ -85,3 +85,19 @@ export const BED_DIM_TRANSITION: Transition = {
 
 /** 被篩選排除的病床不透明度（與 Tailwind `opacity-35` 相同）。 */
 export const DIMMED_BED_OPACITY = 0.35;
+
+/** 逐步工作表：由下方微微浮現並放大到位，退場反向；減少動態時只保留淡入淡出。 */
+export const WIZARD_SHEET_MOTION = {
+  initial: { opacity: 0, y: 24, scale: 0.98 },
+  animate: { opacity: 1, y: 0, scale: 1 },
+  exit: { opacity: 0, y: 24, scale: 0.98 },
+} as const;
+
+/** 換步驟時內容水平位移的距離：前進由右側進入、返回由左側進入。 */
+export const WIZARD_STEP_OFFSET_PX = 24;
+
+/** 換步驟：位移用 spring，透明度另以短淡入。 */
+export const WIZARD_STEP_TRANSITION: Transition = {
+  ...SPRING_DEFAULT,
+  opacity: { duration: 0.15, ease: "easeOut" },
+};

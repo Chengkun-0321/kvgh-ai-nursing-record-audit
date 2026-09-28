@@ -36,7 +36,7 @@ backend/
 │   │   └── v1/
 │   │       ├── router.py
 │   │       └── endpoints/   # patients.py、audit_findings.py、llm_configs.py…
-│   ├── core/            # config.py、logging.py、security.py、exceptions.py、enums.py
+│   ├── core/            # config.py、logging.py、security.py、exceptions.py、enums.py、constants.py（models／schemas 共用的長度上限）
 │   ├── db/              # base.py（Base、mixin、naming convention）、session.py
 │   ├── models/          # SQLAlchemy ORM
 │   ├── schemas/         # Pydantic（Create / Update / Read 分開）
@@ -99,8 +99,18 @@ backend/
 - log 用 `logging.getLogger(__name__)`，禁用 `print`；log 只記 `patient_key`、`record_id`
 - async 函式內禁止阻塞 I/O（`requests`、`time.sleep`、大量同步檔案讀寫）；對外 HTTP 用 `httpx.AsyncClient`
 
+## 啟動（開發）
+
+首次：`cp .env.example .env`，填入 `LLM_KEY_ENCRYPTION_KEY`（產生方式見 `.env.example`）。之後：
+
+```bash
+source .venv/bin/activate && alembic upgrade head && uvicorn app.main:app --reload --port 8000
+```
+
+也可用 `.claude/launch.json` 的 `backend` 設定啟動。
+
 ## 檢查
 
 ```bash
-ruff check . && ruff format --check . && mypy app
+ruff check . && ruff format --check . && mypy app && pytest
 ```

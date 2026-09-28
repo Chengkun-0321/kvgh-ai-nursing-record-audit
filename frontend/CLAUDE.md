@@ -52,6 +52,7 @@ frontend/
     │   ├── ui/           # 通用元件，無業務邏輯（SegmentedControl、icons…）
     │   ├── app-shell/    # 工作區外框：頂列、側欄、底部分頁列
     │   ├── ward-scene/   # 病房 3D 場景（R3F）、DOM 病床按鈕層、地圖控制與視窗
+    │   ├── llm-settings/ # LLM 模型設定頁：設定清單與表單、ChatGPT 登入、測試對話
     │   └── …             # 業務元件（BedCard、PatientSummary、AuditFindingList…）
     ├── hooks/            # useXxx
     ├── lib/              # api client、utils（cn）、motion variants、constants
@@ -73,7 +74,8 @@ frontend/
 ## 資料存取
 
 - 後端呼叫一律經 `src/lib/api/`，元件內不直接 `fetch` 後端 URL
-- 後端位址：Server 端用 `API_BASE_URL`，Client 端用 `NEXT_PUBLIC_API_BASE_URL`
+- 後端位址：Server 端用 `API_BASE_URL`，Client 端用 `NEXT_PUBLIC_API_BASE_URL`（複製 `.env.example` 為 `.env.local`）
+- API 錯誤一律轉成帶繁中訊息的 `ApiError`（`lib/api/client.ts`），元件以 `toErrorMessage()` 顯示
 - API 型別：`npm run gen:api` 由 FastAPI `/openapi.json` 產生 `src/types/api.ts`；禁止手寫重複的 API 型別
 - 後端 schema 變更後必須重新產生 `api.ts`
 

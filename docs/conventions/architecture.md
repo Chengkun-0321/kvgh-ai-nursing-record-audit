@@ -29,8 +29,8 @@ Next.js：病床總覽 → 點選病床顯示詳情 → 進入病患頁面 → �
 | `api/`      | HTTP 輸入輸出、驗證、狀態碼   | `schemas`、`services`、`api/deps`、`core`            | `crud`、`models`、`db`       |
 | `services/` | 商業邏輯、交易邊界、流程編排  | `crud`、`schemas`、`models`、`core`、其他 `services` | `api`、`fastapi`             |
 | `crud/`     | DB 查詢與寫入（不 commit）    | `models`、`db`、`core`                               | `services`、`api`、`schemas` |
-| `models/`   | ORM 定義                      | `db/base`、`core/enums`                              | 其他                         |
-| `schemas/`  | Pydantic 資料結構             | `core/enums`                                         | `models`、`crud`、`services` |
+| `models/`   | ORM 定義                      | `db/base`、`core/enums`、`core/constants`            | 其他                         |
+| `schemas/`  | Pydantic 資料結構             | `core/enums`、`core/constants`                       | `models`、`crud`、`services` |
 | `core/`     | 設定、例外、列舉、log、加解密 | 標準庫與第三方                                       | `app` 內其他模組             |
 
 依賴方向：`api → services → crud → models`，不可反向。
@@ -48,9 +48,16 @@ services/
 │       ├── r01_admission_course.py
 │       └── …
 ├── llm/
-│   ├── gateway.py         # 唯一 LLM 出口
-│   ├── config_service.py  # 使用者模型設定的讀寫與加解密
-│   └── prompt_loader.py   # 載入、渲染 Jinja2 prompt
+│   ├── __init__.py        # 內網：改用 LiteLLM 內建的模型價格表
+│   ├── gateway.py         # 唯一 LLM 出口（目前提供測試對話串流）
+│   ├── providers.py       # 服務類型 → LiteLLM 前綴、必填欄位（不 import litellm）
+│   ├── config_service.py  # 模型設定的讀寫、使用中切換、變更紀錄
+│   ├── system_prompt_service.py  # 共用 system prompt 的版本化儲存
+│   ├── model_catalog.py   # 以 httpx 查詢各服務的模型清單、偵測本地伺服器類型（不 import litellm）
+│   ├── model_listing.py   # 查詢可用模型的流程：取得金鑰、過濾對話模型
+│   ├── redaction.py       # 服務錯誤說明的金鑰遮蔽
+│   ├── chatgpt_auth.py    # ChatGPT 訂閱的裝置碼登入（唯一可 import litellm 內部模組的例外）
+│   └── prompt_loader.py   # 載入、渲染 Jinja2 prompt（待實作）
 └── ingestion/
     ├── sources.py         # DataSource Protocol、LocalFixtureSource、RelaySource
     ├── importer.py        # 驗證 → 正規化 → 入庫
@@ -70,6 +77,7 @@ services/
 | `audit_runs`          | 每次稽核批次（日期、規則集、模型、耗時、token 用量） |
 | `audit_findings`      | 每位病患每條規則的 Verdict 與 Evidence               |
 | `llm_configs`         | 使用者設定的模型（API key 加密存放）                 |
+| `llm_system_prompts`  | 共用 system prompt，每次儲存為一個新版本             |
 | `setting_change_logs` | 設定變更操作紀錄                                     |
 
 ## 前端（Next.js App Router 標準結構）
@@ -82,7 +90,7 @@ services/
 | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `/`                      | 病房地圖：Blender 場景模組依床數組成的 3D 場景搭配病床素材，可拖曳及縮放 50–200%；依最嚴重 Verdict 顯示光暈並篩選（淡化其餘床位）；點選病床於右側（手機為 bottom sheet）顯示病患摘要與稽核結果 |
 | `/patients/[patientKey]` | 病患頁面：病患摘要、各規則稽核結果、Evidence 原文（內容待討論，目前為佔位頁）                                                                                      |
-| `/settings/llm`          | LLM 模型設定（provider、model、API key、測試連線）                                                                                                                 |
+| `/settings/llm`          | LLM 模型設定：多組設定（同一時間一組使用中）、服務類型、API key（只顯示遮罩值）、ChatGPT 訂閱登入、共用 system prompt、串流測試對話；見 [ADR 0006](../adr/0006-llm-config-settings.md)、[ADR 0007](../adr/0007-llm-system-prompt.md) |
 
 登入後的頁面放在 `app/(workspace)/`，共用工作區外框（頂列、側欄／底部分頁列）；登入頁（待決）之後放在此群組之外。UI 規範見 [ui-design.md](ui-design.md)。
 

@@ -3,7 +3,7 @@
 使用 LLM 稽核護理師紀錄（入院護理評估、每日身體評估、過程紀錄、轉入／轉出摘要、給藥紀錄…）的完整性與一致性。
 流程：每日讀取病房資料 → 執行稽核規則 → 產出附 Evidence 的稽核結果 → 護理師／護理長確認。
 
-> 目前階段：`frontend/` 已初始化，Apple 風格工作區與首頁病床總覽（Blender 場景模組＋React Three Fiber 的滿版 3D 病房，預設正視、可切換斜視）使用前端假資料（`src/lib/api/`）；`backend/` 尚未初始化（步驟見 backend/CLAUDE.md）。
+> 目前階段：`frontend/` 已初始化，Apple 風格工作區與首頁病床總覽（Blender 場景模組＋React Three Fiber 的滿版 3D 病房，預設正視、可切換斜視）仍使用前端假資料（`src/lib/api/`）。`backend/` 已初始化 FastAPI 骨架與 LLM 模型設定（`/settings/llm`：多組設定、ChatGPT 訂閱登入、共用 system prompt、串流測試對話，見 [ADR 0006](docs/adr/0006-llm-config-settings.md)、[ADR 0007](docs/adr/0007-llm-system-prompt.md)）；病患資料與稽核規則尚未實作。
 
 ## 核心原則（領域）
 

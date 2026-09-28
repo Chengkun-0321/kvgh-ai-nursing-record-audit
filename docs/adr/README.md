@@ -32,3 +32,5 @@
 | [0003](0003-ward-scene-3d.md) | 病房場景改用 Blender 場景模組＋React Three Fiber | 提議（視角與設定檔部分由 0004 取代） |
 | [0004](0004-ward-straight-view.md) | 病房地圖預設改為正視角，保留斜視角切換，場景滿版 | 提議 |
 | [0005](0005-floating-glass-shell.md) | 桌機工作區外框改為全浮動液態玻璃 | 提議 |
+| [0006](0006-llm-config-settings.md) | LLM 模型設定頁（多組設定、服務類型、ChatGPT 訂閱登入、串流測試對話） | 提議 |
+| [0007](0007-llm-system-prompt.md) | 共用 System Prompt（版本化、套用所有呼叫、ChatGPT 訂閱不帶 Codex 內建指示） | 提議 |

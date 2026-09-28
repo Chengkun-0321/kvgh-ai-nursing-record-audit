@@ -72,6 +72,23 @@
 | 判定引擎   | `engine`         | `rule` / `llm` / `hybrid`                                     |
 | 業務日期   | `business_date`  | 稽核歸屬日，以 Asia/Taipei 計算                               |
 
+## LLM 設定
+
+| 中文             | 英文識別字           | 說明                                                                 |
+| ---------------- | -------------------- | -------------------------------------------------------------------- |
+| 模型設定         | `llm_config`         | 一組 LLM 連線設定（服務類型、模型名稱、API 位址、API 金鑰、逾時）    |
+| 服務類型         | `llm_provider`       | `openai` / `chatgpt` / `gemini` / `ollama` / `openai_compatible`     |
+| 使用中           | `is_active`          | 同一時間只有一組模型設定為使用中，系統呼叫模型時使用這一組           |
+| 金鑰遮罩值       | `api_key_hint`       | 顯示用的遮罩金鑰（如 `sk-…abcd`），明文只在呼叫當下解密              |
+| 可用模型         | `available_model`    | 服務目前提供、可選擇的模型（設定頁下拉選單），由後端即時查詢         |
+| 本地模型         | `local`              | 畫面上的服務類型選項，涵蓋 `ollama` 與 `openai_compatible`，由後端偵測 |
+| 逐步工作表       | `llm_config_wizard`  | 新增／編輯模型設定的彈出式流程，一步一頁                             |
+| 測試對話         | `chat_test`          | 設定頁以已儲存的設定直接對話、串流顯示回應；歷史只存在前端           |
+| ChatGPT 訂閱登入 | `chatgpt_auth`       | 以 OAuth 裝置碼登入 ChatGPT Plus／Pro，供 `chatgpt` 服務類型使用     |
+| 設定變更紀錄     | `setting_change_log` | 設定的新增、更新、切換、刪除紀錄；只記欄位名稱，不記值               |
+| 共用 System Prompt | `llm_system_prompt` | 所有模型呼叫（含稽核）都會先帶上的指示，每次儲存為一個新版本       |
+| System prompt 版本 | `system_prompt_version` | 呼叫當下使用的共用 system prompt 版本號，稽核結果據此重現       |
+
 ## 資料匯入
 
 | 中文     | 英文識別字        | 說明               |

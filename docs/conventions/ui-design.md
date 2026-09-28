@@ -28,6 +28,10 @@ token 實作在 `frontend/src/app/globals.css` 的 `@theme`；元件只用語意
 | 玻璃     | `glass`                                                                                  | 淺色液態玻璃底色（側欄、使用者膠囊、手機頂列與分頁列、標題、狀態列、縮放控制、詳情卡共用）         |
 | 場景     | `scene-*`（牆面、設備帶、燈光、地板、木紋、金屬、螢幕、隔簾、布面、陰影、環境光、地坪）  | 只給病房場景使用，元件 UI 不可引用；`scene-apron` 為病房外的地坪（滿版舞台底色）                   |
 | 主操作色 | `accent`（操作藍）、`accent-contrast`                                                    | 主要按鈕、focus 外框；與 `NEEDS_REVIEW` 分開定義，狀態以圖示、文字輔助辨識                         |
+| 淺藍操作 | `accent-tint`、`accent-tint-strong`（hover）、`accent-strong`                           | 設定頁「淺藍底＋深藍字」的主要按鈕、選取狀態、使用者訊息；`accent-strong` 在 tint 上 ≥5.8:1        |
+| 破壞性   | `danger`、`danger-tint`                                                                  | 刪除按鈕、錯誤訊息（白底約 7.2:1）；與 verdict 的紅色分開定義                                      |
+| 輸入框   | `field-border`                                                                           | 輸入框外框（白底約 3.1:1，符合非文字 ≥3:1）                                                        |
+| 頁面底色 | `backdrop`、`backdrop-glow`、`backdrop-cool`                                             | 非地圖頁（設定）的靜態柔和底色，經 `page-backdrop` utility 使用                                    |
 | 狀態色   | `verdict-{error,warning,review,pass}` 與 `-strong`                                       | 主色用於圖示；`-strong` 為白底 ≥4.5:1 的文字色                                                     |
 | 徽章     | `badge`                                                                                  | 待處理數字徽章（白字 ≥4.5:1）                                                                      |
 | 圓角     | `rounded-card`（20px）、`rounded-panel`（28px）                                          | 卡片／清單、面板／sheet                                                                            |
@@ -39,6 +43,7 @@ token 實作在 `frontend/src/app/globals.css` 的 `@theme`；元件只用語意
 | Utility | 用途                                                                                                           | 做法                                                                                          |
 | ------- | -------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
 | `glass` | 所有浮在畫面上的功能層：滿高浮動側欄、右上使用者膠囊、手機頂列與分頁列、病房標題卡、狀態列、縮放控制、詳情大卡 | 白 0.76（透出場景暖色）＋上緣光澤漸層＋`blur(30px) saturate(190%)`；`::before` 畫漸層邊緣高光 |
+| `page-backdrop` | 非地圖頁（設定）的滿版底色，讓玻璃面板有層次可透 | 暖灰底＋兩處柔光徑向漸層；靜態、不動畫 |
 
 - 使用玻璃的元素本身必須有定位（`relative`／`sticky`／`absolute`／`fixed`），邊緣高光才會貼齊。
 - **透明度動畫要做在玻璃元素本身**，不可做在祖先：祖先 `opacity < 1` 會讓 `backdrop-filter` 暫時失效，動畫結束時畫面會跳一下。
@@ -143,9 +148,37 @@ token 實作在 `frontend/src/app/globals.css` 的 `@theme`；元件只用語意
 | 狀態列     | 結構層玻璃；各 Verdict 床數，同時是篩選開關（`aria-pressed`，再點一次回到全部），選取底色（實色白膠囊）以 spring 滑動                                                                                                                                                                                       |
 | 分段控制器 | `components/ui/SegmentedControl`；指示器以 spring 滑動；停用項目以 `disabledHint` 標示                                                                                                                                                                                                                      |
 | 清單       | 實色 `surface` 卡片＋`divide-separator`                                                                                                                                                                                                                                                                     |
-| 主要按鈕   | `rounded-full bg-accent text-accent-contrast`，高度 ≥ 44px，加上 `pressable` 與 `focus-ring`                                                                                                                                                                                                                |
+| 主要按鈕   | `rounded-full bg-accent text-accent-contrast`，高度 ≥ 44px，加上 `pressable` 與 `focus-ring`；設定頁改用下方「淺藍按鈕」                                                                                                                                                                                  |
+| 淺藍按鈕   | 設定頁的按鈕樣式集中在 `components/ui/controlStyles.ts`：主要 `bg-accent-tint text-accent-strong`、次要 `bg-fill text-ink`、刪除 `bg-danger-tint text-danger`；文字不換行，高度 ≥ 44px                                                                                                                  |
+| 輸入欄位   | `components/ui/TextField`：標籤在上，說明與錯誤在下；錯誤為「圖示＋文字」並以 `aria-describedby` 關聯；送出失敗時焦點移到第一個錯誤欄位                                                                                                                                                                     |
+| 確認對話框 | `components/ui/ConfirmDialog`：原生 `<dialog>`＋`showModal()`，預設焦點在「取消」，用於刪除等破壞性操作                                                                                                                                                                                                      |
 | 詳情大卡   | 桌機右側：**開頁不顯示，點選病床才浮現**；由 `--spacing-toolbar` 以下開始，不遮住右上使用者膠囊；淺色玻璃、不加遮罩（不打斷操作）；地圖平移讓選中床位保持可見。X、Esc、再點同一床、點大卡與病床／狀態列以外的地方皆可關閉，以 X／Esc 關閉時焦點回到該床。高度固定、內容捲動，「進入病人個人頁面」固定在底部 |
 | 模態 sheet | 手機詳情（點選病床開啟）：原生 `<dialog>`＋40% 黑遮罩；由下進、往下退；可拖曳把手關閉                                                                                                                                                                                                                       |
+
+## LLM 模型設定頁（`/settings/llm`）
+
+- **版面**：
+  - 桌機左欄是頁首＋已儲存模型清單＋選取設定的摘要卡（同一片玻璃，內部為實色 `surface` 卡片）；摘要卡有「編輯設定」「刪除設定」。
+  - 右欄是測試對話面板，sticky 在頂部工具列下方，高度填滿視窗，輸入框永遠可見。
+  - 手機改為上下堆疊。
+- **逐步工作表**（新增與編輯共用，`LlmConfigWizard`）：
+  - 原生 `<dialog>`，桌機為置中玻璃工作表（最寬 `max-w-xl`），手機為全螢幕；點背景不關閉，X、Esc、「取消」才關閉。
+  - 一步一頁：選擇服務類型（點卡片即前進）→ 連線設定 → 選擇模型 → 命名與確認。標題上方寫「步驟 N／4」，下方有進度條。
+  - 換步驟時焦點移到新標題；新內容依方向滑入，舊內容只做 0.15 秒淡出。
+  - 模型為下拉選單，自動列出可用模型；取不到時顯示原因與「重試」，並提供「改為手動輸入」。
+  - 提示文字（placeholder）不可看起來像已填好的值：預設值寫成「留空使用 …」，範例寫成「例：…」。
+- **文字不反白**：
+  - 整頁不使用白字。
+  - 選取中的列、服務類型卡片、使用者訊息都用淺藍底＋深色字；「使用中」以實心勾選圖示＋「使用中」文字標示。
+  - 驗證方式：掃描 `#main-content` 內有文字的元素，確認沒有接近白色的文字色。
+- **用字**：
+  - 按鈕直接寫動作與結果：「新增設定」「儲存變更」「設為使用中」「刪除設定」「送出」「停止」「清除對話」。
+  - 停用的操作要在旁邊說明原因，例如「使用中的設定無法刪除」。
+- **測試對話**：
+  - 回應逐字串流。完成後顯示模型、總耗時、首字時間、token 數。
+  - 錯誤以紅色圖示＋繁中訊息顯示在對話中。
+  - Enter 送出、Shift+Enter 換行，輸入法選字中按 Enter 不會送出。
+  - 訊息清單為 `role="log"`，串流中設 `aria-busy`，避免螢幕報讀逐字朗讀。
 
 ## 動態
 

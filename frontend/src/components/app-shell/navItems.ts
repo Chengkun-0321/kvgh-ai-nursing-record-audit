@@ -49,9 +49,9 @@ export const NAV_ITEMS: readonly NavItemConfig[] = [
   },
   {
     label: "設定",
-    href: null,
+    href: "/settings/llm",
     icon: GearIcon,
-    activePathPrefixes: [],
+    activePathPrefixes: ["/settings"],
     hasPendingBadge: false,
   },
 ];

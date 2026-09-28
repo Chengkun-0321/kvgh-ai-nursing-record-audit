@@ -13,6 +13,8 @@
 - 機密只放 `.env`（不進版控）；`.env.example` 列出所有變數與說明（不含真值）
 - 程式一律經 `Settings` 讀取，不直接讀 `os.environ`
 - LLM API key 加密存 DB、只回傳遮罩值，細節見 [llm.md](llm.md)
+- ChatGPT 訂閱登入的 token 以明文存在 `backend/data/chatgpt/`（不進版控；目錄 0700、檔案 0600）；部署到共用主機或接真實資料前須重新評估（見 [ADR 0006](../adr/0006-llm-config-settings.md)）
+- 設定頁的測試對話會把輸入內容送往所選服務：畫面提示勿輸入病患資料，後端不保存、不記錄對話內容
 
 ## Log 與錯誤訊息
 

@@ -40,7 +40,8 @@ max-statements = 30
 [tool.ruff.lint.per-file-ignores]
 # FastAPI endpoint 的 Depends 參數常超過 4 個
 "app/api/**" = ["PLR0913"]
-"tests/**" = ["S101", "PLR2004", "PLR0913"]
+# 測試使用虛構的金鑰與 token 字串
+"tests/**" = ["S101", "S105", "S106", "PLR2004", "PLR0913"]
 
 [tool.mypy]
 python_version = "3.12"
@@ -50,3 +51,7 @@ plugins = ["pydantic.mypy"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 asyncio_mode = "auto"
+# LiteLLM 的型別定義在 pydantic 產生 schema 時的提示，與本專案無關
+filterwarnings = [
+    "ignore:Item 'summary' on TypedDict class 'ChatCompletionReasoningItem':UserWarning",
+]
