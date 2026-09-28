@@ -7,17 +7,14 @@ type AppStatusCapsuleProps = {
   pendingBedCount: number;
 };
 
-/**
- * 桌機右上角的玻璃膠囊：取代滿寬頂列，讓場景直達視窗上緣；
- * 與側欄、病房標題對齊同一條上緣（top-4），詳情卡由 `--spacing-toolbar` 以下開始。
- */
+/** 桌機頂部導覽右側的玻璃膠囊：目前時間、待處理數與使用者。 */
 export function AppStatusCapsule({
   user,
   pendingBedCount,
 }: AppStatusCapsuleProps) {
   return (
-    <header className="glass fixed top-4 right-4 z-30 hidden h-13 items-center rounded-full pr-2 pl-5 shadow-float lg:flex">
-      <UserStatus user={user} pendingBedCount={pendingBedCount} />
+    <header className="glass pointer-events-auto relative flex h-nav items-center justify-self-end rounded-full pr-2 pl-4 shadow-float xl:pl-5">
+      <UserStatus user={user} pendingBedCount={pendingBedCount} isCompact />
     </header>
   );
 }

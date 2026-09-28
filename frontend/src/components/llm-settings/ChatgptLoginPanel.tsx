@@ -78,7 +78,7 @@ function SignedInLogin({ login }: ChatgptLoginPanelProps) {
         <CheckCircleIcon
           weight="fill"
           aria-hidden="true"
-          className="size-5 shrink-0 text-accent-strong"
+          className="size-5 shrink-0 text-positive"
         />
         已登入 {login.status.account_email ?? "ChatGPT 帳號"}
       </p>

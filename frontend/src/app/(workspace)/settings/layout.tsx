@@ -1,20 +1,17 @@
 import type { ReactNode } from "react";
 
+import { SettingsNav } from "@/components/settings/SettingsNav";
+
 type SettingsLayoutProps = {
   children: ReactNode;
 };
 
-// 設定類頁面共用的靜態底色：讓玻璃面板有柔和層次可透
+// 設定類頁面共用外框：桌機左側為設定分頁導覽，手機改為頁首上方的橫向膠囊列
 export default function SettingsLayout({ children }: SettingsLayoutProps) {
   return (
-    <>
-      <div
-        aria-hidden="true"
-        className="pointer-events-none fixed inset-0 page-backdrop"
-      />
-      <div className="relative mx-auto max-w-7xl px-4 pt-4 pb-8 lg:pt-0 lg:pr-4 lg:pl-0">
-        {children}
-      </div>
-    </>
+    <div className="mx-auto flex max-w-[90rem] flex-col gap-4 px-4 pt-4 pb-8 lg:grid lg:grid-cols-[14rem_minmax(0,1fr)] lg:items-start lg:gap-6">
+      <SettingsNav />
+      <div className="min-w-0">{children}</div>
+    </div>
   );
 }

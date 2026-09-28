@@ -84,7 +84,7 @@ export function BedBoard({ board }: BedBoardProps) {
           onSceneError={reportSceneError}
         />
       )}
-      {/* 固定介面放在安全區內：病房鋪滿整個視窗，頂列與側欄疊在場景上 */}
+      {/* 固定介面放在安全區內：病房鋪滿整個視窗，頂部導覽（手機為頂列）疊在場景上 */}
       <div className="ward-safe">
         <WardTitle board={board} />
         <div

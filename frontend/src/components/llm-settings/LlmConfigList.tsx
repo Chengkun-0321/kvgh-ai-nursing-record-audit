@@ -55,7 +55,7 @@ function ActiveToggle({ config, isActivating, onActivate }: ActiveToggleProps) {
         aria-hidden="true"
         className={cn(
           "size-6",
-          isActive ? "text-accent-strong" : "text-ink-secondary",
+          isActive ? "text-positive" : "text-ink-secondary",
         )}
       />
     </button>
@@ -93,7 +93,7 @@ function LlmConfigRow({
               {config.name}
             </span>
             {config.is_active && (
-              <span className="shrink-0 rounded-full bg-surface px-2 py-0.5 text-caption font-semibold text-accent-strong ring-1 ring-accent-strong/35">
+              <span className="shrink-0 rounded-full bg-surface px-2 py-0.5 text-caption font-semibold text-positive-strong ring-1 ring-positive/45">
                 使用中
               </span>
             )}
@@ -137,11 +137,11 @@ export function LlmConfigList({
         </button>
       </div>
       {configs.length === 0 ? (
-        <p className="rounded-card bg-surface p-5 text-body text-ink-secondary shadow-card">
+        <p className="rounded-card bg-canvas p-5 text-body text-ink-secondary">
           尚未儲存任何模型。按「新增模型」逐步完成設定，第一組會自動設為使用中。
         </p>
       ) : (
-        <ul className="divide-y divide-separator overflow-hidden rounded-card bg-surface shadow-card">
+        <ul className="divide-y divide-separator overflow-hidden rounded-card bg-canvas">
           {configs.map((config) => (
             <LlmConfigRow
               key={config.id}

@@ -60,7 +60,7 @@ function ChatSession({ config }: { config: LlmConfig }) {
         role="log"
         aria-label="測試對話內容"
         aria-busy={isStreaming}
-        className="flex min-h-64 flex-1 flex-col gap-3 overflow-y-auto overscroll-contain rounded-card bg-surface p-4 shadow-card"
+        className="flex min-h-64 flex-1 flex-col gap-3 overflow-y-auto overscroll-contain rounded-card bg-canvas p-4"
       >
         {entries.length === 0 && (
           <li className="m-auto max-w-xs text-center text-body text-ink-secondary">
@@ -88,7 +88,7 @@ export function ChatTestPanel({ config }: ChatTestPanelProps) {
   return (
     <section
       aria-label="測試對話"
-      className="glass relative flex flex-col gap-4 rounded-panel p-4 shadow-float lg:sticky lg:top-toolbar lg:h-[calc(100dvh-var(--spacing-toolbar)-1rem)] lg:p-5"
+      className="relative flex flex-col gap-4 rounded-panel bg-surface p-4 shadow-card lg:p-5 xl:sticky xl:top-[calc(var(--spacing-toolbar)+1rem)] xl:h-[calc(100dvh-var(--spacing-toolbar)-2rem)]"
     >
       {config ? (
         <ChatSession key={config.id} config={config} />

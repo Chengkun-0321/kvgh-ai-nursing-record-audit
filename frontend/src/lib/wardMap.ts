@@ -23,7 +23,7 @@ export const MAP_LIMITS = {
 export type MapPoint = { x: number; y: number };
 export type MapCamera = MapPoint & { scale: number };
 export type MapSize = { width: number; height: number };
-/** 地圖視窗內可放病房的區域（px）：扣掉疊在場景上的頂列、側欄等外框；x、y 為左上角。 */
+/** 地圖視窗內可放病房的區域（px）：扣掉疊在場景上的頂部導覽、頂列等外框；x、y 為左上角。 */
 export type MapArea = MapPoint & MapSize;
 export type MapBounds = {
   left: number;

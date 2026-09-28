@@ -30,3 +30,7 @@ export { TrashIcon } from "@phosphor-icons/react/dist/ssr/Trash";
 export { ArrowClockwiseIcon } from "@phosphor-icons/react/dist/ssr/ArrowClockwise";
 export { CaretDownIcon } from "@phosphor-icons/react/dist/ssr/CaretDown";
 export { PencilSimpleIcon } from "@phosphor-icons/react/dist/ssr/PencilSimple";
+export { ClockCountdownIcon } from "@phosphor-icons/react/dist/ssr/ClockCountdown";
+export { CpuIcon } from "@phosphor-icons/react/dist/ssr/Cpu";
+export { ShieldCheckIcon } from "@phosphor-icons/react/dist/ssr/ShieldCheck";
+export { UsersThreeIcon } from "@phosphor-icons/react/dist/ssr/UsersThree";

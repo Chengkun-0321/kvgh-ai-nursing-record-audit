@@ -26,16 +26,10 @@
   inherits: true;
   initial-value: 0px;
 }
-/* 病房鋪滿整個視窗，側欄、使用者膠囊（手機為頂列）與手機分頁列都疊在場景上；病房外的地坪以靜態暖灰與柔光填滿 */
+/* 病房鋪滿整個視窗，頂部導覽（手機為頂列）與手機分頁列都疊在場景上；病房外透出全站共用的暖亞麻底色（page-backdrop），與病房的暖色木紋、燈光同一色溫 */
 .ward-stage {
   position: fixed;
   inset: 0;
-  background-color: var(--color-scene-apron);
-  background-image: radial-gradient(
-    ellipse 75% 70% at 55% 50%,
-    var(--color-scene-apron-light),
-    transparent
-  );
 }
 /*
  * 安全區：扣掉疊在場景上的外框；標題、狀態列、詳情卡與縮放控制以 absolute 定位在此範圍內（不受 padding 影響）。
@@ -121,11 +115,11 @@
   }
 }
 @media (min-width: 64rem) {
-  /* 桌機沒有頂列，場景直達視窗上緣；側欄為 m-4 的浮動卡片，安全區從卡片右緣開始，內部元件再留 1rem */
+  /* 桌機場景直達視窗上緣，頂部導覽膠囊疊在場景上；安全區從導覽下緣開始，內部元件再留 1rem */
   .ward-safe {
-    top: 0;
+    top: var(--spacing-toolbar);
     bottom: 0;
-    left: calc(var(--spacing-rail) + 1rem);
+    left: 0;
     padding: 2rem;
   }
   .map-controls {
@@ -134,11 +128,6 @@
   [data-detail-open="true"] .map-controls {
     right: calc(var(--spacing-detail) + 2rem);
     bottom: 7.5rem;
-  }
-}
-@media (min-width: 80rem) {
-  .ward-safe {
-    left: calc(var(--spacing-sidebar) + 1rem);
   }
 }
 @media (max-width: 39.99rem) {

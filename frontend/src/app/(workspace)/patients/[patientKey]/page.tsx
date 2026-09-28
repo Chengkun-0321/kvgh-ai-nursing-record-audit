@@ -18,7 +18,7 @@ export default async function PatientPage({ params }: PatientPageProps) {
   }
 
   return (
-    <div className="glass relative mx-auto mt-6 max-w-3xl rounded-panel p-6 shadow-float max-lg:mx-4">
+    <div className="mx-auto mt-4 max-w-3xl rounded-panel bg-surface p-6 shadow-card max-lg:mx-4">
       <Link
         href="/"
         className="-ml-2 inline-flex min-h-11 pressable items-center gap-1 rounded-xl px-2 text-body text-ink-secondary focus-ring hover:text-ink"
@@ -31,7 +31,7 @@ export default async function PatientPage({ params }: PatientPageProps) {
       </p>
       <h1 className="text-large-title">{bed.patient.name}</h1>
 
-      <section className="mt-8 rounded-panel bg-surface p-8 text-center shadow-card">
+      <section className="mt-8 rounded-card bg-canvas p-8 text-center">
         <h2 className="text-headline">病患頁面建置中</h2>
         <p className="mt-2 text-body text-ink-secondary">
           病患摘要、各規則稽核結果與 Evidence 原文待討論後提供。

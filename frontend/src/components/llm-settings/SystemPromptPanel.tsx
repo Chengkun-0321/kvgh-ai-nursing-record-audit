@@ -50,7 +50,7 @@ export function SystemPromptPanel({
   return (
     <section
       aria-labelledby={headingId}
-      className="glass relative flex flex-col gap-3 rounded-panel p-4 shadow-float lg:p-5"
+      className="flex flex-col gap-3 rounded-panel bg-surface p-4 shadow-card lg:p-5"
     >
       <div className="flex flex-col gap-1">
         <h2 id={headingId} className="text-headline">

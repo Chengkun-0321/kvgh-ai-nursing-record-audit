@@ -12,14 +12,14 @@ export function SettingsNotice({ notice }: SettingsNoticeProps) {
   return (
     <p role="status" className="empty:hidden">
       {notice && (
-        <span className="flex items-start gap-1.5 rounded-card bg-surface px-4 py-3 text-body text-ink shadow-card">
+        <span className="flex items-start gap-1.5 rounded-card bg-canvas px-4 py-3 text-body text-ink">
           <Icon
             weight="fill"
             aria-hidden="true"
             className={
               notice.tone === "error"
                 ? "mt-0.5 size-5 shrink-0 text-danger"
-                : "mt-0.5 size-5 shrink-0 text-accent-strong"
+                : "mt-0.5 size-5 shrink-0 text-positive"
             }
           />
           {notice.message}

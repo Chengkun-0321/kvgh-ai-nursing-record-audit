@@ -39,7 +39,7 @@ export default async function LlmSettingsPage() {
       {header}
       <p
         role="alert"
-        className="glass relative flex items-start gap-2 rounded-panel p-5 text-body text-ink shadow-float"
+        className="flex items-start gap-2 rounded-panel bg-surface p-5 text-body text-ink shadow-card"
       >
         <WarningCircleIcon
           aria-hidden="true"

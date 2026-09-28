@@ -75,7 +75,7 @@ it("放不滿的軸置中，並把低於下限的倍率拉回下限", () => {
   expect(camera.y).toBeCloseTo(75);
 });
 
-it("安全區有偏移時（側欄、頂列疊在場景上），置中與夾限都相對於安全區", () => {
+it("安全區有偏移時（頂部導覽、頂列疊在場景上），置中與夾限都相對於安全區", () => {
   const safe = { x: 240, y: 68, width: 1200, height: 900 };
   const range = getScaleRange(safe, world);
   const initial = getInitialCamera(safe, world);

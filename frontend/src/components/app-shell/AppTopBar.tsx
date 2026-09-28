@@ -10,7 +10,7 @@ type AppTopBarProps = {
 
 /**
  * 手機／平板頂列：淺色液態玻璃浮在內容上方，底緣以漸層遮罩淡出取代分隔線。
- * 桌機（lg 以上）改由側欄上方的標誌與右上角膠囊（`AppStatusCapsule`）取代。
+ * 桌機（lg 以上）改由頂部導覽（`AppNavBar`）取代。
  */
 export function AppTopBar({ user, pendingBedCount }: AppTopBarProps) {
   return (

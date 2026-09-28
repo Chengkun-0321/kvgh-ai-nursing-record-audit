@@ -109,10 +109,10 @@ export function LlmSettingsView({
     : notice;
 
   return (
-    <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-4 lg:grid-cols-[minmax(0,26rem)_minmax(0,1fr)] xl:grid-cols-[minmax(0,30rem)_minmax(0,1fr)]">
+    <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-4 xl:grid-cols-[minmax(0,28rem)_minmax(0,1fr)] 2xl:grid-cols-[minmax(0,32rem)_minmax(0,1fr)]">
       <div className="flex flex-col gap-4">
         {header}
-        <div className="glass relative flex flex-col gap-4 rounded-panel p-4 shadow-float lg:p-5">
+        <div className="flex flex-col gap-4 rounded-panel bg-surface p-4 shadow-card lg:p-5">
           <LlmConfigList
             configs={configs}
             selectedId={selected?.id ?? null}

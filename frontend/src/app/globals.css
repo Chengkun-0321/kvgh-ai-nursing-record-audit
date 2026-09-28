@@ -33,40 +33,47 @@
   --text-tab--line-height: 1.2;
   --text-tab--letter-spacing: 0.01em;
 
-  /* 介面色 */
-  --color-canvas: #f5f5f7;
+  /* 介面色：底色是一層暖亞麻（page-backdrop，與病房的木紋、燈光同一色溫），內容放在白色實色卡片上，液態玻璃只用於浮動外框。
+     冷色（深青）只留給小面積的互動元素，與暖色場景形成對比 */
+  --color-canvas: #f6f3ee;
   --color-surface: #ffffff;
-  --color-ink: #1d1d1f;
-  /* 次要文字：疊在液態玻璃（背後可能是深色病床或光暈）上仍需 ≥4.5:1，因此比系統灰更深（玻璃下墊純黑約 5.1:1） */
-  --color-ink-secondary: #48484d;
-  --color-fill: rgb(120 120 128 / 0.12);
-  --color-fill-strong: rgb(120 120 128 / 0.2);
-  --color-separator: rgb(0 0 0 / 0.08);
-  /* 操作藍與判定藍使用獨立 token；狀態另以圖示、文字區分 */
-  --color-accent: #3972ce;
+  /* 帶一點青的深炭灰：白底 14.7:1、玻璃下墊純黑 8.3:1 */
+  --color-ink: #1f2a2c;
+  /* 次要文字：疊在液態玻璃（背後可能是深色病床或光暈）上仍需 ≥4.5:1（玻璃下墊純黑 4.9:1、白底 8.7:1、底色 7.0:1） */
+  --color-ink-secondary: #454d4e;
+  --color-fill: rgb(31 42 44 / 0.06);
+  --color-fill-strong: rgb(31 42 44 / 0.12);
+  --color-separator: rgb(31 42 44 / 0.1);
+  /* 主色（深青）：實心按鈕底（白字 5.4:1）、品牌標誌、選取指示、進度條、圖示與 focus 外框（淺底 ≥4.3:1、病房暖色地板 3.4:1）。
+     與判定藍（verdict-review）使用獨立 token；狀態另以圖示、文字區分 */
+  --color-accent: #0e7490;
   --color-accent-contrast: #ffffff;
   --color-badge: #e0241a;
-  /* 淺藍底＋深藍字：設定頁的主要按鈕、選取狀態與使用者訊息（不使用白字）；
-     accent-strong 在 accent-tint-strong 上約 5.9:1、白底約 7.9:1 */
-  --color-accent-tint: rgb(57 114 206 / 0.14);
-  --color-accent-tint-strong: rgb(57 114 206 / 0.22);
-  --color-accent-strong: #1f4f9e;
+  /* 淺青底＋深青字：設定頁的主要按鈕、選取狀態與使用者訊息（不使用白字）；
+     accent-strong 在 accent-tint-strong 上約 5.7:1、白底約 7.3:1 */
+  --color-accent-tint: rgb(14 116 144 / 0.1);
+  --color-accent-tint-strong: rgb(14 116 144 / 0.18);
+  --color-accent-strong: #155e75;
+  /* 強調色（綠）：使用中、成功等正向狀態；主色只用於圖示與圓點（白底 3.3:1），文字用 strong（白底 5.0:1） */
+  --color-positive: #16a34a;
+  --color-positive-strong: #15803d;
   /* 刪除等破壞性操作與錯誤訊息；白底約 7.2:1、danger-tint 上約 6:1 */
   --color-danger: #b3001b;
   --color-danger-tint: rgb(215 0 21 / 0.1);
-  /* 輸入框外框：白底約 3.1:1，符合非文字元素 ≥3:1 */
-  --color-field-border: rgb(60 60 67 / 0.56);
+  /* 輸入框外框：白底約 3.5:1，符合非文字元素 ≥3:1 */
+  --color-field-border: rgb(31 42 44 / 0.55);
   /* 模態遮罩：40% 黑，讓前景完整分離 */
   --color-scrim: rgb(0 0 0 / 0.4);
 
-  /* 淺色液態玻璃：側欄、使用者膠囊、手機頂列、標題、狀態列、縮放控制、詳情卡共用；
-     透出場景的暖色，不透明度已依最差背景（下方墊純黑）驗證 ink／ink-secondary 對比 */
+  /* 淺色液態玻璃：頂部導覽、手機頂列與分頁列、病房標題、狀態列、縮放控制、詳情卡與工作表共用；
+     不透明度已依最差背景（下方墊純黑）驗證 ink／ink-secondary 對比 */
   --color-glass: rgb(255 255 255 / 0.76);
 
-  /* 非地圖頁的靜態底色：暖灰加柔光，讓玻璃面板有東西可透；ink 約 12.8:1、ink-secondary 約 6.9:1 */
-  --color-backdrop: #e6e0d8;
-  --color-backdrop-glow: #f6f1ea;
-  --color-backdrop-cool: #dde3ea;
+  /* 全站底色（page-backdrop）：暖亞麻，取自病房燈光與窗框的米白再降低彩度，讓病房像延伸出去的同一個空間；
+     左上近白柔光、右下略深的暖灰角落。ink 12:1、ink-secondary 7.0:1 */
+  --color-backdrop: #ece7e0;
+  --color-backdrop-glow: #f8f5f0;
+  --color-backdrop-shade: #e3dcd2;
 
   /* Verdict 狀態色：主色用於圖示與光暈，strong 為白底可讀（≥4.5:1）的文字色 */
   --color-verdict-error: #ff3b30;
@@ -101,28 +108,28 @@
   --color-scene-curtain: #c8d0d2;
   --color-scene-curtain-fold: #9aa6aa;
   --color-scene-fabric: #5b6d7d;
-  /* 病房外的地坪（滿版舞台背景）：比室內地板暗、低彩度，讓病房像放在建築樓層裡 */
-  --color-scene-apron: #aea79f;
-  --color-scene-apron-light: #c3bcb3;
 
   --radius-card: 1.25rem;
   --radius-panel: 1.75rem;
 
-  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.04), 0 4px 16px rgb(0 0 0 / 0.06);
-  --shadow-float: 0 1px 3px rgb(0 0 0 / 0.06), 0 12px 40px rgb(0 0 0 / 0.12);
+  /* 帶暖色調的擴散陰影（與底色同色溫）：極簡卡片只需輕微浮起 */
+  --shadow-card:
+    0 1px 2px rgb(56 44 32 / 0.05), 0 6px 20px rgb(56 44 32 / 0.07);
+  --shadow-float:
+    0 1px 3px rgb(56 44 32 / 0.07), 0 14px 40px rgb(56 44 32 / 0.13);
 
   --spacing-topbar: 4.25rem;
-  /* 桌機頂部工具列列高（上緣 1rem＋膠囊＋間隙）：側欄以外的頂部浮動層都在這一列，詳情卡與病患頁由此往下 */
-  --spacing-toolbar: 5rem;
-  --spacing-rail: 4.5rem;
-  --spacing-sidebar: 13rem;
+  /* 桌機頂部導覽膠囊的高度 */
+  --spacing-nav: 3.5rem;
+  /* 桌機頂部導覽下緣（上緣 1rem＋導覽高度）：病房安全區與各頁內容由此往下，再各自留 1rem 間距 */
+  --spacing-toolbar: 4.5rem;
   --spacing-detail: 23rem;
 
   --ease-apple: cubic-bezier(0.25, 0.1, 0.25, 1);
 }
 
 /*
- * 液態玻璃（淺色）：側欄、使用者膠囊、手機頂列與分頁列、標題、狀態列、縮放控制與詳情大卡。不可疊在另一層半透明材質上。
+ * 液態玻璃（淺色）：只用於浮動外框（頂部導覽、手機頂列與分頁列、病房標題、狀態列、縮放控制、詳情大卡、工作表）。不可疊在另一層半透明材質上。
  * 元素本身需有定位（relative／sticky／absolute），邊緣高光畫在 ::before。
  * 透明度動畫必須做在這個元素本身，不可做在祖先：祖先 opacity < 1 會讓 backdrop-filter 暫時失效。
  */
@@ -171,7 +178,7 @@
   }
 }
 
-/* 非地圖頁（設定等）的滿版底色：靜態、不動畫，只提供玻璃可透的柔和層次 */
+/* 全站滿版底色（工作區 layout 與首頁病房外共用）：不是白色，而是一層暖亞麻；靜態、不動畫 */
 @utility page-backdrop {
   background-color: var(--color-backdrop);
   background-image:
@@ -182,12 +189,12 @@
     ),
     radial-gradient(
       50rem 36rem at 100% 100%,
-      var(--color-backdrop-cool),
+      var(--color-backdrop-shade),
       transparent 70%
     );
 }
 
-/* 鍵盤焦點：操作藍外框，所有可互動元素共用 */
+/* 鍵盤焦點：主色外框（淺底與病房地板上都 ≥3:1），所有可互動元素共用 */
 @utility focus-ring {
   &:focus-visible {
     outline: 2px solid var(--color-accent);

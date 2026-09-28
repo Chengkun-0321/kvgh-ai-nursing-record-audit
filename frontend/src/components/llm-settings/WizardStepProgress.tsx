@@ -14,7 +14,7 @@ export function WizardStepProgress({ currentIndex }: WizardStepProgressProps) {
           key={step.id}
           className={cn(
             "h-1 flex-1 rounded-full",
-            index <= currentIndex ? "bg-accent-strong" : "bg-fill-strong",
+            index <= currentIndex ? "bg-accent" : "bg-fill-strong",
           )}
         />
       ))}

@@ -50,7 +50,8 @@ frontend/
     ├── app/              # 路由；登入後頁面放 (workspace)/，共用工作區外框
     ├── components/
     │   ├── ui/           # 通用元件，無業務邏輯（SegmentedControl、icons…）
-    │   ├── app-shell/    # 工作區外框：頂列、側欄、底部分頁列
+    │   ├── app-shell/    # 工作區外框：桌機頂部導覽、手機頂列與底部分頁列
+    │   ├── settings/     # 設定頁共用：左側設定分頁導覽
     │   ├── ward-scene/   # 病房 3D 場景（R3F）、DOM 病床按鈕層、地圖控制與視窗
     │   ├── llm-settings/ # LLM 模型設定頁：設定清單與表單、ChatGPT 登入、測試對話
     │   └── …             # 業務元件（BedCard、PatientSummary、AuditFindingList…）
@@ -92,7 +93,7 @@ frontend/
 - 禁止 inline `style`、禁止任意色碼（`bg-[#…]`）；顏色、陰影、光暈一律走 token
 - 條件 class 用 `cn()`（`src/lib/utils.ts`，clsx + tailwind-merge）
 - Verdict 呈現必須「顏色 + icon + 文字」，不可只靠顏色
-- RWD：mobile-first；`lg` 以上顯示側欄與右側詳情大卡（點選病床才出現），以下改用底部分頁列與 bottom sheet
+- RWD：mobile-first；`lg` 以上顯示頂部導覽與右側詳情大卡（點選病床才出現），以下改用頂列、底部分頁列與 bottom sheet
 
 ## Framer Motion
 

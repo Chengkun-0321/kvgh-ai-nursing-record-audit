@@ -5,7 +5,7 @@ import {
   type MapPoint,
 } from "./wardMap";
 
-// 安全區：病房場景鋪滿整個視窗，側欄、使用者膠囊與手機頂列／分頁列疊在場景上，以 CSS 定義扣除後的範圍
+// 安全區：病房場景鋪滿整個視窗，頂部導覽與手機頂列／分頁列疊在場景上，以 CSS 定義扣除後的範圍
 const SAFE_AREA_SELECTOR = ".ward-safe";
 
 function getStage(viewport: HTMLElement): HTMLElement {

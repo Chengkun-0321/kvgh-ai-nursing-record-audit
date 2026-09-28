@@ -34,7 +34,7 @@ export function LlmConfigSummary({
           {config.name}
         </h2>
         {config.is_active && (
-          <span className="shrink-0 rounded-full bg-surface px-2 py-0.5 text-caption font-semibold text-accent-strong ring-1 ring-accent-strong/35">
+          <span className="shrink-0 rounded-full bg-surface px-2 py-0.5 text-caption font-semibold text-positive-strong ring-1 ring-positive/45">
             使用中
           </span>
         )}
