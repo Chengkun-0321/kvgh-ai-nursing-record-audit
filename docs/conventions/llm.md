@@ -24,7 +24,7 @@
 - 畫面上 Ollama 與 OpenAI 相容合併為一個選項「本地模型」：使用者只填伺服器位址（可留空＝Ollama 預設位址），後端依序試 `/api/tags`（Ollama）、`/v1/models`（OpenAI 相容，只填主機時自動補 `/v1`），以第一個成功的判斷類型；儲存時仍為 `ollama`／`openai_compatible`
 - 新增與編輯都用逐步工作表：選擇服務類型 → 連線設定 → 選擇模型 → 命名與確認
 - 「查詢可用模型」API（模型下拉選單），不讓使用者自己猜模型名稱：
-  - `POST /api/v1/available-models`：Codex（`GET /v1/models`）、Gemini（`GET /v1beta/models`，只留 `generateContent`）、ChatGPT 訂閱（與 Codex CLI 相同，以登入 token 呼叫 `GET https://chatgpt.com/backend-api/codex/models?client_version=…`，只留 `visibility=list`、依 `priority` 排序，即此帳號在 Codex 模型選單看得到的模型；版本號為 `Settings.CHATGPT_CLIENT_VERSION`）
+  - `POST /api/v1/available-models`：Codex（`GET /v1/models`）、Gemini（`GET /v1beta/models`，只留 `generateContent`）、ChatGPT 訂閱（與 Codex CLI 相同，以登入 token 呼叫 `GET https://chatgpt.com/backend-api/codex/models?client_version=…`，只留 `visibility=list`、依 `priority` 排序，即此帳號在 Codex 模型選單看得到的模型；版本號由 `services/llm/codex_version.py` 決定：`CHATGPT_CLIENT_VERSION` 有設定就固定使用，否則自動查詢 npm `@openai/codex` 最新版本並快取，失敗時用 `CHATGPT_CLIENT_VERSION_FALLBACK`）
   - `POST /api/v1/available-models/local`：偵測本地伺服器類型並回傳實際位址
   - Codex、Gemini 只列可對話的模型：以 LiteLLM 價格表的 `mode`（`chat`／`responses`）判斷，未收錄的新模型以名稱排除 embedding、語音、影像等
   - 以 httpx 直接查詢（`services/llm/model_catalog.py`），不用 LiteLLM 的 `get_valid_models`：後者為同步呼叫、失敗一律回空清單，Ollama 失敗時甚至回傳內建清單

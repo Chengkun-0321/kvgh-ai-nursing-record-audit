@@ -32,8 +32,12 @@ class Settings(BaseSettings):
 
     # ChatGPT 訂閱登入的 token 檔目錄；含登入憑證，只能放在不進版控的 data/
     CHATGPT_TOKEN_DIR: Path = DATA_DIR / "chatgpt"
-    # 查詢 ChatGPT 帳號可用模型時帶的 Codex 用戶端版本；太舊時新模型可能不會列出
-    CHATGPT_CLIENT_VERSION: str = "0.157.1"
+    # 查詢 ChatGPT 帳號可用模型時帶的 Codex 用戶端版本；太舊時新模型不會列出。
+    # 有設定時固定使用此版本；未設定時自動查詢 Codex CLI 最新版本，查詢失敗才用 FALLBACK
+    CHATGPT_CLIENT_VERSION: str | None = None
+    CHATGPT_CLIENT_VERSION_FALLBACK: str = "0.159.2"
+    CODEX_LATEST_VERSION_URL: str = "https://registry.npmjs.org/@openai/codex/latest"
+    CODEX_VERSION_CACHE_SECONDS: int = 86400
 
 
 @lru_cache
