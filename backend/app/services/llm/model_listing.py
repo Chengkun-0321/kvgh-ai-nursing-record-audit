@@ -11,7 +11,6 @@ from typing import Final
 from pydantic import SecretStr
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.config import get_settings
 from app.core.enums import LlmProvider
 from app.core.exceptions import ChatgptAuthRequiredError
 from app.core.security import decrypt_secret
@@ -22,7 +21,13 @@ from app.schemas.available_model import (
     LocalModelsQuery,
     LocalModelsRead,
 )
-from app.services.llm import chatgpt_auth, config_service, gateway, model_catalog
+from app.services.llm import (
+    chatgpt_auth,
+    codex_version,
+    config_service,
+    gateway,
+    model_catalog,
+)
 from app.services.llm.providers import (
     OLLAMA_DEFAULT_API_BASE,
     check_required_fields,
@@ -108,17 +113,20 @@ async def _resolve_listing_key(
 
 async def _list_chatgpt_models() -> list[AvailableModel]:
     credentials = await chatgpt_auth.ensure_access_token()
+    client_version = await codex_version.resolve_client_version()
     target = model_catalog.ListingTarget(
         LlmProvider.CHATGPT,
         api_base=credentials.api_base,
         api_key=None,
         headers=chatgpt_auth.request_headers(credentials),
-        params={"client_version": get_settings().CHATGPT_CLIENT_VERSION},
+        params={"client_version": client_version},
     )
     try:
         models = await model_catalog.fetch_models(target)
     except model_catalog.ListingUnauthorizedError as exc:
         raise ChatgptAuthRequiredError("ChatGPT 登入已失效，請重新登入") from exc
-    logger.info("已查詢 ChatGPT 帳號可用模型：count=%d", len(models))
+    logger.info(
+        "已查詢 ChatGPT 帳號可用模型：count=%d client_version=%s", len(models), client_version
+    )
     # 保留 Codex 模型選單的順序，不重新排序
     return models

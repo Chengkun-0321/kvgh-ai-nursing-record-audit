@@ -58,6 +58,7 @@
    - 使用者也分不清 Ollama 與 OpenAI 相容伺服器，所以畫面上合併為「本地模型」，由後端偵測實際類型。
    - ChatGPT 訂閱：不用 LiteLLM 內建清單（會缺新模型、列出帳號不能用的舊模型），改以登入 token 查詢此帳號在 Codex 模型選單上的模型；呼叫時一律用 `chatgpt/responses/<模型>`，否則不在 LiteLLM 內建清單的新模型會被送到 Codex 後端不支援的 `/chat/completions`。
    - 清單查詢以 httpx 實作（`model_catalog.py`），流程與金鑰解析在 `model_listing.py`。
+   - Codex 後端依 `client_version` 篩選模型，版本太舊時新模型（例如 gpt-6.1-sol）不會列出。版本由 `codex_version.py` 自動取得 npm `@openai/codex` 的最新版本（記憶體快取一天；失敗時改用 `CHATGPT_CLIENT_VERSION_FALLBACK`，並在 10 分鐘內不再重試），`CHATGPT_CLIENT_VERSION` 可手動固定。不採用本機 `codex --version`（伺服器不一定有安裝，版本也可能舊），也不送虛構的高版本號（可能列出目前呼叫方式尚未支援的模型）。
 7. **逐步工作表**：新增與編輯都用彈出式工作表，一步一頁（服務類型 → 連線設定 → 選擇模型 → 命名與確認）；每一步只檢查該步欄位，最後一步才儲存。
 8. **內網**：LiteLLM 預設會在 import 時從 GitHub 下載模型價格表。`services/llm/__init__.py` 設定 `LITELLM_LOCAL_MODEL_COST_MAP=True`，改用套件內建的價格表。
 

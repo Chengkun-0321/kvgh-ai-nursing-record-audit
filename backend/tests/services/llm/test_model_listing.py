@@ -10,7 +10,13 @@ from app.core.enums import LlmProvider
 from app.core.exceptions import ChatgptAuthRequiredError, InvalidInputError, LLMConnectionError
 from app.schemas.available_model import AvailableModelsQuery, LocalModelsQuery
 from app.schemas.llm_config import LlmConfigCreate
-from app.services.llm import chatgpt_auth, config_service, model_catalog, model_listing
+from app.services.llm import (
+    chatgpt_auth,
+    codex_version,
+    config_service,
+    model_catalog,
+    model_listing,
+)
 
 Handler = Callable[[httpx.Request], httpx.Response]
 
@@ -93,7 +99,11 @@ def _signed_in_chatgpt(monkeypatch: pytest.MonkeyPatch) -> None:
             access_token="token-test", account_id="acct-test", api_base="https://codex.test"
         )
 
+    async def fixed_client_version() -> str:
+        return "0.160.0"
+
     monkeypatch.setattr(model_listing.chatgpt_auth, "ensure_access_token", fake_credentials)
+    monkeypatch.setattr(codex_version, "resolve_client_version", fixed_client_version)
 
 
 async def test_chatgpt_lists_account_models_in_picker_order(
@@ -117,7 +127,7 @@ async def test_chatgpt_lists_account_models_in_picker_order(
     ]
     request = requests[0]
     assert request.url.path == "/models"
-    assert request.url.params["client_version"]
+    assert request.url.params["client_version"] == "0.160.0"
     assert request.headers["Authorization"] == "Bearer token-test"
     assert request.headers["ChatGPT-Account-Id"] == "acct-test"
 
