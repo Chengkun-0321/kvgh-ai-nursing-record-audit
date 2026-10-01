@@ -1,0 +1,229 @@
+{
+  "schema_version": "0.1.0",
+  "business_date": "2026-09-10",
+  "ward": {
+    "ward_code": "W51",
+    "ward_name": "內科病房"
+  },
+  "patient": {
+    "patient_id": "C病患",
+    "admission_id": "ADM-C-01",
+    "bed_code": "W51-3",
+    "sex": "M",
+    "age_years": 81,
+    "admission_at": "2026-09-08T09:50:00+08:00",
+    "admission_source": "急診",
+    "admission_diagnosis": "慢性阻塞性肺病急性惡化（COPD AE）",
+    "attending_physician_id": "D204",
+    "status": "inpatient",
+    "status_changed_at": null
+  },
+  "admission_assessment": null,
+  "daily_physical_assessments": [
+    {
+      "record_id": "DPA-C-0910-1",
+      "assessed_at": "2026-09-10T08:40:00+08:00",
+      "shift": "day",
+      "author_id": "N106",
+      "last_modified_at": null,
+      "items": {
+        "consciousness": {
+          "measured_at": "2026-09-10T08:40:00+08:00",
+          "scale": "GCS",
+          "e": "4",
+          "v": "5",
+          "m": "6",
+          "rass": null
+        },
+        "pain": {
+          "scale": "10分法",
+          "score": 0,
+          "unable_to_assess": false
+        },
+        "sleep": "正常",
+        "airway": "無",
+        "tubes": {
+          "has_tube": true,
+          "description": "IV，置放日期2026-09-08，部位：右前臂，外觀：正常"
+        },
+        "pulse": {
+          "status": "正常",
+          "abnormal_types": []
+        },
+        "limb_circulation": "微血管快速填滿",
+        "breath_sounds": {
+          "status": "異常",
+          "abnormal_types": [
+            "哮喘音"
+          ],
+          "other": null
+        },
+        "cough": "有",
+        "sore_throat": "無",
+        "bowel_sounds": "正常",
+        "appetite": [
+          "減少"
+        ],
+        "urination": {
+          "status": "正常",
+          "abnormal_types": [],
+          "other": null
+        },
+        "skin_pressure_prone_sites": [
+          "薦骨"
+        ],
+        "muscle_power": {
+          "left_upper": "4",
+          "right_upper": "4",
+          "left_lower": "4",
+          "right_lower": "4"
+        },
+        "mobility": "尚可自行翻身",
+        "fall_risk": {
+          "unable_to_move": false,
+          "risk_factors": [
+            "步態不穩",
+            "下肢肌力0~4分"
+          ],
+          "medications": [
+            "降壓藥"
+          ],
+          "score": 4,
+          "high_risk": true,
+          "osteoporosis_high_risk": false
+        }
+      }
+    }
+  ],
+  "nursing_progress_notes": [
+    {
+      "record_id": "NPN-C-0910-01",
+      "recorded_at": "2026-09-10T05:20:00+08:00",
+      "title_category": "交班",
+      "title": "交班",
+      "content": "病人夜間睡眠約 5 小時，未因喘醒來。昨日 24 小時輸入 2050ml、輸出 1100ml，尿量較前增加。",
+      "author_id": "N112",
+      "last_modified_at": null,
+      "has_image": false
+    },
+    {
+      "record_id": "NPN-C-0910-02",
+      "recorded_at": "2026-09-10T11:10:00+08:00",
+      "title_category": "健康問題",
+      "title": "健康問題 ：氣體交換障礙",
+      "content": "病人鼻導管 2L/min 下 SpO2 94%，呼吸 20 次/分，平躺仍會喘，坐起後緩解。雙側哮喘音較昨日減少，咳嗽淡黃痰可自咳。吸入治療後協助床上坐起活動雙下肢 10 分鐘，無明顯喘。",
+      "author_id": "N106",
+      "last_modified_at": null,
+      "has_image": false
+    },
+    {
+      "record_id": "NPN-C-0910-03",
+      "recorded_at": "2026-09-10T15:30:00+08:00",
+      "title_category": "健康問題",
+      "title": "健康問題 ：營養少於身體需要",
+      "content": "病人三餐進食約四至五成，表示喘時吃不下、假牙稍鬆。協助改為軟質飲食並分 5–6 餐少量進食，餐前 30 分鐘完成吸入治療，鼓勵進食時坐直。今日體重 51.6 公斤。",
+      "author_id": "N106",
+      "last_modified_at": null,
+      "has_image": false
+    },
+    {
+      "record_id": "NPN-C-0910-04",
+      "recorded_at": "2026-09-10T21:40:00+08:00",
+      "title_category": "交班",
+      "title": "交班",
+      "content": "病人晚間與兒子聊天，精神可。08:00–20:00 輸入 1300ml、輸出 780ml。右前臂 IV 留置，N/S 40ml/hr 滴注順暢。",
+      "author_id": "N110",
+      "last_modified_at": null,
+      "has_image": false
+    }
+  ],
+  "transfers": [],
+  "consultations": [
+    {
+      "consultation_id": "CON-C-01",
+      "consultant_role": "醫師",
+      "department": "腎臟科",
+      "consult_type": "REGULAR",
+      "ordered_at": "2026-09-09T10:00:00+08:00",
+      "requested_by": "D204",
+      "signed_at": "2026-09-09T16:00:00+08:00",
+      "signed_by": "D312",
+      "replied_at": "2026-09-10T10:40:00+08:00",
+      "status": "已回覆",
+      "condition_summary": "81 歲男性，COPD AE，CREA 1.2（2026/03）→ 2.1 → 2.3 mg/dL，尿量偏少，曾自行服用 Ibuprofen，請評估急性腎損傷處置。",
+      "reply_content": "Impression: AKI, prerenal azotemia with NSAID use, on CKD stage 3a. Suggestion: 1. Keep hydration with N/S 40-60ml/hr, monitor I/O. 2. Avoid NSAIDs and contrast medium. 3. Arrange renal echo. 4. Follow up BUN/CREA/K every 2 days. Thanks for consultation."
+    }
+  ],
+  "medication_orders": [],
+  "vital_signs": [
+    {
+      "record_id": "VS-C-0910-1",
+      "measured_at": "2026-09-10T08:00:00+08:00",
+      "body_temperature": 36.8,
+      "temperature_site": "耳溫",
+      "pulse": 88,
+      "respiration": 20,
+      "sbp": 134,
+      "dbp": 74,
+      "spo2": 94,
+      "oxygen_therapy": "鼻導管 2L/min",
+      "measured_by": "N106"
+    },
+    {
+      "record_id": "VS-C-0910-2",
+      "measured_at": "2026-09-10T12:00:00+08:00",
+      "body_temperature": 36.9,
+      "temperature_site": "耳溫",
+      "pulse": 86,
+      "respiration": 20,
+      "sbp": 132,
+      "dbp": 72,
+      "spo2": 94,
+      "oxygen_therapy": "鼻導管 2L/min",
+      "measured_by": "N106"
+    },
+    {
+      "record_id": "VS-C-0910-3",
+      "measured_at": "2026-09-10T16:00:00+08:00",
+      "body_temperature": 37.0,
+      "temperature_site": "耳溫",
+      "pulse": 88,
+      "respiration": 20,
+      "sbp": 130,
+      "dbp": 72,
+      "spo2": 94,
+      "oxygen_therapy": "鼻導管 2L/min",
+      "measured_by": "N110"
+    },
+    {
+      "record_id": "VS-C-0910-4",
+      "measured_at": "2026-09-10T20:00:00+08:00",
+      "body_temperature": 36.8,
+      "temperature_site": "耳溫",
+      "pulse": 84,
+      "respiration": 20,
+      "sbp": 128,
+      "dbp": 70,
+      "spo2": 95,
+      "oxygen_therapy": "鼻導管 2L/min",
+      "measured_by": "N110"
+    }
+  ],
+  "lab_results": [],
+  "tubes": [
+    {
+      "tube_id": "TUB-C-01",
+      "tube_type": "IV",
+      "site": "右前臂",
+      "size": "22G",
+      "inserted_on": "2026-09-08",
+      "removed_on": null,
+      "fixation": "透明敷料",
+      "appearance": "正常"
+    }
+  ],
+  "examinations": [],
+  "health_educations": [],
+  "consent_forms": [],
+  "emotional_distress_assessments": []
+}

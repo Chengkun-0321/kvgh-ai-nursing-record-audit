@@ -1,0 +1,241 @@
+{
+  "schema_version": "0.1.0",
+  "business_date": "2026-09-30",
+  "ward": {
+    "ward_code": "W51",
+    "ward_name": "內科病房"
+  },
+  "patient": {
+    "patient_id": "D病患",
+    "admission_id": "ADM-D-01",
+    "bed_code": "W51-2",
+    "sex": "F",
+    "age_years": 58,
+    "admission_at": "2026-09-19T14:20:00+08:00",
+    "admission_source": "急診",
+    "admission_diagnosis": "右下肢蜂窩性組織炎合併第二型糖尿病",
+    "attending_physician_id": "D206",
+    "status": "inpatient",
+    "status_changed_at": null
+  },
+  "admission_assessment": null,
+  "daily_physical_assessments": [
+    {
+      "record_id": "DPA-D-0930-1",
+      "assessed_at": "2026-09-30T08:30:00+08:00",
+      "shift": "day",
+      "author_id": "N106",
+      "last_modified_at": null,
+      "items": {
+        "consciousness": {
+          "measured_at": "2026-09-30T08:30:00+08:00",
+          "scale": "GCS",
+          "e": "4",
+          "v": "5",
+          "m": "6",
+          "rass": null
+        },
+        "pain": {
+          "scale": "10分法",
+          "score": 1,
+          "unable_to_assess": false
+        },
+        "sleep": "正常",
+        "airway": "無",
+        "tubes": {
+          "has_tube": true,
+          "description": "IV，置放日期2026-09-27，部位：左前臂，外觀：正常"
+        },
+        "pulse": {
+          "status": "正常",
+          "abnormal_types": []
+        },
+        "limb_circulation": "微血管快速填滿",
+        "breath_sounds": {
+          "status": "正常",
+          "abnormal_types": [],
+          "other": null
+        },
+        "cough": "無",
+        "sore_throat": "無",
+        "bowel_sounds": "正常",
+        "appetite": [
+          "正常"
+        ],
+        "urination": {
+          "status": "正常",
+          "abnormal_types": [],
+          "other": null
+        },
+        "skin_pressure_prone_sites": [
+          "無"
+        ],
+        "muscle_power": {
+          "left_upper": "5",
+          "right_upper": "5",
+          "left_lower": "5",
+          "right_lower": "5"
+        },
+        "mobility": "完全能動",
+        "fall_risk": {
+          "unable_to_move": false,
+          "risk_factors": [],
+          "medications": [
+            "降血糖藥"
+          ],
+          "score": 0,
+          "high_risk": false,
+          "osteoporosis_high_risk": false
+        }
+      }
+    }
+  ],
+  "nursing_progress_notes": [
+    {
+      "record_id": "NPN-D-0930-01",
+      "recorded_at": "2026-09-30T05:30:00+08:00",
+      "title_category": "交班",
+      "title": "交班",
+      "content": "病人夜間睡眠可，04:00 耳溫 36.5℃，Oxacillin 依時滴注，IV 注射部位無紅腫。",
+      "author_id": "N113",
+      "last_modified_at": null,
+      "has_image": false
+    },
+    {
+      "record_id": "NPN-D-0930-02",
+      "recorded_at": "2026-09-30T10:40:00+08:00",
+      "title_category": "健康問題",
+      "title": "健康問題 ：皮膚完整性受損",
+      "content": "依整形外科醫囑今日起停止紗布填塞，傷口約 2x0.6 公分，邊緣收合，肉芽組織紅潤，滲液極少，周圍紅腫約 5x4 公分。改以紗布覆蓋每日換藥一次。感染科醫師查房表示若持續穩定，10/2 可改口服抗生素並評估出院。",
+      "author_id": "N106",
+      "last_modified_at": null,
+      "has_image": false
+    },
+    {
+      "record_id": "NPN-D-0930-03",
+      "recorded_at": "2026-09-30T15:00:00+08:00",
+      "title_category": "健康問題",
+      "title": "健康問題 ：血糖不穩定",
+      "content": "近兩日飯前血糖介於 148–176 mg/dL，未再發生低血糖。新陳代謝科醫師調整出院後用藥，新增 Empagliflozin 10mg QD，已說明此藥可能增加泌尿道及生殖器感染機會，需多喝水、注意會陰清潔，病人可複述。",
+      "author_id": "N106",
+      "last_modified_at": null,
+      "has_image": false
+    },
+    {
+      "record_id": "NPN-D-0930-04",
+      "recorded_at": "2026-09-30T21:40:00+08:00",
+      "title_category": "交班",
+      "title": "交班",
+      "content": "病人晚間情緒佳，與先生討論出院後換藥安排。右小腿傷口敷料乾燥，疼痛 1 分。左前臂 IV 留置順暢。",
+      "author_id": "N110",
+      "last_modified_at": null,
+      "has_image": false
+    }
+  ],
+  "transfers": [],
+  "consultations": [],
+  "medication_orders": [],
+  "vital_signs": [
+    {
+      "record_id": "VS-D-0930-1",
+      "measured_at": "2026-09-30T08:00:00+08:00",
+      "body_temperature": 36.5,
+      "temperature_site": "耳溫",
+      "pulse": 74,
+      "respiration": 18,
+      "sbp": 120,
+      "dbp": 72,
+      "spo2": 98,
+      "oxygen_therapy": "room air",
+      "measured_by": "N106"
+    },
+    {
+      "record_id": "VS-D-0930-2",
+      "measured_at": "2026-09-30T12:00:00+08:00",
+      "body_temperature": 36.7,
+      "temperature_site": "耳溫",
+      "pulse": 76,
+      "respiration": 18,
+      "sbp": 122,
+      "dbp": 74,
+      "spo2": 98,
+      "oxygen_therapy": "room air",
+      "measured_by": "N106"
+    },
+    {
+      "record_id": "VS-D-0930-3",
+      "measured_at": "2026-09-30T16:00:00+08:00",
+      "body_temperature": 36.6,
+      "temperature_site": "耳溫",
+      "pulse": 76,
+      "respiration": 18,
+      "sbp": 120,
+      "dbp": 72,
+      "spo2": 98,
+      "oxygen_therapy": "room air",
+      "measured_by": "N110"
+    },
+    {
+      "record_id": "VS-D-0930-4",
+      "measured_at": "2026-09-30T20:00:00+08:00",
+      "body_temperature": 36.5,
+      "temperature_site": "耳溫",
+      "pulse": 72,
+      "respiration": 18,
+      "sbp": 118,
+      "dbp": 70,
+      "spo2": 98,
+      "oxygen_therapy": "room air",
+      "measured_by": "N110"
+    }
+  ],
+  "lab_results": [
+    {
+      "record_id": "LAB-D-0930-01",
+      "order_name": "Glucose (finger)",
+      "item": "Glucose (finger)",
+      "value": "152",
+      "unit": "mg/dL",
+      "reference_range": "80-180",
+      "abnormal_flag": null,
+      "collected_at": "2026-09-30T07:00:00+08:00",
+      "reported_at": "2026-09-30T07:01:00+08:00"
+    },
+    {
+      "record_id": "LAB-D-0930-02",
+      "order_name": "Glucose (finger)",
+      "item": "Glucose (finger)",
+      "value": "168",
+      "unit": "mg/dL",
+      "reference_range": "80-180",
+      "abnormal_flag": null,
+      "collected_at": "2026-09-30T11:00:00+08:00",
+      "reported_at": "2026-09-30T11:01:00+08:00"
+    }
+  ],
+  "tubes": [
+    {
+      "tube_id": "TUB-D-03",
+      "tube_type": "IV",
+      "site": "左前臂",
+      "size": "20G",
+      "inserted_on": "2026-09-27",
+      "removed_on": null,
+      "fixation": "透明敷料",
+      "appearance": "正常"
+    }
+  ],
+  "examinations": [],
+  "health_educations": [
+    {
+      "record_id": "EDU-D-0930-1",
+      "recorded_at": "2026-09-30T15:00:00+08:00",
+      "topic": "降血糖藥物",
+      "target": "病人",
+      "content": "說明 Empagliflozin 作用、泌尿生殖道感染副作用與預防方式，病人可複述。",
+      "author_id": "N106"
+    }
+  ],
+  "consent_forms": [],
+  "emotional_distress_assessments": []
+}

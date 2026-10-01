@@ -3,7 +3,7 @@
 使用 LLM 稽核護理師紀錄（入院護理評估、每日身體評估、過程紀錄、轉入／轉出摘要、給藥紀錄…）的完整性與一致性。
 流程：每日讀取病房資料 → 執行稽核規則 → 產出附 Evidence 的稽核結果 → 護理師／護理長確認。
 
-> 目前階段：`frontend/` 已初始化，Apple 風格工作區與首頁病床總覽（Blender 場景模組＋React Three Fiber 的滿版 3D 病房，預設正視、可切換斜視）仍使用前端假資料（`src/lib/api/`）。`backend/` 已初始化 FastAPI 骨架與 LLM 模型設定（`/settings/llm`：多組設定、ChatGPT 訂閱登入、共用 system prompt、串流測試對話，見 [ADR 0006](docs/adr/0006-llm-config-settings.md)、[ADR 0007](docs/adr/0007-llm-system-prompt.md)）；病患資料與稽核規則尚未實作。
+> 目前階段：`frontend/` 已初始化，Apple 風格工作區與首頁病床總覽（Blender 場景模組＋React Three Fiber 的滿版 3D 病房，預設正視、可切換斜視）仍使用前端假資料（`src/lib/api/`）。`backend/` 已初始化 FastAPI 骨架與 LLM 模型設定（`/settings/llm`：多組設定、ChatGPT 訂閱登入、共用 system prompt、串流測試對話，見 [ADR 0006](docs/adr/0006-llm-config-settings.md)、[ADR 0007](docs/adr/0007-llm-system-prompt.md)）。院方每日資料格式已先定義（[hospital-data-spec.md](docs/hospital-data-spec.md)、[ADR 0009](docs/adr/0009-hospital-daily-data-format.md)），根目錄 `mock_data/` 為 4 位病患 9/01–9/30 的虛構每日資料包（含正確／錯誤情境答案表），可在桌機導覽「護理紀錄」頁（`/nursing-records`）瀏覽（[ADR 0010](docs/adr/0010-mock-data-viewer.md)）；資料匯入與稽核規則尚未實作。
 
 ## 核心原則（領域）
 
@@ -48,9 +48,11 @@
 ```
 ├── backend/          # FastAPI 標準結構 → backend/CLAUDE.md
 ├── frontend/         # Next.js App Router 標準結構 → frontend/CLAUDE.md
+├── mock_data/        # 虛構病房每日資料包（YYYYMMDD/manifest.json＋每位病患一檔），答案表見 README
 └── docs/
     ├── conventions/  # 各主題規範
     ├── glossary.md   # 領域詞彙中英對照
+    ├── hospital-data-spec.md  # 院方每日資料交換格式（交給資訊處）＋ hospital-data-spec/*.schema.json
     └── adr/          # 架構決策紀錄
 ```
 
@@ -62,7 +64,7 @@
 | 前端 UI、樣式、動畫 | [ui-design.md](docs/conventions/ui-design.md)（依據 `.claude/skill/apple-design`、`.claude/skill/ui-ux-pro-max`） |
 | 新增／修改稽核規則 | [audit-rules.md](docs/conventions/audit-rules.md)、[llm.md](docs/conventions/llm.md) |
 | LLM 呼叫、prompt、模型設定 | [llm.md](docs/conventions/llm.md)、[security-privacy.md](docs/conventions/security-privacy.md) |
-| 資料匯入（假資料／中繼站 JSON） | [data-ingestion.md](docs/conventions/data-ingestion.md) |
+| 資料匯入（假資料／中繼站 JSON） | [data-ingestion.md](docs/conventions/data-ingestion.md)、[hospital-data-spec.md](docs/hospital-data-spec.md)、[mock_data/README.md](mock_data/README.md) |
 | DB schema、migration | [backend/CLAUDE.md](backend/CLAUDE.md)、[ADR 0001](docs/adr/0001-sqlite-to-postgresql.md) |
 | 撰寫測試 | [testing.md](docs/conventions/testing.md) |
 | commit、branch | [git-workflow.md](docs/conventions/git-workflow.md) |

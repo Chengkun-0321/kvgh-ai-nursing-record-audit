@@ -1,0 +1,301 @@
+{
+  "schema_version": "0.1.0",
+  "business_date": "2026-09-25",
+  "ward": {
+    "ward_code": "W51",
+    "ward_name": "內科病房"
+  },
+  "patient": {
+    "patient_id": "A病患",
+    "admission_id": "ADM-A-01",
+    "bed_code": "W51-1",
+    "sex": "M",
+    "age_years": 72,
+    "admission_at": "2026-09-01T10:30:00+08:00",
+    "admission_source": "急診",
+    "admission_diagnosis": "非ST段上升心肌梗塞（NSTEMI）",
+    "attending_physician_id": "D201",
+    "status": "inpatient",
+    "status_changed_at": null
+  },
+  "admission_assessment": null,
+  "daily_physical_assessments": [
+    {
+      "record_id": "DPA-A-0925-1",
+      "assessed_at": "2026-09-25T08:30:00+08:00",
+      "shift": "day",
+      "author_id": "N103",
+      "last_modified_at": null,
+      "items": {
+        "consciousness": {
+          "measured_at": "2026-09-25T08:30:00+08:00",
+          "scale": "GCS",
+          "e": "4",
+          "v": "5",
+          "m": "6",
+          "rass": null
+        },
+        "pain": {
+          "scale": "10分法",
+          "score": 0,
+          "unable_to_assess": false
+        },
+        "sleep": "正常",
+        "airway": "無",
+        "tubes": {
+          "has_tube": true,
+          "description": "IV，置放日期2026-09-24，部位：右前臂，外觀：正常"
+        },
+        "pulse": {
+          "status": "正常",
+          "abnormal_types": []
+        },
+        "limb_circulation": "微血管快速填滿",
+        "breath_sounds": {
+          "status": "正常",
+          "abnormal_types": [],
+          "other": null
+        },
+        "cough": "無",
+        "sore_throat": "無",
+        "bowel_sounds": "正常",
+        "appetite": [
+          "正常"
+        ],
+        "urination": {
+          "status": "正常",
+          "abnormal_types": [],
+          "other": null
+        },
+        "skin_pressure_prone_sites": [
+          "無"
+        ],
+        "muscle_power": {
+          "left_upper": "5",
+          "right_upper": "5",
+          "left_lower": "5",
+          "right_lower": "5"
+        },
+        "mobility": "完全能動",
+        "fall_risk": {
+          "unable_to_move": false,
+          "risk_factors": [],
+          "medications": [
+            "降壓藥",
+            "利尿劑",
+            "心血管用藥"
+          ],
+          "score": 1,
+          "high_risk": false,
+          "osteoporosis_high_risk": false
+        }
+      }
+    }
+  ],
+  "nursing_progress_notes": [
+    {
+      "record_id": "NPN-A-0925-01",
+      "recorded_at": "2026-09-25T06:00:00+08:00",
+      "title_category": "交班",
+      "title": "交班",
+      "content": "06:00 量體重 69.3 公斤。夜間睡眠可，無咳嗽。",
+      "author_id": "N112",
+      "last_modified_at": null,
+      "has_image": false
+    },
+    {
+      "record_id": "NPN-A-0925-02",
+      "recorded_at": "2026-09-25T13:50:00+08:00",
+      "title_category": "健康問題",
+      "title": "健康問題 ：活動無耐力",
+      "content": "今日上午爬樓梯 2 層、走廊行走約 400 公尺，活動後 HR 98 次/分，無胸悶。病人下午表示稍覺疲倦，於床上午休約 1 小時。",
+      "author_id": "N103",
+      "last_modified_at": null,
+      "has_image": false
+    },
+    {
+      "record_id": "NPN-A-0925-03",
+      "recorded_at": "2026-09-25T20:30:00+08:00",
+      "title_category": "健康問題",
+      "title": "健康問題 ：體溫過高",
+      "content": "20:00 測量耳溫 38.2℃，脈搏 98 次/分，呼吸 22 次/分，血壓 132/78mmHg，SpO2 94%（room air），病人主訴傍晚開始咳嗽、有黃痰，畏寒。聽診右下肺有痰音。通知值班醫師 D209，依醫囑抽血液培養兩套、留痰液培養，安排胸部 X 光，予 Acetaminophen 500mg 1# PO STAT，並開始 Ceftriaxone 2g IVD Q24H。予冰枕使用，鼓勵咳痰，續觀察體溫變化。",
+      "author_id": "N107",
+      "last_modified_at": null,
+      "has_image": false
+    },
+    {
+      "record_id": "NPN-A-0925-04",
+      "recorded_at": "2026-09-25T22:40:00+08:00",
+      "title_category": "健康問題",
+      "title": "健康問題 ：體溫過高",
+      "content": "22:30 複測耳溫 37.8℃，畏寒改善，病人表示較舒服，SpO2 95%（room air）。Ceftriaxone 已於 21:30 滴注完畢，注射部位無紅腫，無皮疹。",
+      "author_id": "N107",
+      "last_modified_at": null,
+      "has_image": false
+    }
+  ],
+  "transfers": [],
+  "consultations": [],
+  "medication_orders": [
+    {
+      "order_id": "MED-A-009",
+      "order_category": "臨時",
+      "drug_name": "Acetaminophen Tab 500mg",
+      "route": "PO",
+      "dose": 1,
+      "unit": "TAB",
+      "frequency": "STAT",
+      "is_high_alert": false,
+      "ordered_at": "2026-09-25T20:15:00+08:00",
+      "prescriber_id": "D209",
+      "status": "已執行",
+      "administrations": [
+        {
+          "administration_id": "MAR-A-0925-01",
+          "administered_at": "2026-09-25T20:20:00+08:00",
+          "administered_by": "N107",
+          "dose": 1,
+          "unit": "TAB",
+          "rate": null,
+          "status": "已執行",
+          "remark": null
+        }
+      ]
+    }
+  ],
+  "vital_signs": [
+    {
+      "record_id": "VS-A-0925-1",
+      "measured_at": "2026-09-25T08:00:00+08:00",
+      "body_temperature": 36.8,
+      "temperature_site": "耳溫",
+      "pulse": 76,
+      "respiration": 18,
+      "sbp": 124,
+      "dbp": 72,
+      "spo2": 97,
+      "oxygen_therapy": "room air",
+      "measured_by": "N103"
+    },
+    {
+      "record_id": "VS-A-0925-2",
+      "measured_at": "2026-09-25T12:00:00+08:00",
+      "body_temperature": 37.0,
+      "temperature_site": "耳溫",
+      "pulse": 80,
+      "respiration": 18,
+      "sbp": 126,
+      "dbp": 74,
+      "spo2": 97,
+      "oxygen_therapy": "room air",
+      "measured_by": "N103"
+    },
+    {
+      "record_id": "VS-A-0925-3",
+      "measured_at": "2026-09-25T16:00:00+08:00",
+      "body_temperature": 37.4,
+      "temperature_site": "耳溫",
+      "pulse": 86,
+      "respiration": 20,
+      "sbp": 128,
+      "dbp": 76,
+      "spo2": 96,
+      "oxygen_therapy": "room air",
+      "measured_by": "N107"
+    },
+    {
+      "record_id": "VS-A-0925-4",
+      "measured_at": "2026-09-25T20:00:00+08:00",
+      "body_temperature": 38.2,
+      "temperature_site": "耳溫",
+      "pulse": 98,
+      "respiration": 22,
+      "sbp": 132,
+      "dbp": 78,
+      "spo2": 94,
+      "oxygen_therapy": "room air",
+      "measured_by": "N107"
+    },
+    {
+      "record_id": "VS-A-0925-5",
+      "measured_at": "2026-09-25T22:30:00+08:00",
+      "body_temperature": 37.8,
+      "temperature_site": "耳溫",
+      "pulse": 90,
+      "respiration": 20,
+      "sbp": 128,
+      "dbp": 74,
+      "spo2": 95,
+      "oxygen_therapy": "room air",
+      "measured_by": "N107"
+    }
+  ],
+  "lab_results": [
+    {
+      "record_id": "LAB-A-0925-01",
+      "order_name": "CBC,DC",
+      "item": "WBC",
+      "value": "13.6",
+      "unit": "K/uL",
+      "reference_range": "3.5-11.0",
+      "abnormal_flag": "H",
+      "collected_at": "2026-09-25T20:40:00+08:00",
+      "reported_at": "2026-09-25T21:20:00+08:00"
+    },
+    {
+      "record_id": "LAB-A-0925-02",
+      "order_name": "CRP (Quantitative)",
+      "item": "CRP",
+      "value": "5.8",
+      "unit": "mg/dL",
+      "reference_range": "<0.5",
+      "abnormal_flag": "H",
+      "collected_at": "2026-09-25T20:40:00+08:00",
+      "reported_at": "2026-09-25T21:30:00+08:00"
+    }
+  ],
+  "tubes": [
+    {
+      "tube_id": "TUB-A-09",
+      "tube_type": "IV",
+      "site": "右前臂",
+      "size": "20G",
+      "inserted_on": "2026-09-24",
+      "removed_on": null,
+      "fixation": "透明敷料",
+      "appearance": "正常"
+    }
+  ],
+  "examinations": [
+    {
+      "order_id": "EXM-A-11",
+      "order_name": "BLOOD CULT. & S.-Blood x2",
+      "ordered_at": "2026-09-25T20:15:00+08:00",
+      "performed_at": "2026-09-25T20:40:00+08:00",
+      "status": "已執行",
+      "is_invasive": false,
+      "report_summary": null
+    },
+    {
+      "order_id": "EXM-A-12",
+      "order_name": "Sputum culture",
+      "ordered_at": "2026-09-25T20:15:00+08:00",
+      "performed_at": "2026-09-25T21:00:00+08:00",
+      "status": "已執行",
+      "is_invasive": false,
+      "report_summary": null
+    },
+    {
+      "order_id": "EXM-A-13",
+      "order_name": "Chest PA view",
+      "ordered_at": "2026-09-25T20:15:00+08:00",
+      "performed_at": null,
+      "status": "已開立",
+      "is_invasive": false,
+      "report_summary": null
+    }
+  ],
+  "health_educations": [],
+  "consent_forms": [],
+  "emotional_distress_assessments": []
+}

@@ -1,0 +1,359 @@
+{
+  "schema_version": "0.1.0",
+  "business_date": "2026-09-25",
+  "ward": {
+    "ward_code": "W51",
+    "ward_name": "內科病房"
+  },
+  "patient": {
+    "patient_id": "D病患",
+    "admission_id": "ADM-D-01",
+    "bed_code": "W51-2",
+    "sex": "F",
+    "age_years": 58,
+    "admission_at": "2026-09-19T14:20:00+08:00",
+    "admission_source": "急診",
+    "admission_diagnosis": "右下肢蜂窩性組織炎合併第二型糖尿病",
+    "attending_physician_id": "D206",
+    "status": "inpatient",
+    "status_changed_at": null
+  },
+  "admission_assessment": null,
+  "daily_physical_assessments": [
+    {
+      "record_id": "DPA-D-0925-1",
+      "assessed_at": "2026-09-25T08:30:00+08:00",
+      "shift": "day",
+      "author_id": "N105",
+      "last_modified_at": null,
+      "items": {
+        "consciousness": {
+          "measured_at": "2026-09-25T08:30:00+08:00",
+          "scale": "GCS",
+          "e": "4",
+          "v": "5",
+          "m": "6",
+          "rass": null
+        },
+        "pain": {
+          "scale": "10分法",
+          "score": 7,
+          "unable_to_assess": false
+        },
+        "sleep": "正常",
+        "airway": "無",
+        "tubes": {
+          "has_tube": true,
+          "description": "IV，置放日期2026-09-23，部位：右前臂，外觀：正常"
+        },
+        "pulse": {
+          "status": "正常",
+          "abnormal_types": []
+        },
+        "limb_circulation": "輕微水腫(無壓窩)",
+        "breath_sounds": {
+          "status": "正常",
+          "abnormal_types": [],
+          "other": null
+        },
+        "cough": "無",
+        "sore_throat": "無",
+        "bowel_sounds": "正常",
+        "appetite": [
+          "正常"
+        ],
+        "urination": {
+          "status": "正常",
+          "abnormal_types": [],
+          "other": null
+        },
+        "skin_pressure_prone_sites": [
+          "無"
+        ],
+        "muscle_power": {
+          "left_upper": "5",
+          "right_upper": "5",
+          "left_lower": "5",
+          "right_lower": "4"
+        },
+        "mobility": "完全能動",
+        "fall_risk": {
+          "unable_to_move": false,
+          "risk_factors": [
+            "步態不穩"
+          ],
+          "medications": [
+            "鎮靜劑安眠藥",
+            "降血糖藥"
+          ],
+          "score": 3,
+          "high_risk": true,
+          "osteoporosis_high_risk": false
+        }
+      }
+    }
+  ],
+  "nursing_progress_notes": [
+    {
+      "record_id": "NPN-D-0925-01",
+      "recorded_at": "2026-09-25T05:20:00+08:00",
+      "title_category": "交班",
+      "title": "交班",
+      "content": "病人服用 Zolpidem 後夜間睡眠約 6 小時，03:00 按鈴協助如廁一次，步態稍不穩，全程攙扶。",
+      "author_id": "N113",
+      "last_modified_at": null,
+      "has_image": false
+    },
+    {
+      "record_id": "NPN-D-0925-02",
+      "recorded_at": "2026-09-25T10:20:00+08:00",
+      "title_category": "健康問題",
+      "title": "健康問題 ：急性疼痛",
+      "content": "晨間身評右小腿疼痛 7 分，病人表示膿瘍處脹痛加劇。整形外科醫師 09:30 評估後決定今日 11:00 床邊切開引流。通知主治醫師，依醫囑 10:15 予 Morphine 3mg IVP STAT 止痛。",
+      "author_id": "N105",
+      "last_modified_at": null,
+      "has_image": false
+    },
+    {
+      "record_id": "NPN-D-0925-03",
+      "recorded_at": "2026-09-25T10:50:00+08:00",
+      "title_category": "健康問題",
+      "title": "健康問題 ：急性疼痛",
+      "content": "10:45 病人主訴噁心，嘔吐一次約 50ml 胃內容物，呼吸 10 次/分，嗜睡，叫喚可睜眼回答。",
+      "author_id": "N105",
+      "last_modified_at": null,
+      "has_image": false
+    },
+    {
+      "record_id": "NPN-D-0925-04",
+      "recorded_at": "2026-09-25T13:00:00+08:00",
+      "title_category": "會診",
+      "title": "會診",
+      "content": "【會診】\n- 2026/09/25 09:30 整形外科 醫師(D318)會診，評估右小腿皮下膿瘍約 3x2 公分，建議床邊切開引流並送傷口培養，傷口每日換藥兩次，抗生素依感染科建議調整。11:00 已於床邊完成切開引流，引流出黃綠色膿液約 8ml，已送傷口培養，傷口以紗布填塞，敷料乾燥。主治醫師另開立感染科會診。",
+      "author_id": "N105",
+      "last_modified_at": null,
+      "has_image": false
+    },
+    {
+      "record_id": "NPN-D-0925-05",
+      "recorded_at": "2026-09-25T16:20:00+08:00",
+      "title_category": "交班",
+      "title": "交班",
+      "content": "病人右小腿切開引流傷口敷料少量淡紅色滲液，已更換一次，右小腿仍輕微水腫，持續抬高患肢。下午於床上休息，先生陪伴，右前臂 IV 留置順暢。",
+      "author_id": "N105",
+      "last_modified_at": null,
+      "has_image": false
+    },
+    {
+      "record_id": "NPN-D-0925-06",
+      "recorded_at": "2026-09-25T21:40:00+08:00",
+      "title_category": "交班",
+      "title": "交班",
+      "content": "病人晚餐進食約五分，20:00 耳溫 37.3℃，右小腿傷口敷料乾燥，疼痛 4 分。",
+      "author_id": "N109",
+      "last_modified_at": null,
+      "has_image": false
+    }
+  ],
+  "transfers": [],
+  "consultations": [
+    {
+      "consultation_id": "CON-D-01",
+      "consultant_role": "醫師",
+      "department": "整形外科",
+      "consult_type": "REGULAR",
+      "ordered_at": "2026-09-23T10:00:00+08:00",
+      "requested_by": "D206",
+      "signed_at": "2026-09-23T15:00:00+08:00",
+      "signed_by": "D318",
+      "replied_at": "2026-09-25T09:30:00+08:00",
+      "status": "已回覆",
+      "condition_summary": "58 歲女性，右下肢蜂窩性組織炎，Cefazolin 使用第 5 天，軟組織超音波示右小腿皮下膿瘍約 3x2 公分，請評估切開引流。",
+      "reply_content": "Impression: Right leg subcutaneous abscess, about 3x2 cm. Suggestion: 1. Bedside incision and drainage today, send wound culture. 2. Wound dressing BID with packing. 3. Adjust antibiotics according to ID suggestion. Thanks for consultation."
+    },
+    {
+      "consultation_id": "CON-D-02",
+      "consultant_role": "醫師",
+      "department": "感染科",
+      "consult_type": "REGULAR",
+      "ordered_at": "2026-09-25T14:00:00+08:00",
+      "requested_by": "D206",
+      "signed_at": null,
+      "signed_by": null,
+      "replied_at": null,
+      "status": "未簽收",
+      "condition_summary": "58 歲女性，右下肢蜂窩性組織炎合併皮下膿瘍 s/p I&D（9/25），Cefazolin 使用 7 天，糖尿病控制不佳（HbA1c 9.2%），請協助抗生素建議。",
+      "reply_content": null
+    }
+  ],
+  "medication_orders": [
+    {
+      "order_id": "MED-D-003",
+      "order_category": "臨時",
+      "drug_name": "Morphine HCl Inj 10mg/1ml",
+      "route": "IVP",
+      "dose": 3,
+      "unit": "MG",
+      "frequency": "STAT",
+      "is_high_alert": true,
+      "ordered_at": "2026-09-25T10:10:00+08:00",
+      "prescriber_id": "D206",
+      "status": "已執行",
+      "administrations": [
+        {
+          "administration_id": "MAR-D-0925-01",
+          "administered_at": "2026-09-25T10:15:00+08:00",
+          "administered_by": "N105",
+          "dose": 3,
+          "unit": "MG",
+          "rate": null,
+          "status": "已執行",
+          "remark": null
+        }
+      ]
+    }
+  ],
+  "vital_signs": [
+    {
+      "record_id": "VS-D-0925-1",
+      "measured_at": "2026-09-25T08:00:00+08:00",
+      "body_temperature": 37.4,
+      "temperature_site": "耳溫",
+      "pulse": 92,
+      "respiration": 18,
+      "sbp": 138,
+      "dbp": 84,
+      "spo2": 98,
+      "oxygen_therapy": "room air",
+      "measured_by": "N105"
+    },
+    {
+      "record_id": "VS-D-0925-2",
+      "measured_at": "2026-09-25T10:45:00+08:00",
+      "body_temperature": 37.3,
+      "temperature_site": "耳溫",
+      "pulse": 76,
+      "respiration": 10,
+      "sbp": 112,
+      "dbp": 68,
+      "spo2": 93,
+      "oxygen_therapy": "room air",
+      "measured_by": "N105"
+    },
+    {
+      "record_id": "VS-D-0925-3",
+      "measured_at": "2026-09-25T12:00:00+08:00",
+      "body_temperature": 37.4,
+      "temperature_site": "耳溫",
+      "pulse": 82,
+      "respiration": 14,
+      "sbp": 122,
+      "dbp": 74,
+      "spo2": 96,
+      "oxygen_therapy": "room air",
+      "measured_by": "N105"
+    },
+    {
+      "record_id": "VS-D-0925-4",
+      "measured_at": "2026-09-25T16:00:00+08:00",
+      "body_temperature": 37.5,
+      "temperature_site": "耳溫",
+      "pulse": 86,
+      "respiration": 18,
+      "sbp": 128,
+      "dbp": 78,
+      "spo2": 98,
+      "oxygen_therapy": "room air",
+      "measured_by": "N109"
+    },
+    {
+      "record_id": "VS-D-0925-5",
+      "measured_at": "2026-09-25T20:00:00+08:00",
+      "body_temperature": 37.3,
+      "temperature_site": "耳溫",
+      "pulse": 84,
+      "respiration": 18,
+      "sbp": 126,
+      "dbp": 76,
+      "spo2": 98,
+      "oxygen_therapy": "room air",
+      "measured_by": "N109"
+    }
+  ],
+  "lab_results": [
+    {
+      "record_id": "LAB-D-0925-01",
+      "order_name": "Glucose (finger)",
+      "item": "Glucose (finger)",
+      "value": "176",
+      "unit": "mg/dL",
+      "reference_range": "80-180",
+      "abnormal_flag": null,
+      "collected_at": "2026-09-25T07:00:00+08:00",
+      "reported_at": "2026-09-25T07:01:00+08:00"
+    },
+    {
+      "record_id": "LAB-D-0925-02",
+      "order_name": "Glucose (finger)",
+      "item": "Glucose (finger)",
+      "value": "198",
+      "unit": "mg/dL",
+      "reference_range": "80-180",
+      "abnormal_flag": "H",
+      "collected_at": "2026-09-25T16:30:00+08:00",
+      "reported_at": "2026-09-25T16:31:00+08:00"
+    }
+  ],
+  "tubes": [
+    {
+      "tube_id": "TUB-D-02",
+      "tube_type": "IV",
+      "site": "右前臂",
+      "size": "20G",
+      "inserted_on": "2026-09-23",
+      "removed_on": null,
+      "fixation": "透明敷料",
+      "appearance": "正常"
+    }
+  ],
+  "examinations": [
+    {
+      "order_id": "EXM-D-03",
+      "order_name": "Incision and drainage (bedside, right leg)",
+      "ordered_at": "2026-09-25T09:40:00+08:00",
+      "performed_at": "2026-09-25T11:00:00+08:00",
+      "status": "已執行",
+      "is_invasive": true,
+      "report_summary": "Drained about 8ml yellowish-green pus, packed with gauze"
+    },
+    {
+      "order_id": "EXM-D-04",
+      "order_name": "Wound culture",
+      "ordered_at": "2026-09-25T09:40:00+08:00",
+      "performed_at": "2026-09-25T11:10:00+08:00",
+      "status": "已執行",
+      "is_invasive": false,
+      "report_summary": null
+    }
+  ],
+  "health_educations": [
+    {
+      "record_id": "EDU-D-0925-1",
+      "recorded_at": "2026-09-25T10:40:00+08:00",
+      "topic": "切開引流前說明",
+      "target": "病人及家屬",
+      "content": "說明切開引流目的、過程約 20 分鐘、局部麻醉、術後傷口每日換藥兩次，可能出血或疼痛，病人及先生表示了解。",
+      "author_id": "N105"
+    }
+  ],
+  "consent_forms": [
+    {
+      "consent_id": "CNS-D-01",
+      "form_name": "手術（處置）同意書：右小腿切開引流",
+      "related_order_id": "EXM-D-03",
+      "status": "已簽",
+      "signed_at": "2026-09-25T10:30:00+08:00"
+    }
+  ],
+  "emotional_distress_assessments": []
+}

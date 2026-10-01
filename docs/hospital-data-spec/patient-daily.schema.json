@@ -1,0 +1,807 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kvgh-ai-nursing-record-audit/schemas/patient-daily/0.1.0",
+  "title": "病患每日資料（patient-daily）",
+  "description": "院方每日資料包中，一位病患一天的資料。說明見 docs/hospital-data-spec.md。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "business_date",
+    "ward",
+    "patient",
+    "admission_assessment",
+    "daily_physical_assessments",
+    "nursing_progress_notes",
+    "transfers",
+    "consultations",
+    "medication_orders",
+    "vital_signs",
+    "lab_results",
+    "tubes"
+  ],
+  "properties": {
+    "schema_version": { "const": "0.1.0" },
+    "business_date": { "$ref": "#/$defs/date" },
+    "ward": { "$ref": "#/$defs/ward" },
+    "patient": { "$ref": "#/$defs/patient" },
+    "admission_assessment": {
+      "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/admission_assessment" }]
+    },
+    "daily_physical_assessments": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/daily_physical_assessment" }
+    },
+    "nursing_progress_notes": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/nursing_progress_note" }
+    },
+    "transfers": { "type": "array", "items": { "$ref": "#/$defs/transfer" } },
+    "consultations": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/consultation" }
+    },
+    "medication_orders": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/medication_order" }
+    },
+    "vital_signs": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/vital_sign" }
+    },
+    "lab_results": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/lab_result" }
+    },
+    "tubes": { "type": "array", "items": { "$ref": "#/$defs/tube" } },
+    "examinations": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/examination" }
+    },
+    "health_educations": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/health_education" }
+    },
+    "consent_forms": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/consent_form" }
+    },
+    "emotional_distress_assessments": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/emotional_distress_assessment" }
+    }
+  },
+  "$defs": {
+    "date": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+    },
+    "datetime": {
+      "description": "ISO 8601，必須帶時區 +08:00",
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\+08:00$"
+    },
+    "nullable_datetime": {
+      "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/datetime" }]
+    },
+    "nullable_string": { "type": ["string", "null"] },
+    "staff_id": {
+      "description": "院方人員代碼（去識別），不得放姓名",
+      "type": "string",
+      "minLength": 1
+    },
+    "ward": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ward_code", "ward_name"],
+      "properties": {
+        "ward_code": { "type": "string", "minLength": 1 },
+        "ward_name": { "type": "string", "minLength": 1 }
+      }
+    },
+    "patient": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "patient_id",
+        "admission_id",
+        "bed_code",
+        "sex",
+        "age_years",
+        "admission_at",
+        "admission_source",
+        "admission_diagnosis",
+        "attending_physician_id",
+        "status",
+        "status_changed_at"
+      ],
+      "properties": {
+        "patient_id": {
+          "description": "院方去識別病患代碼，同一人跨日固定",
+          "type": "string",
+          "minLength": 1
+        },
+        "admission_id": {
+          "description": "住院序號，同一人再次住院時不同",
+          "type": "string",
+          "minLength": 1
+        },
+        "bed_code": { "type": "string", "minLength": 1 },
+        "sex": { "enum": ["M", "F"] },
+        "age_years": { "type": "integer", "minimum": 0, "maximum": 130 },
+        "admission_at": { "$ref": "#/$defs/datetime" },
+        "admission_source": { "enum": ["急診", "門診", "轉院", "其他"] },
+        "admission_diagnosis": { "type": "string", "minLength": 1 },
+        "attending_physician_id": { "$ref": "#/$defs/staff_id" },
+        "status": { "enum": ["inpatient", "transferred_out", "discharged"] },
+        "status_changed_at": { "$ref": "#/$defs/nullable_datetime" }
+      }
+    },
+    "assessment_items": {
+      "description": "身體評估各項目；值照院內畫面選項原文，空白（未填）用 null",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "consciousness",
+        "pain",
+        "sleep",
+        "airway",
+        "tubes",
+        "pulse",
+        "limb_circulation",
+        "breath_sounds",
+        "cough",
+        "sore_throat",
+        "bowel_sounds",
+        "appetite",
+        "urination",
+        "skin_pressure_prone_sites",
+        "muscle_power",
+        "mobility",
+        "fall_risk"
+      ],
+      "properties": {
+        "consciousness": {
+          "oneOf": [
+            { "type": "null" },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["measured_at", "scale", "e", "v", "m", "rass"],
+              "properties": {
+                "measured_at": { "$ref": "#/$defs/nullable_datetime" },
+                "scale": { "enum": ["GCS", "RASS"] },
+                "e": { "enum": ["1", "2", "3", "4", null] },
+                "v": { "enum": ["1", "2", "3", "4", "5", "T", "E", "A", null] },
+                "m": { "enum": ["1", "2", "3", "4", "5", "6", null] },
+                "rass": { "enum": ["+4", "+3", "+2", "+1", "0", "-1", "-2", "-3", "-4", "-5", null] }
+              }
+            }
+          ]
+        },
+        "pain": {
+          "oneOf": [
+            { "type": "null" },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["scale", "score", "unable_to_assess"],
+              "properties": {
+                "scale": { "type": "string" },
+                "score": { "type": ["integer", "null"], "minimum": 0, "maximum": 10 },
+                "unable_to_assess": { "type": "boolean" }
+              }
+            }
+          ]
+        },
+        "sleep": { "enum": ["正常", "不易入睡", "早醒", "淺眠", "嗜睡", "無法評估", null] },
+        "airway": { "enum": ["無", "氣管內管", "氣切", null] },
+        "tubes": {
+          "oneOf": [
+            { "type": "null" },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["has_tube", "description"],
+              "properties": {
+                "has_tube": { "type": "boolean" },
+                "description": { "$ref": "#/$defs/nullable_string" }
+              }
+            }
+          ]
+        },
+        "pulse": {
+          "oneOf": [
+            { "type": "null" },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["status", "abnormal_types"],
+              "properties": {
+                "status": { "enum": ["正常", "異常"] },
+                "abnormal_types": {
+                  "type": "array",
+                  "items": { "enum": ["不規律", "快", "慢"] }
+                }
+              }
+            }
+          ]
+        },
+        "limb_circulation": {
+          "enum": [
+            "微血管快速填滿",
+            "微血管延遲填滿(大於五秒)",
+            "輕微水腫(無壓窩)",
+            "中、重度水腫(有壓窩)",
+            null
+          ]
+        },
+        "breath_sounds": {
+          "oneOf": [
+            { "type": "null" },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["status", "abnormal_types", "other"],
+              "properties": {
+                "status": { "enum": ["正常", "異常"] },
+                "abnormal_types": {
+                  "type": "array",
+                  "items": { "enum": ["痰音", "哮喘音", "濕囉音"] }
+                },
+                "other": { "$ref": "#/$defs/nullable_string" }
+              }
+            }
+          ]
+        },
+        "cough": { "enum": ["無", "有", "無法評估", null] },
+        "sore_throat": { "enum": ["無", "有", "無法評估", null] },
+        "bowel_sounds": { "enum": ["正常", "過快", "過慢", "無腸音", null] },
+        "appetite": {
+          "type": ["array", "null"],
+          "items": { "enum": ["正常", "減少", "灌食", "NPO", "嘔吐"] }
+        },
+        "urination": {
+          "oneOf": [
+            { "type": "null" },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["status", "abnormal_types", "other"],
+              "properties": {
+                "status": { "enum": ["正常", "異常"] },
+                "abnormal_types": {
+                  "type": "array",
+                  "items": {
+                    "enum": [
+                      "頻尿",
+                      "尿失禁",
+                      "多尿",
+                      "少尿",
+                      "無尿",
+                      "血尿",
+                      "血液透析",
+                      "腹膜透析",
+                      "排尿困難",
+                      "排尿疼痛",
+                      "排尿燒灼感",
+                      "尿液混濁",
+                      "尿道(膀胱)造口",
+                      "留置導尿管",
+                      "茶色尿",
+                      "恥骨上壓痛",
+                      "肋脊角疼痛/壓痛",
+                      "急尿",
+                      "其他"
+                    ]
+                  }
+                },
+                "other": { "$ref": "#/$defs/nullable_string" }
+              }
+            }
+          ]
+        },
+        "skin_pressure_prone_sites": {
+          "type": ["array", "null"],
+          "items": {
+            "enum": ["薦骨", "坐骨", "股骨粗隆", "足部", "頭頸部", "面部", "軀幹", "上下肢", "無"]
+          }
+        },
+        "muscle_power": {
+          "oneOf": [
+            { "type": "null" },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["left_upper", "right_upper", "left_lower", "right_lower"],
+              "properties": {
+                "left_upper": { "$ref": "#/$defs/muscle_power_value" },
+                "right_upper": { "$ref": "#/$defs/muscle_power_value" },
+                "left_lower": { "$ref": "#/$defs/muscle_power_value" },
+                "right_lower": { "$ref": "#/$defs/muscle_power_value" }
+              }
+            }
+          ]
+        },
+        "mobility": { "enum": ["完全能動", "尚可自行翻身", "無法自行翻身", "不能動", null] },
+        "fall_risk": {
+          "oneOf": [
+            { "type": "null" },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "unable_to_move",
+                "risk_factors",
+                "medications",
+                "score",
+                "high_risk",
+                "osteoporosis_high_risk"
+              ],
+              "properties": {
+                "unable_to_move": { "type": "boolean" },
+                "risk_factors": {
+                  "type": "array",
+                  "items": {
+                    "enum": [
+                      "步態不穩",
+                      "過去一年曾跌倒",
+                      "主訴頭暈/眩暈",
+                      "行為混亂、躁動",
+                      "下床活動需協助且不尋求協助或無陪伴者",
+                      "下肢肌力0~4分"
+                    ]
+                  }
+                },
+                "medications": {
+                  "type": "array",
+                  "items": {
+                    "enum": [
+                      "鎮靜劑安眠藥",
+                      "降壓藥",
+                      "輕瀉藥",
+                      "降血糖藥",
+                      "抗精神病藥",
+                      "抗憂鬱劑",
+                      "抗癲癇藥",
+                      "抗巴金森氏症藥物",
+                      "肌肉鬆弛劑",
+                      "抗組織胺藥",
+                      "麻醉止痛藥",
+                      "利尿劑",
+                      "心血管用藥"
+                    ]
+                  }
+                },
+                "score": { "type": "integer", "minimum": 0, "maximum": 7 },
+                "high_risk": { "type": "boolean" },
+                "osteoporosis_high_risk": { "type": "boolean" }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "muscle_power_value": {
+      "enum": ["5", "4", "3", "2", "1", "0", "無法評估", "鎮靜劑使用", "嬰兒期會翻身", null]
+    },
+    "admission_section": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["completed", "content"],
+      "properties": {
+        "completed": { "type": "boolean" },
+        "content": { "type": ["object", "null"] }
+      }
+    },
+    "admission_assessment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["record_id", "assessed_at", "author_id", "last_modified_at", "sections"],
+      "properties": {
+        "record_id": { "type": "string", "minLength": 1 },
+        "assessed_at": { "$ref": "#/$defs/datetime" },
+        "author_id": { "$ref": "#/$defs/staff_id" },
+        "last_modified_at": { "$ref": "#/$defs/nullable_datetime" },
+        "sections": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "basic_info",
+            "personal_history",
+            "nutrition",
+            "daily_living",
+            "physical_assessment",
+            "psychosocial",
+            "admission_course",
+            "environment"
+          ],
+          "properties": {
+            "basic_info": { "$ref": "#/$defs/admission_section" },
+            "personal_history": { "$ref": "#/$defs/admission_section" },
+            "nutrition": { "$ref": "#/$defs/admission_section" },
+            "daily_living": { "$ref": "#/$defs/admission_section" },
+            "physical_assessment": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["completed", "content"],
+              "properties": {
+                "completed": { "type": "boolean" },
+                "content": {
+                  "oneOf": [
+                    { "type": "null" },
+                    {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": ["narrative", "items"],
+                      "properties": {
+                        "narrative": { "$ref": "#/$defs/nullable_string" },
+                        "items": { "$ref": "#/$defs/assessment_items" }
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            "psychosocial": { "$ref": "#/$defs/admission_section" },
+            "admission_course": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["completed", "content"],
+              "properties": {
+                "completed": { "type": "boolean" },
+                "content": {
+                  "oneOf": [
+                    { "type": "null" },
+                    {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": ["text"],
+                      "properties": { "text": { "type": "string" } }
+                    }
+                  ]
+                }
+              }
+            },
+            "environment": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["completed", "content"],
+              "properties": {
+                "completed": { "type": "boolean" },
+                "content": {
+                  "oneOf": [
+                    { "type": "null" },
+                    {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": ["introduced_items", "not_introduced"],
+                      "properties": {
+                        "introduced_items": {
+                          "type": "array",
+                          "items": { "type": "string" }
+                        },
+                        "not_introduced": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "required": ["item", "reason"],
+                            "properties": {
+                              "item": { "type": "string" },
+                              "reason": { "type": "string" }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "daily_physical_assessment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["record_id", "assessed_at", "shift", "author_id", "last_modified_at", "items"],
+      "properties": {
+        "record_id": { "type": "string", "minLength": 1 },
+        "assessed_at": { "$ref": "#/$defs/datetime" },
+        "shift": { "enum": ["day", "evening", "night"] },
+        "author_id": { "$ref": "#/$defs/staff_id" },
+        "last_modified_at": { "$ref": "#/$defs/nullable_datetime" },
+        "items": { "$ref": "#/$defs/assessment_items" }
+      }
+    },
+    "nursing_progress_note": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "record_id",
+        "recorded_at",
+        "title_category",
+        "title",
+        "content",
+        "author_id",
+        "last_modified_at",
+        "has_image"
+      ],
+      "properties": {
+        "record_id": { "type": "string", "minLength": 1 },
+        "recorded_at": { "$ref": "#/$defs/datetime" },
+        "title_category": {
+          "enum": [
+            "健康問題",
+            "交班",
+            "導管照護",
+            "會診",
+            "營養照會建議",
+            "轉出摘要",
+            "轉入摘要",
+            "入院護理",
+            "出院護理",
+            "護理指導",
+            "其他"
+          ]
+        },
+        "title": { "type": "string", "minLength": 1 },
+        "content": { "type": "string" },
+        "author_id": { "$ref": "#/$defs/staff_id" },
+        "last_modified_at": { "$ref": "#/$defs/nullable_datetime" },
+        "has_image": { "type": "boolean" }
+      }
+    },
+    "transfer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["transfer_id", "direction", "occurred_at", "from_unit", "to_unit", "reason"],
+      "properties": {
+        "transfer_id": { "type": "string", "minLength": 1 },
+        "direction": { "enum": ["in", "out"] },
+        "occurred_at": { "$ref": "#/$defs/datetime" },
+        "from_unit": { "type": "string", "minLength": 1 },
+        "to_unit": { "type": "string", "minLength": 1 },
+        "reason": { "$ref": "#/$defs/nullable_string" }
+      }
+    },
+    "consultation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "consultation_id",
+        "consultant_role",
+        "department",
+        "consult_type",
+        "ordered_at",
+        "requested_by",
+        "signed_at",
+        "signed_by",
+        "replied_at",
+        "status",
+        "condition_summary",
+        "reply_content"
+      ],
+      "properties": {
+        "consultation_id": { "type": "string", "minLength": 1 },
+        "consultant_role": { "enum": ["醫師", "營養師"] },
+        "department": { "type": "string", "minLength": 1 },
+        "consult_type": { "enum": ["REGULAR", "URGENT"] },
+        "ordered_at": { "$ref": "#/$defs/datetime" },
+        "requested_by": { "$ref": "#/$defs/staff_id" },
+        "signed_at": { "$ref": "#/$defs/nullable_datetime" },
+        "signed_by": {
+          "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/staff_id" }]
+        },
+        "replied_at": { "$ref": "#/$defs/nullable_datetime" },
+        "status": { "enum": ["未簽收", "已簽收", "已回覆"] },
+        "condition_summary": { "$ref": "#/$defs/nullable_string" },
+        "reply_content": { "$ref": "#/$defs/nullable_string" }
+      }
+    },
+    "medication_order": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "order_id",
+        "order_category",
+        "drug_name",
+        "route",
+        "dose",
+        "unit",
+        "frequency",
+        "is_high_alert",
+        "ordered_at",
+        "prescriber_id",
+        "status",
+        "administrations"
+      ],
+      "properties": {
+        "order_id": { "type": "string", "minLength": 1 },
+        "order_category": { "enum": ["常規", "臨時"] },
+        "drug_name": { "type": "string", "minLength": 1 },
+        "route": { "type": "string", "minLength": 1 },
+        "dose": { "type": "number" },
+        "unit": { "type": "string", "minLength": 1 },
+        "frequency": { "type": "string", "minLength": 1 },
+        "is_high_alert": { "type": "boolean" },
+        "ordered_at": { "$ref": "#/$defs/datetime" },
+        "prescriber_id": { "$ref": "#/$defs/staff_id" },
+        "status": { "enum": ["未執行", "執行中", "已執行", "到期停用", "DC"] },
+        "administrations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "administration_id",
+              "administered_at",
+              "administered_by",
+              "dose",
+              "unit",
+              "rate",
+              "status",
+              "remark"
+            ],
+            "properties": {
+              "administration_id": { "type": "string", "minLength": 1 },
+              "administered_at": { "$ref": "#/$defs/datetime" },
+              "administered_by": { "$ref": "#/$defs/staff_id" },
+              "dose": { "type": ["number", "null"] },
+              "unit": { "$ref": "#/$defs/nullable_string" },
+              "rate": { "$ref": "#/$defs/nullable_string" },
+              "status": { "enum": ["已執行", "暫停", "停止", "拒絕", "未執行"] },
+              "remark": { "$ref": "#/$defs/nullable_string" }
+            }
+          }
+        }
+      }
+    },
+    "vital_sign": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "record_id",
+        "measured_at",
+        "body_temperature",
+        "temperature_site",
+        "pulse",
+        "respiration",
+        "sbp",
+        "dbp",
+        "spo2",
+        "oxygen_therapy",
+        "measured_by"
+      ],
+      "properties": {
+        "record_id": { "type": "string", "minLength": 1 },
+        "measured_at": { "$ref": "#/$defs/datetime" },
+        "body_temperature": { "type": ["number", "null"] },
+        "temperature_site": { "enum": ["耳溫", "口溫", "腋溫", "肛溫", null] },
+        "pulse": { "type": ["integer", "null"] },
+        "respiration": { "type": ["integer", "null"] },
+        "sbp": { "type": ["integer", "null"] },
+        "dbp": { "type": ["integer", "null"] },
+        "spo2": { "type": ["integer", "null"] },
+        "oxygen_therapy": { "$ref": "#/$defs/nullable_string" },
+        "measured_by": { "$ref": "#/$defs/staff_id" }
+      }
+    },
+    "lab_result": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "record_id",
+        "order_name",
+        "item",
+        "value",
+        "unit",
+        "reference_range",
+        "abnormal_flag",
+        "collected_at",
+        "reported_at"
+      ],
+      "properties": {
+        "record_id": { "type": "string", "minLength": 1 },
+        "order_name": { "type": "string", "minLength": 1 },
+        "item": { "type": "string", "minLength": 1 },
+        "value": { "type": "string" },
+        "unit": { "$ref": "#/$defs/nullable_string" },
+        "reference_range": { "$ref": "#/$defs/nullable_string" },
+        "abnormal_flag": { "enum": ["H", "L", null] },
+        "collected_at": { "$ref": "#/$defs/datetime" },
+        "reported_at": { "$ref": "#/$defs/nullable_datetime" }
+      }
+    },
+    "tube": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "tube_id",
+        "tube_type",
+        "site",
+        "size",
+        "inserted_on",
+        "removed_on",
+        "fixation",
+        "appearance"
+      ],
+      "properties": {
+        "tube_id": { "type": "string", "minLength": 1 },
+        "tube_type": { "type": "string", "minLength": 1 },
+        "site": { "type": "string", "minLength": 1 },
+        "size": { "$ref": "#/$defs/nullable_string" },
+        "inserted_on": {
+          "description": "置放日期；不詳用 null",
+          "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/date" }]
+        },
+        "removed_on": {
+          "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/date" }]
+        },
+        "fixation": { "$ref": "#/$defs/nullable_string" },
+        "appearance": { "$ref": "#/$defs/nullable_string" }
+      }
+    },
+    "examination": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "order_id",
+        "order_name",
+        "ordered_at",
+        "performed_at",
+        "status",
+        "is_invasive",
+        "report_summary"
+      ],
+      "properties": {
+        "order_id": { "type": "string", "minLength": 1 },
+        "order_name": { "type": "string", "minLength": 1 },
+        "ordered_at": { "$ref": "#/$defs/datetime" },
+        "performed_at": { "$ref": "#/$defs/nullable_datetime" },
+        "status": { "enum": ["已開立", "已執行", "正式報告", "取消"] },
+        "is_invasive": { "type": "boolean" },
+        "report_summary": { "$ref": "#/$defs/nullable_string" }
+      }
+    },
+    "health_education": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["record_id", "recorded_at", "topic", "target", "content", "author_id"],
+      "properties": {
+        "record_id": { "type": "string", "minLength": 1 },
+        "recorded_at": { "$ref": "#/$defs/datetime" },
+        "topic": { "type": "string", "minLength": 1 },
+        "target": { "enum": ["病人", "家屬", "病人及家屬"] },
+        "content": { "type": "string" },
+        "author_id": { "$ref": "#/$defs/staff_id" }
+      }
+    },
+    "consent_form": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["consent_id", "form_name", "related_order_id", "status", "signed_at"],
+      "properties": {
+        "consent_id": { "type": "string", "minLength": 1 },
+        "form_name": { "type": "string", "minLength": 1 },
+        "related_order_id": { "$ref": "#/$defs/nullable_string" },
+        "status": { "enum": ["待簽", "已簽", "拒簽"] },
+        "signed_at": { "$ref": "#/$defs/nullable_datetime" }
+      }
+    },
+    "emotional_distress_assessment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["record_id", "assessed_at", "score", "suicidal_ideation", "author_id"],
+      "properties": {
+        "record_id": { "type": "string", "minLength": 1 },
+        "assessed_at": { "$ref": "#/$defs/datetime" },
+        "score": { "type": "integer", "minimum": 0, "maximum": 10 },
+        "suicidal_ideation": { "type": ["boolean", "null"] },
+        "author_id": { "$ref": "#/$defs/staff_id" }
+      }
+    }
+  }
+}

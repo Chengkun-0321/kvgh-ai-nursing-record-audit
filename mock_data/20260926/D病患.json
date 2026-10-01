@@ -1,0 +1,279 @@
+{
+  "schema_version": "0.1.0",
+  "business_date": "2026-09-26",
+  "ward": {
+    "ward_code": "W51",
+    "ward_name": "內科病房"
+  },
+  "patient": {
+    "patient_id": "D病患",
+    "admission_id": "ADM-D-01",
+    "bed_code": "W51-2",
+    "sex": "F",
+    "age_years": 58,
+    "admission_at": "2026-09-19T14:20:00+08:00",
+    "admission_source": "急診",
+    "admission_diagnosis": "右下肢蜂窩性組織炎合併第二型糖尿病",
+    "attending_physician_id": "D206",
+    "status": "inpatient",
+    "status_changed_at": null
+  },
+  "admission_assessment": null,
+  "daily_physical_assessments": [
+    {
+      "record_id": "DPA-D-0926-1",
+      "assessed_at": "2026-09-26T08:30:00+08:00",
+      "shift": "day",
+      "author_id": "N106",
+      "last_modified_at": null,
+      "items": {
+        "consciousness": {
+          "measured_at": "2026-09-26T08:30:00+08:00",
+          "scale": "GCS",
+          "e": "4",
+          "v": "5",
+          "m": "6",
+          "rass": null
+        },
+        "pain": {
+          "scale": "10分法",
+          "score": 3,
+          "unable_to_assess": false
+        },
+        "sleep": "正常",
+        "airway": "無",
+        "tubes": {
+          "has_tube": true,
+          "description": "IV，置放日期2026-09-23，部位：右前臂，外觀：正常"
+        },
+        "pulse": {
+          "status": "正常",
+          "abnormal_types": []
+        },
+        "limb_circulation": "輕微水腫(無壓窩)",
+        "breath_sounds": {
+          "status": "正常",
+          "abnormal_types": [],
+          "other": null
+        },
+        "cough": "無",
+        "sore_throat": "無",
+        "bowel_sounds": "正常",
+        "appetite": [
+          "正常"
+        ],
+        "urination": {
+          "status": "正常",
+          "abnormal_types": [],
+          "other": null
+        },
+        "skin_pressure_prone_sites": [
+          "無"
+        ],
+        "muscle_power": {
+          "left_upper": "5",
+          "right_upper": "5",
+          "left_lower": "5",
+          "right_lower": "4"
+        },
+        "mobility": "完全能動",
+        "fall_risk": {
+          "unable_to_move": false,
+          "risk_factors": [
+            "步態不穩"
+          ],
+          "medications": [
+            "降血糖藥"
+          ],
+          "score": 2,
+          "high_risk": true,
+          "osteoporosis_high_risk": false
+        }
+      }
+    }
+  ],
+  "nursing_progress_notes": [
+    {
+      "record_id": "NPN-D-0926-01",
+      "recorded_at": "2026-09-26T09:30:00+08:00",
+      "title_category": "健康問題",
+      "title": "健康問題 ：皮膚完整性受損",
+      "content": "右小腿切開引流傷口約 3x1 公分，紗布填塞，滲液呈淡黃色少量，傷口周圍紅腫範圍約 10x8 公分，較前縮小，依醫囑每日換藥兩次，患肢抬高，續觀察傷口變化。",
+      "author_id": "N106",
+      "last_modified_at": null,
+      "has_image": false
+    },
+    {
+      "record_id": "NPN-D-0926-02",
+      "recorded_at": "2026-09-26T14:10:00+08:00",
+      "title_category": "健康問題",
+      "title": "健康問題 ：血糖不穩定",
+      "content": "AC 血糖 168–242 mg/dL，依醫囑飲食控制及 Metformin 使用，衛教糖尿病飲食及足部照護，病人可複述，續監測血糖。",
+      "author_id": "N106",
+      "last_modified_at": null,
+      "has_image": false
+    },
+    {
+      "record_id": "NPN-D-0926-03",
+      "recorded_at": "2026-09-26T15:20:00+08:00",
+      "title_category": "健康問題",
+      "title": "健康問題 ：焦慮",
+      "content": "病人表示擔心傷口好不了、會不會截肢，也擔心請假太久工作不保，情緒困擾溫度計自評 5 分，無自殺想法。予傾聽並說明目前紅腫範圍已縮小、傷口引流順利，經病人同意後轉介社工師及臨床心理師，社工師預計明日訪視。",
+      "author_id": "N106",
+      "last_modified_at": null,
+      "has_image": false
+    },
+    {
+      "record_id": "NPN-D-0926-04",
+      "recorded_at": "2026-09-26T22:00:00+08:00",
+      "title_category": "交班",
+      "title": "交班",
+      "content": "病人夜間睡眠可，右小腿傷口敷料乾燥，患肢抬高，疼痛 3 分，生命徵象穩定，續觀察。",
+      "author_id": "N110",
+      "last_modified_at": null,
+      "has_image": false
+    }
+  ],
+  "transfers": [],
+  "consultations": [
+    {
+      "consultation_id": "CON-D-02",
+      "consultant_role": "醫師",
+      "department": "感染科",
+      "consult_type": "REGULAR",
+      "ordered_at": "2026-09-25T14:00:00+08:00",
+      "requested_by": "D206",
+      "signed_at": "2026-09-26T09:00:00+08:00",
+      "signed_by": "D320",
+      "replied_at": "2026-09-26T16:00:00+08:00",
+      "status": "已回覆",
+      "condition_summary": "58 歲女性，右下肢蜂窩性組織炎合併皮下膿瘍 s/p I&D（9/25），Cefazolin 使用 7 天，糖尿病控制不佳（HbA1c 9.2%），請協助抗生素建議。",
+      "reply_content": "Impression: Right leg cellulitis with abscess s/p I&D, wound culture preliminary Gram-positive cocci in clusters. Suggestion: 1. Shift Cefazolin to Oxacillin 2g IVA Q4H, total course 14 days, adjust according to final culture. 2. Tight glucose control. 3. Follow up CBC/CRP twice weekly. Thanks for consultation."
+    }
+  ],
+  "medication_orders": [],
+  "vital_signs": [
+    {
+      "record_id": "VS-D-0926-1",
+      "measured_at": "2026-09-26T08:00:00+08:00",
+      "body_temperature": 37.1,
+      "temperature_site": "耳溫",
+      "pulse": 84,
+      "respiration": 18,
+      "sbp": 128,
+      "dbp": 78,
+      "spo2": 98,
+      "oxygen_therapy": "room air",
+      "measured_by": "N106"
+    },
+    {
+      "record_id": "VS-D-0926-2",
+      "measured_at": "2026-09-26T12:00:00+08:00",
+      "body_temperature": 37.2,
+      "temperature_site": "耳溫",
+      "pulse": 86,
+      "respiration": 18,
+      "sbp": 130,
+      "dbp": 78,
+      "spo2": 98,
+      "oxygen_therapy": "room air",
+      "measured_by": "N106"
+    },
+    {
+      "record_id": "VS-D-0926-3",
+      "measured_at": "2026-09-26T16:00:00+08:00",
+      "body_temperature": 37.0,
+      "temperature_site": "耳溫",
+      "pulse": 84,
+      "respiration": 18,
+      "sbp": 126,
+      "dbp": 76,
+      "spo2": 98,
+      "oxygen_therapy": "room air",
+      "measured_by": "N110"
+    },
+    {
+      "record_id": "VS-D-0926-4",
+      "measured_at": "2026-09-26T20:00:00+08:00",
+      "body_temperature": 36.9,
+      "temperature_site": "耳溫",
+      "pulse": 80,
+      "respiration": 18,
+      "sbp": 124,
+      "dbp": 76,
+      "spo2": 98,
+      "oxygen_therapy": "room air",
+      "measured_by": "N110"
+    }
+  ],
+  "lab_results": [
+    {
+      "record_id": "LAB-D-0926-01",
+      "order_name": "Glucose (finger)",
+      "item": "Glucose (finger)",
+      "value": "168",
+      "unit": "mg/dL",
+      "reference_range": "80-180",
+      "abnormal_flag": null,
+      "collected_at": "2026-09-26T07:00:00+08:00",
+      "reported_at": "2026-09-26T07:01:00+08:00"
+    },
+    {
+      "record_id": "LAB-D-0926-02",
+      "order_name": "Glucose (finger)",
+      "item": "Glucose (finger)",
+      "value": "242",
+      "unit": "mg/dL",
+      "reference_range": "80-180",
+      "abnormal_flag": "H",
+      "collected_at": "2026-09-26T11:00:00+08:00",
+      "reported_at": "2026-09-26T11:01:00+08:00"
+    },
+    {
+      "record_id": "LAB-D-0926-03",
+      "order_name": "CBC,DC",
+      "item": "WBC",
+      "value": "9.8",
+      "unit": "K/uL",
+      "reference_range": "3.5-11.0",
+      "abnormal_flag": null,
+      "collected_at": "2026-09-26T06:00:00+08:00",
+      "reported_at": "2026-09-26T06:40:00+08:00"
+    },
+    {
+      "record_id": "LAB-D-0926-04",
+      "order_name": "CRP (Quantitative)",
+      "item": "CRP",
+      "value": "4.1",
+      "unit": "mg/dL",
+      "reference_range": "<0.5",
+      "abnormal_flag": "H",
+      "collected_at": "2026-09-26T06:00:00+08:00",
+      "reported_at": "2026-09-26T07:00:00+08:00"
+    }
+  ],
+  "tubes": [
+    {
+      "tube_id": "TUB-D-02",
+      "tube_type": "IV",
+      "site": "右前臂",
+      "size": "20G",
+      "inserted_on": "2026-09-23",
+      "removed_on": null,
+      "fixation": "透明敷料",
+      "appearance": "正常"
+    }
+  ],
+  "examinations": [],
+  "health_educations": [],
+  "consent_forms": [],
+  "emotional_distress_assessments": [
+    {
+      "record_id": "EDS-D-0926-1",
+      "assessed_at": "2026-09-26T15:10:00+08:00",
+      "score": 5,
+      "suicidal_ideation": false,
+      "author_id": "N106"
+    }
+  ]
+}

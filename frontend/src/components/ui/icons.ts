@@ -8,6 +8,7 @@ export { CaretRightIcon } from "@phosphor-icons/react/dist/ssr/CaretRight";
 export { ChartBarIcon } from "@phosphor-icons/react/dist/ssr/ChartBar";
 export { GearIcon } from "@phosphor-icons/react/dist/ssr/Gear";
 export { ListChecksIcon } from "@phosphor-icons/react/dist/ssr/ListChecks";
+export { NotebookIcon } from "@phosphor-icons/react/dist/ssr/Notebook";
 export { PlusIcon } from "@phosphor-icons/react/dist/ssr/Plus";
 export { UserIcon } from "@phosphor-icons/react/dist/ssr/User";
 export { UserCircleIcon } from "@phosphor-icons/react/dist/ssr/UserCircle";

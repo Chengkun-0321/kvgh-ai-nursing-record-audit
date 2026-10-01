@@ -1,0 +1,265 @@
+{
+  "schema_version": "0.1.0",
+  "business_date": "2026-09-08",
+  "ward": {
+    "ward_code": "W51",
+    "ward_name": "內科病房"
+  },
+  "patient": {
+    "patient_id": "B病患",
+    "admission_id": "ADM-B-01",
+    "bed_code": "W51-2",
+    "sex": "F",
+    "age_years": 68,
+    "admission_at": "2026-09-01T11:05:00+08:00",
+    "admission_source": "急診",
+    "admission_diagnosis": "社區型肺炎（右下肺葉）合併第二型糖尿病血糖控制不良",
+    "attending_physician_id": "D203",
+    "status": "inpatient",
+    "status_changed_at": null
+  },
+  "admission_assessment": null,
+  "daily_physical_assessments": [
+    {
+      "record_id": "DPA-B-0908-1",
+      "assessed_at": "2026-09-08T08:25:00+08:00",
+      "shift": "day",
+      "author_id": "N105",
+      "last_modified_at": null,
+      "items": {
+        "consciousness": {
+          "measured_at": "2026-09-08T08:25:00+08:00",
+          "scale": "GCS",
+          "e": "4",
+          "v": "5",
+          "m": "6",
+          "rass": null
+        },
+        "pain": {
+          "scale": "10分法",
+          "score": 0,
+          "unable_to_assess": false
+        },
+        "sleep": "正常",
+        "airway": "無",
+        "tubes": {
+          "has_tube": true,
+          "description": "IV，置放日期2026-09-05，部位：右前臂，外觀：正常"
+        },
+        "pulse": {
+          "status": "正常",
+          "abnormal_types": []
+        },
+        "limb_circulation": "微血管快速填滿",
+        "breath_sounds": {
+          "status": "正常",
+          "abnormal_types": [],
+          "other": null
+        },
+        "cough": "有",
+        "sore_throat": "無",
+        "bowel_sounds": "正常",
+        "appetite": [
+          "正常"
+        ],
+        "urination": {
+          "status": "正常",
+          "abnormal_types": [],
+          "other": null
+        },
+        "skin_pressure_prone_sites": [
+          "無"
+        ],
+        "muscle_power": {
+          "left_upper": "5",
+          "right_upper": "5",
+          "left_lower": "5",
+          "right_lower": "5"
+        },
+        "mobility": "完全能動",
+        "fall_risk": {
+          "unable_to_move": false,
+          "risk_factors": [],
+          "medications": [
+            "降壓藥",
+            "降血糖藥"
+          ],
+          "score": 1,
+          "high_risk": false,
+          "osteoporosis_high_risk": false
+        }
+      }
+    }
+  ],
+  "nursing_progress_notes": [
+    {
+      "record_id": "NPN-B-0908-01",
+      "recorded_at": "2026-09-08T05:10:00+08:00",
+      "title_category": "交班",
+      "title": "交班",
+      "content": "病人夜間睡眠約 7 小時，未咳醒。04:00 耳溫 36.7℃。",
+      "author_id": "N113",
+      "last_modified_at": null,
+      "has_image": false
+    },
+    {
+      "record_id": "NPN-B-0908-02",
+      "recorded_at": "2026-09-08T10:30:00+08:00",
+      "title_category": "健康問題",
+      "title": "健康問題 ：氣體交換障礙",
+      "content": "今日雙側呼吸音清晰，偶有輕咳白痰少量。09:00 依醫囑停止氧氣，room air 下觀察 1 小時 SpO2 95–96%，呼吸 18 次/分，病人無喘。已連續 48 小時無發燒，醫師表示明日改口服抗生素。",
+      "author_id": "N105",
+      "last_modified_at": null,
+      "has_image": false
+    },
+    {
+      "record_id": "NPN-B-0908-03",
+      "recorded_at": "2026-09-08T15:00:00+08:00",
+      "title_category": "健康問題",
+      "title": "健康問題 ：血糖不穩定",
+      "content": "今日指尖血糖 07:00 168、11:00 196、16:30 172 mg/dL，較前幾日下降。醫師表示感染改善後明日恢復 Metformin。病人三餐進食約八至九分，可依營養師建議選擇主食份量。",
+      "author_id": "N105",
+      "last_modified_at": null,
+      "has_image": false
+    },
+    {
+      "record_id": "NPN-B-0908-04",
+      "recorded_at": "2026-09-08T21:30:00+08:00",
+      "title_category": "交班",
+      "title": "交班",
+      "content": "病人 room air 下 SpO2 96%，晚間於走道散步約 100 公尺無喘。女兒詢問出院時間，已請醫師明日說明。",
+      "author_id": "N109",
+      "last_modified_at": null,
+      "has_image": false
+    }
+  ],
+  "transfers": [],
+  "consultations": [],
+  "medication_orders": [],
+  "vital_signs": [
+    {
+      "record_id": "VS-B-0908-1",
+      "measured_at": "2026-09-08T08:00:00+08:00",
+      "body_temperature": 36.7,
+      "temperature_site": "耳溫",
+      "pulse": 88,
+      "respiration": 18,
+      "sbp": 124,
+      "dbp": 70,
+      "spo2": 96,
+      "oxygen_therapy": "鼻導管 1L/min",
+      "measured_by": "N105"
+    },
+    {
+      "record_id": "VS-B-0908-2",
+      "measured_at": "2026-09-08T12:00:00+08:00",
+      "body_temperature": 36.8,
+      "temperature_site": "耳溫",
+      "pulse": 86,
+      "respiration": 18,
+      "sbp": 126,
+      "dbp": 72,
+      "spo2": 96,
+      "oxygen_therapy": "room air",
+      "measured_by": "N105"
+    },
+    {
+      "record_id": "VS-B-0908-3",
+      "measured_at": "2026-09-08T16:00:00+08:00",
+      "body_temperature": 36.9,
+      "temperature_site": "耳溫",
+      "pulse": 84,
+      "respiration": 18,
+      "sbp": 122,
+      "dbp": 70,
+      "spo2": 96,
+      "oxygen_therapy": "room air",
+      "measured_by": "N109"
+    },
+    {
+      "record_id": "VS-B-0908-4",
+      "measured_at": "2026-09-08T20:00:00+08:00",
+      "body_temperature": 36.6,
+      "temperature_site": "耳溫",
+      "pulse": 82,
+      "respiration": 18,
+      "sbp": 120,
+      "dbp": 68,
+      "spo2": 96,
+      "oxygen_therapy": "room air",
+      "measured_by": "N109"
+    }
+  ],
+  "lab_results": [
+    {
+      "record_id": "LAB-B-0908-01",
+      "order_name": "Glucose (finger)",
+      "item": "Glucose (finger)",
+      "value": "168",
+      "unit": "mg/dL",
+      "reference_range": "80-180",
+      "abnormal_flag": null,
+      "collected_at": "2026-09-08T07:00:00+08:00",
+      "reported_at": "2026-09-08T07:01:00+08:00"
+    },
+    {
+      "record_id": "LAB-B-0908-02",
+      "order_name": "Glucose (finger)",
+      "item": "Glucose (finger)",
+      "value": "196",
+      "unit": "mg/dL",
+      "reference_range": "80-180",
+      "abnormal_flag": "H",
+      "collected_at": "2026-09-08T11:00:00+08:00",
+      "reported_at": "2026-09-08T11:01:00+08:00"
+    },
+    {
+      "record_id": "LAB-B-0908-03",
+      "order_name": "Glucose (finger)",
+      "item": "Glucose (finger)",
+      "value": "172",
+      "unit": "mg/dL",
+      "reference_range": "80-180",
+      "abnormal_flag": null,
+      "collected_at": "2026-09-08T16:30:00+08:00",
+      "reported_at": "2026-09-08T16:31:00+08:00"
+    },
+    {
+      "record_id": "LAB-B-0908-04",
+      "order_name": "Glucose (finger)",
+      "item": "Glucose (finger)",
+      "value": "184",
+      "unit": "mg/dL",
+      "reference_range": "80-180",
+      "abnormal_flag": "H",
+      "collected_at": "2026-09-08T21:00:00+08:00",
+      "reported_at": "2026-09-08T21:01:00+08:00"
+    }
+  ],
+  "tubes": [
+    {
+      "tube_id": "TUB-B-02",
+      "tube_type": "IV",
+      "site": "右前臂",
+      "size": "22G",
+      "inserted_on": "2026-09-05",
+      "removed_on": null,
+      "fixation": "透明敷料",
+      "appearance": "正常"
+    }
+  ],
+  "examinations": [
+    {
+      "order_id": "EXM-B-03",
+      "order_name": "Sputum culture",
+      "ordered_at": "2026-09-01T08:50:00+08:00",
+      "performed_at": "2026-09-01T14:40:00+08:00",
+      "status": "正式報告",
+      "is_invasive": false,
+      "report_summary": "Streptococcus pneumoniae, penicillin susceptible"
+    }
+  ],
+  "health_educations": [],
+  "consent_forms": [],
+  "emotional_distress_assessments": []
+}

@@ -45,6 +45,12 @@ export function formatDate(isoDate: string): string {
   return `${year}/${month}/${day}`;
 }
 
+/** 將 `YYYY-MM-DD` 格式化為「09/26」。 */
+export function formatMonthDay(isoDate: string): string {
+  const { month, day } = toParts(new Date(`${isoDate}T00:00:00+08:00`));
+  return `${month}/${day}`;
+}
+
 /** 格式化為「2026/09/26 14:20」。 */
 export function formatDateTime(date: Date): string {
   const { year, month, day, hour, minute } = toParts(date);

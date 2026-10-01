@@ -4,6 +4,7 @@
 
 | 資料 | 處理方式 |
 |---|---|
+| 自製虛構病房資料包 `mock_data/` | 完全虛構（人員只用代碼、不取材自院內截圖內容），可進版控 |
 | 院方假資料 | 視同敏感資料：只放 `backend/data/`，不進版控、不外傳 |
 | 真實病患資料 | 目前未取得；取得前須先完成 [ADR 0002](../adr/0002-llm-phi-policy.md) 的重新評估 |
 | 測試 fixture | 必須完全虛構，可進版控 |
@@ -30,7 +31,7 @@
 
 ## API
 
-- CORS 只允許 `Settings.CORS_ORIGINS` 內的來源，禁止 `*`
+- CORS 只允許 `Settings.CORS_ORIGINS` 內的來源，禁止 `*`；瀏覽器經 Next.js 同網域轉送呼叫後端（[ADR 0011](../adr/0011-same-origin-api-proxy.md)），不因對外網域而放寬 CORS
 - 所有輸入經 Pydantic 驗證；路徑參數（如日期）驗證格式，防止 path traversal
 - SQL 一律經 SQLAlchemy 或 bound parameters，禁止字串拼接
 

@@ -25,6 +25,12 @@
 | 護理長     | `head_nurse`          |                                                                         |
 | 護理師     | `nurse`               |                                                                         |
 | 目前使用者 | `current_user`        | 登入的使用者（登入機制待決，目前為虛構資料）                            |
+| 院方病患代碼 | `patient_id`        | 院方提供的去識別病患代碼，跨日固定；匯入後轉成內部 `patient_key`        |
+| 住院序號   | `admission_id`        | 院方提供，區分同一病患的不同次住院                                      |
+| 人員代碼   | `staff_id`            | 院方提供的護理師、醫師、營養師代碼（如 `author_id`），不含姓名          |
+| 住院狀態   | `status`（patient 內）| `inpatient` / `transferred_out` / `discharged`                          |
+| 出院       | `discharge`           |                                                                         |
+| 班別       | `shift`               | `day`（白班）/ `evening`（小夜）/ `night`（大夜）                       |
 
 ## 護理紀錄與臨床資料
 
@@ -49,6 +55,13 @@
 | 管路             | `tube`                      |                                              |
 | 檢驗結果         | `lab_result`                |                                              |
 | 護理計畫         | `nursing_care_plan`         |                                              |
+| 轉入／轉出       | `transfer`                  | `direction`：`in` / `out`                    |
+| 紀錄標籤         | `title_category`            | 過程紀錄標題的分類，如健康問題、會診、營養照會建議、轉出摘要 |
+| 營養照會         | `nutrition_consultation`    | 會診中 `consultant_role` 為營養師者          |
+| 會診回覆時間     | `replied_at`                | 醫師（營養師）書寫紀錄時間                   |
+| 高警訊用藥       | `high_alert_medication`     | 藥囑欄位 `is_high_alert`                     |
+| 檢查             | `examination`               | 本次醫囑清單中的檢查，含 `is_invasive`       |
+| 情緒困擾評估     | `emotional_distress_assessment` | 一次評估紀錄，內含 `score`               |
 
 ## 稽核
 
@@ -71,6 +84,8 @@
 | 證據       | `evidence`       | 判定依據：來源、紀錄 ID、欄位、日期、原文片段                 |
 | 判定引擎   | `engine`         | `rule` / `llm` / `hybrid`                                     |
 | 業務日期   | `business_date`  | 稽核歸屬日，以 Asia/Taipei 計算                               |
+| 紀錄時間軸 | `record_timeline` | 護理紀錄頁：一位病患所有日期的紀錄，由新到舊排列               |
+| 紀錄類型   | `record_type`    | 時間軸的篩選分類：入院評估、每日身體評估、護理紀錄、轉入轉出、給藥紀錄、會診、生命徵象、檢驗 |
 
 ## LLM 設定
 
@@ -96,3 +111,6 @@
 | 中繼站   | `relay`           | 院方每日上傳資料處 |
 | 匯入批次 | `ingestion_batch` |                    |
 | 資料來源 | `data_source`     | `local` / `relay`  |
+| 每日資料包 | `daily_package` | 院方每天產出的一個業務日資料夾（`YYYYMMDD/`） |
+| 資料包清單 | `manifest`      | 資料包內的 `manifest.json`，列出當天病患檔案 |
+| 假資料目錄 | `mock_data`     | 專案根目錄的自製虛構資料包 |

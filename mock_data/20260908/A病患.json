@@ -1,0 +1,233 @@
+{
+  "schema_version": "0.1.0",
+  "business_date": "2026-09-08",
+  "ward": {
+    "ward_code": "W51",
+    "ward_name": "內科病房"
+  },
+  "patient": {
+    "patient_id": "A病患",
+    "admission_id": "ADM-A-01",
+    "bed_code": "W51-1",
+    "sex": "M",
+    "age_years": 72,
+    "admission_at": "2026-09-01T10:30:00+08:00",
+    "admission_source": "急診",
+    "admission_diagnosis": "非ST段上升心肌梗塞（NSTEMI）",
+    "attending_physician_id": "D201",
+    "status": "inpatient",
+    "status_changed_at": null
+  },
+  "admission_assessment": null,
+  "daily_physical_assessments": [
+    {
+      "record_id": "DPA-A-0908-1",
+      "assessed_at": "2026-09-08T08:30:00+08:00",
+      "shift": "day",
+      "author_id": "N104",
+      "last_modified_at": null,
+      "items": {
+        "consciousness": {
+          "measured_at": "2026-09-08T08:30:00+08:00",
+          "scale": "GCS",
+          "e": "4",
+          "v": "5",
+          "m": "6",
+          "rass": null
+        },
+        "pain": {
+          "scale": "10分法",
+          "score": 0,
+          "unable_to_assess": false
+        },
+        "sleep": "正常",
+        "airway": "無",
+        "tubes": {
+          "has_tube": true,
+          "description": "IV，置放日期2026-09-05，部位：右前臂，外觀：正常"
+        },
+        "pulse": {
+          "status": "正常",
+          "abnormal_types": []
+        },
+        "limb_circulation": "微血管快速填滿",
+        "breath_sounds": {
+          "status": "正常",
+          "abnormal_types": [],
+          "other": null
+        },
+        "cough": "無",
+        "sore_throat": "無",
+        "bowel_sounds": "正常",
+        "appetite": [
+          "正常"
+        ],
+        "urination": {
+          "status": "正常",
+          "abnormal_types": [],
+          "other": null
+        },
+        "skin_pressure_prone_sites": [
+          "無"
+        ],
+        "muscle_power": {
+          "left_upper": "5",
+          "right_upper": "5",
+          "left_lower": "5",
+          "right_lower": "5"
+        },
+        "mobility": "完全能動",
+        "fall_risk": {
+          "unable_to_move": false,
+          "risk_factors": [],
+          "medications": [
+            "降壓藥",
+            "心血管用藥"
+          ],
+          "score": 1,
+          "high_risk": false,
+          "osteoporosis_high_risk": false
+        }
+      }
+    }
+  ],
+  "nursing_progress_notes": [
+    {
+      "record_id": "NPN-A-0908-01",
+      "recorded_at": "2026-09-08T05:50:00+08:00",
+      "title_category": "交班",
+      "title": "交班",
+      "content": "病人夜間睡眠約 7 小時，太太陪宿。06:00 量體重 69.6 公斤，與入院時相近。",
+      "author_id": "N112",
+      "last_modified_at": null,
+      "has_image": false
+    },
+    {
+      "record_id": "NPN-A-0908-02",
+      "recorded_at": "2026-09-08T11:30:00+08:00",
+      "title_category": "健康問題",
+      "title": "健康問題 ：組織灌流改變：心肺",
+      "content": "心臟內科醫師查房說明，預計 9/15 安排第二次心導管處理 LCX 病灶，RCA 病灶視情況再評估，期間持續 Aspirin、Clopidogrel、Atorvastatin 40mg、Bisoprolol 2.5mg 治療。病人今日無胸悶主訴，心電圖監測 sinus rhythm 64–76 次/分。",
+      "author_id": "N104",
+      "last_modified_at": null,
+      "has_image": false
+    },
+    {
+      "record_id": "NPN-A-0908-03",
+      "recorded_at": "2026-09-08T15:20:00+08:00",
+      "title_category": "健康問題",
+      "title": "健康問題 ：活動無耐力",
+      "content": "下午由復健師陪同爬樓梯 1 層（約 20 階），爬完 HR 104 次/分、BP 142/82mmHg，稍喘，Borg 13 分，休息 4 分鐘回復至 HR 80 次/分。復健師建議明日起每日爬樓梯 1 層，並持續走廊行走。",
+      "author_id": "N104",
+      "last_modified_at": null,
+      "has_image": false
+    },
+    {
+      "record_id": "NPN-A-0908-04",
+      "recorded_at": "2026-09-08T21:40:00+08:00",
+      "title_category": "交班",
+      "title": "交班",
+      "content": "病人晚間在房內看書，生命徵象穩定，今日解便 1 次。右前臂 IV 留置第 4 天，注射部位無紅腫，明日依常規更換。",
+      "author_id": "N108",
+      "last_modified_at": null,
+      "has_image": false
+    }
+  ],
+  "transfers": [],
+  "consultations": [],
+  "medication_orders": [],
+  "vital_signs": [
+    {
+      "record_id": "VS-A-0908-1",
+      "measured_at": "2026-09-08T08:00:00+08:00",
+      "body_temperature": 36.4,
+      "temperature_site": "耳溫",
+      "pulse": 68,
+      "respiration": 16,
+      "sbp": 120,
+      "dbp": 70,
+      "spo2": 98,
+      "oxygen_therapy": "room air",
+      "measured_by": "N104"
+    },
+    {
+      "record_id": "VS-A-0908-2",
+      "measured_at": "2026-09-08T12:00:00+08:00",
+      "body_temperature": 36.6,
+      "temperature_site": "耳溫",
+      "pulse": 72,
+      "respiration": 18,
+      "sbp": 126,
+      "dbp": 74,
+      "spo2": 98,
+      "oxygen_therapy": "room air",
+      "measured_by": "N104"
+    },
+    {
+      "record_id": "VS-A-0908-3",
+      "measured_at": "2026-09-08T16:00:00+08:00",
+      "body_temperature": 36.7,
+      "temperature_site": "耳溫",
+      "pulse": 76,
+      "respiration": 18,
+      "sbp": 130,
+      "dbp": 78,
+      "spo2": 97,
+      "oxygen_therapy": "room air",
+      "measured_by": "N108"
+    },
+    {
+      "record_id": "VS-A-0908-4",
+      "measured_at": "2026-09-08T20:00:00+08:00",
+      "body_temperature": 36.5,
+      "temperature_site": "耳溫",
+      "pulse": 66,
+      "respiration": 16,
+      "sbp": 118,
+      "dbp": 68,
+      "spo2": 98,
+      "oxygen_therapy": "room air",
+      "measured_by": "N108"
+    }
+  ],
+  "lab_results": [
+    {
+      "record_id": "LAB-A-0908-01",
+      "order_name": "BUN,CREA,NA,K",
+      "item": "CREA",
+      "value": "1.1",
+      "unit": "mg/dL",
+      "reference_range": "0.7-1.3",
+      "abnormal_flag": null,
+      "collected_at": "2026-09-08T06:00:00+08:00",
+      "reported_at": "2026-09-08T07:00:00+08:00"
+    },
+    {
+      "record_id": "LAB-A-0908-02",
+      "order_name": "BUN,CREA,NA,K",
+      "item": "K",
+      "value": "4.3",
+      "unit": "mmol/L",
+      "reference_range": "3.5-5.1",
+      "abnormal_flag": null,
+      "collected_at": "2026-09-08T06:00:00+08:00",
+      "reported_at": "2026-09-08T07:00:00+08:00"
+    }
+  ],
+  "tubes": [
+    {
+      "tube_id": "TUB-A-02",
+      "tube_type": "IV",
+      "site": "右前臂",
+      "size": "20G",
+      "inserted_on": "2026-09-05",
+      "removed_on": null,
+      "fixation": "透明敷料",
+      "appearance": "正常"
+    }
+  ],
+  "examinations": [],
+  "health_educations": [],
+  "consent_forms": [],
+  "emotional_distress_assessments": []
+}

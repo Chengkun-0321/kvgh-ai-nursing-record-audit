@@ -19,3 +19,6 @@ export const SYSTEM_PROMPT_MAX_CHARS = 8_000;
 
 // 模型清單：輸入 API 位址或金鑰停頓後才查詢，避免每打一個字就呼叫一次
 export const MODEL_LIST_DEBOUNCE_MS = 500;
+
+// 護理紀錄頁讀取的假資料目錄（相對於 frontend/，可用伺服器端環境變數 MOCK_DATA_DIR 覆寫）
+export const DEFAULT_MOCK_DATA_DIR = "../mock_data";

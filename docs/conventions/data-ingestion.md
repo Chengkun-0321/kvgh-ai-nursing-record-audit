@@ -4,7 +4,7 @@
 
 | 階段 | 來源 | 設定 |
 |---|---|---|
-| 現在 | 院方提供的假資料 JSON | `DATA_SOURCE=local` |
+| 現在 | 自製虛構假資料 `mock_data/`（之後換成院方提供的假資料） | `DATA_SOURCE=local` |
 | 未來 | 院方每日打包上傳中繼站，本系統下載當日資料 | `DATA_SOURCE=relay` |
 
 兩者實作同一介面，切換只改設定，不改匯入流程。
@@ -16,7 +16,7 @@ class DataSource(Protocol):
     async def fetch(self, business_date: date) -> list[RawDocument]: ...
 ```
 
-- `LocalFixtureSource`：讀取 `backend/data/fixtures/<YYYY-MM-DD>/*.json`
+- `LocalFixtureSource`：讀取 `<MOCK_DATA_DIR>/<YYYYMMDD>/`（`manifest.json`＋每位病患一個 JSON）；`MOCK_DATA_DIR` 放 `Settings`，預設為專案根目錄的 `mock_data/`
 - `RelaySource`：傳輸協定、認證方式**待決**；連線資訊只放 `Settings`／`.env`
 
 ## 匯入流程
@@ -41,14 +41,17 @@ class DataSource(Protocol):
 
 ## 格式對照
 
-院方 JSON 格式**待提供**。取得範例後：
+院方每日資料包格式由我們先定義，交給院方資訊處照著產出：[hospital-data-spec.md](../hospital-data-spec.md)（v0.1.0，決策見 [ADR 0009](../adr/0009-hospital-daily-data-format.md)）。
 
-1. 先寫 ADR：欄位對照表（院方欄位 → 內部欄位）、必填／選填、特殊值處理
-2. 再建立 `schemas/ingestion/` 與對應 models、migration
+- 資料包：`<YYYYMMDD>/manifest.json` ＋ `<patient_id>.json`（一位病患一天一檔，增量）
+- 格式檢查：`docs/hospital-data-spec/*.schema.json`（JSON Schema 2020-12）
+- 院方實際資料與規格不同時：先更新規格與 ADR，再調整 `schemas/ingestion/`
+- 下一步：依規格建立 `schemas/ingestion/` 與對應 models、migration
 
 ## 假資料放置
 
 | 類型 | 位置 | 進版控 |
 |---|---|---|
+| 自製虛構病房資料包（含正確／錯誤情境答案表） | `mock_data/` | ✅（完全虛構） |
 | 院方提供的假資料 | `backend/data/fixtures/` | ❌（`backend/data/` 整個被 gitignore） |
 | 測試用自製最小資料 | `backend/tests/fixtures/` | ✅（必須完全虛構） |

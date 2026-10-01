@@ -54,6 +54,7 @@ frontend/
     │   ├── settings/     # 設定頁共用：左側設定分頁導覽
     │   ├── ward-scene/   # 病房 3D 場景（R3F）、DOM 病床按鈕層、地圖控制與視窗
     │   ├── llm-settings/ # LLM 模型設定頁：設定清單與表單、ChatGPT 登入、測試對話
+    │   ├── nursing-records/ # 護理紀錄頁：病患清單、紀錄類型篩選、時間軸與各類紀錄卡片
     │   └── …             # 業務元件（BedCard、PatientSummary、AuditFindingList…）
     ├── hooks/            # useXxx
     ├── lib/              # api client、utils（cn）、motion variants、constants
@@ -75,7 +76,9 @@ frontend/
 ## 資料存取
 
 - 後端呼叫一律經 `src/lib/api/`，元件內不直接 `fetch` 後端 URL
-- 後端位址：Server 端用 `API_BASE_URL`，Client 端用 `NEXT_PUBLIC_API_BASE_URL`（複製 `.env.example` 為 `.env.local`）
+- 唯一例外：`lib/api/mockDailyPackages.ts`（server-only）。它直接讀取根目錄的 `mock_data/`，供護理紀錄頁使用，目錄由伺服器端環境變數 `MOCK_DATA_DIR` 設定，後端完成匯入後改為 API（見 [ADR 0010](../docs/adr/0010-mock-data-viewer.md)）
+- 後端位址只有伺服器端的 `API_BASE_URL`（複製 `.env.example` 為 `.env.local`）：Server Component 直接連線；瀏覽器一律呼叫同網域的 `/api/v1/*`，由 `next.config.ts` 的 rewrites 轉給後端，不需開放 CORS（見 [ADR 0011](../docs/adr/0011-same-origin-api-proxy.md)）
+- `next.config.ts` 設 `compress: false`：Next.js 的 gzip 會把經 proxy 的 SSE 整段緩衝，測試對話無法逐字顯示
 - API 錯誤一律轉成帶繁中訊息的 `ApiError`（`lib/api/client.ts`），元件以 `toErrorMessage()` 顯示
 - API 型別：`npm run gen:api` 由 FastAPI `/openapi.json` 產生 `src/types/api.ts`；禁止手寫重複的 API 型別
 - 後端 schema 變更後必須重新產生 `api.ts`

@@ -12,12 +12,15 @@ export class ApiError extends Error {
   }
 }
 
-/** Server Component 用 `API_BASE_URL`，瀏覽器端用 `NEXT_PUBLIC_API_BASE_URL`（建置時內嵌）。 */
+/**
+ * Server Component 直接連 `API_BASE_URL`；瀏覽器一律呼叫同網域的 `/api/v1/*`，
+ * 由 Next.js rewrites 轉給後端（見 next.config.ts）。
+ */
 function resolveBaseUrl(): string {
-  const baseUrl =
-    typeof window === "undefined"
-      ? (process.env.API_BASE_URL ?? process.env.NEXT_PUBLIC_API_BASE_URL)
-      : process.env.NEXT_PUBLIC_API_BASE_URL;
+  if (typeof window !== "undefined") {
+    return "";
+  }
+  const baseUrl = process.env.API_BASE_URL;
   if (!baseUrl) {
     throw new ApiError(0, "尚未設定後端位址，請參考 frontend/.env.example");
   }
@@ -29,14 +32,18 @@ function isAbortError(error: unknown): boolean {
 }
 
 async function readErrorDetail(response: Response): Promise<string> {
-  const fallback = `後端回應錯誤（HTTP ${response.status}），請稍後再試`;
+  // 後端的錯誤一律是 JSON `detail`；非 JSON 的 5xx 來自中間的 proxy，代表連不到後端
+  const fallback =
+    response.status >= 500
+      ? BACKEND_UNREACHABLE_MESSAGE
+      : `後端回應錯誤（HTTP ${response.status}），請稍後再試`;
   try {
     const body: unknown = await response.json();
     if (typeof body === "object" && body !== null && "detail" in body) {
       return typeof body.detail === "string" ? body.detail : fallback;
     }
   } catch {
-    // 非 JSON 回應（例如 proxy 錯誤頁）：改用通用訊息
+    // 非 JSON 回應（例如 proxy 錯誤頁）：改用上方的訊息
   }
   return fallback;
 }

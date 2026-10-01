@@ -35,3 +35,6 @@
 | [0006](0006-llm-config-settings.md) | LLM 模型設定頁（多組設定、服務類型、ChatGPT 訂閱登入、串流測試對話） | 提議 |
 | [0007](0007-llm-system-prompt.md) | 共用 System Prompt（版本化、套用所有呼叫、ChatGPT 訂閱不帶 Codex 內建指示） | 提議 |
 | [0008](0008-top-nav-minimal-palette.md) | 頂部導覽列與暖亞麻極簡配色（液態玻璃只當點綴） | 提議 |
+| [0009](0009-hospital-daily-data-format.md) | 院方每日資料交換格式（每人每日一檔、增量）與自製假資料 `mock_data/` | 提議 |
+| [0010](0010-mock-data-viewer.md) | 護理紀錄頁由前端伺服器直接讀取 `mock_data/`（時間軸＋紀錄類型篩選） | 提議 |
+| [0011](0011-same-origin-api-proxy.md) | 瀏覽器經 Next.js rewrites 同網域呼叫後端（取代 `NEXT_PUBLIC_API_BASE_URL`） | 提議 |

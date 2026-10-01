@@ -1,0 +1,236 @@
+{
+  "schema_version": "0.1.0",
+  "business_date": "2026-09-26",
+  "ward": {
+    "ward_code": "W51",
+    "ward_name": "內科病房"
+  },
+  "patient": {
+    "patient_id": "A病患",
+    "admission_id": "ADM-A-01",
+    "bed_code": "W51-1",
+    "sex": "M",
+    "age_years": 72,
+    "admission_at": "2026-09-01T10:30:00+08:00",
+    "admission_source": "急診",
+    "admission_diagnosis": "非ST段上升心肌梗塞（NSTEMI）",
+    "attending_physician_id": "D201",
+    "status": "inpatient",
+    "status_changed_at": null
+  },
+  "admission_assessment": null,
+  "daily_physical_assessments": [
+    {
+      "record_id": "DPA-A-0926-1",
+      "assessed_at": "2026-09-26T08:40:00+08:00",
+      "shift": "day",
+      "author_id": "N104",
+      "last_modified_at": null,
+      "items": {
+        "consciousness": {
+          "measured_at": "2026-09-26T08:40:00+08:00",
+          "scale": "GCS",
+          "e": "4",
+          "v": "5",
+          "m": "6",
+          "rass": null
+        },
+        "pain": {
+          "scale": "10分法",
+          "score": 0,
+          "unable_to_assess": false
+        },
+        "sleep": "淺眠",
+        "airway": "無",
+        "tubes": {
+          "has_tube": true,
+          "description": "IV，置放日期2026-09-24，部位：右前臂，外觀：正常"
+        },
+        "pulse": {
+          "status": "正常",
+          "abnormal_types": []
+        },
+        "limb_circulation": "微血管快速填滿",
+        "breath_sounds": {
+          "status": "異常",
+          "abnormal_types": [
+            "痰音"
+          ],
+          "other": null
+        },
+        "cough": "有",
+        "sore_throat": "無",
+        "bowel_sounds": "正常",
+        "appetite": [
+          "減少"
+        ],
+        "urination": {
+          "status": "正常",
+          "abnormal_types": [],
+          "other": null
+        },
+        "skin_pressure_prone_sites": [
+          "無"
+        ],
+        "muscle_power": {
+          "left_upper": "5",
+          "right_upper": "5",
+          "left_lower": "5",
+          "right_lower": "5"
+        },
+        "mobility": "完全能動",
+        "fall_risk": {
+          "unable_to_move": false,
+          "risk_factors": [],
+          "medications": [
+            "降壓藥",
+            "利尿劑",
+            "心血管用藥"
+          ],
+          "score": 1,
+          "high_risk": false,
+          "osteoporosis_high_risk": false
+        }
+      }
+    }
+  ],
+  "nursing_progress_notes": [
+    {
+      "record_id": "NPN-A-0926-01",
+      "recorded_at": "2026-09-26T00:30:00+08:00",
+      "title_category": "健康問題",
+      "title": "健康問題 ：體溫過高",
+      "content": "00:00 複測耳溫 37.9℃，病人因咳嗽有痰夜間醒來數次、睡眠斷續，協助拍背後可咳出黃白色痰，續冰枕使用。",
+      "author_id": "N111",
+      "last_modified_at": null,
+      "has_image": false
+    },
+    {
+      "record_id": "NPN-A-0926-02",
+      "recorded_at": "2026-09-26T10:20:00+08:00",
+      "title_category": "健康問題",
+      "title": "健康問題 ：體溫過高",
+      "content": "生命徵象（09/25 20:00）：體溫 38.2℃，脈搏 98 次/分，呼吸 22 次/分，血壓 132/78mmHg，SpO2 94%，咳嗽有黃痰，依醫囑 Ceftriaxone 2g IVD Q24H 使用中，予冰枕使用，鼓勵多休息，續觀察體溫變化。",
+      "author_id": "N104",
+      "last_modified_at": null,
+      "has_image": false
+    },
+    {
+      "record_id": "NPN-A-0926-03",
+      "recorded_at": "2026-09-26T14:30:00+08:00",
+      "title_category": "健康問題",
+      "title": "健康問題 ：呼吸道清除功能失效",
+      "content": "今晨胸部 X 光示右下肺葉浸潤，醫師診斷院內感染肺炎。聽診右下肺痰音，痰液黃白色、量中等，可自咳。協助背部叩擊及姿位引流，衛教深呼吸與有效咳嗽，鼓勵在限水範圍內分次飲水。病人今日食慾稍差，午餐進食約五分，已建議少量多餐。",
+      "author_id": "N104",
+      "last_modified_at": null,
+      "has_image": false
+    },
+    {
+      "record_id": "NPN-A-0926-04",
+      "recorded_at": "2026-09-26T21:40:00+08:00",
+      "title_category": "交班",
+      "title": "交班",
+      "content": "病人晚間咳嗽次數較白天減少，晚餐進食約六分。Ceftriaxone 已於 21:20 滴注完畢，右前臂 IV 留置順暢。",
+      "author_id": "N108",
+      "last_modified_at": null,
+      "has_image": false
+    }
+  ],
+  "transfers": [],
+  "consultations": [],
+  "medication_orders": [],
+  "vital_signs": [
+    {
+      "record_id": "VS-A-0926-1",
+      "measured_at": "2026-09-26T00:00:00+08:00",
+      "body_temperature": 37.9,
+      "temperature_site": "耳溫",
+      "pulse": 88,
+      "respiration": 20,
+      "sbp": 126,
+      "dbp": 72,
+      "spo2": 95,
+      "oxygen_therapy": "room air",
+      "measured_by": "N111"
+    },
+    {
+      "record_id": "VS-A-0926-2",
+      "measured_at": "2026-09-26T08:00:00+08:00",
+      "body_temperature": 37.1,
+      "temperature_site": "耳溫",
+      "pulse": 80,
+      "respiration": 18,
+      "sbp": 124,
+      "dbp": 72,
+      "spo2": 96,
+      "oxygen_therapy": "room air",
+      "measured_by": "N104"
+    },
+    {
+      "record_id": "VS-A-0926-3",
+      "measured_at": "2026-09-26T12:00:00+08:00",
+      "body_temperature": 37.4,
+      "temperature_site": "耳溫",
+      "pulse": 82,
+      "respiration": 18,
+      "sbp": 126,
+      "dbp": 74,
+      "spo2": 96,
+      "oxygen_therapy": "room air",
+      "measured_by": "N104"
+    },
+    {
+      "record_id": "VS-A-0926-4",
+      "measured_at": "2026-09-26T16:00:00+08:00",
+      "body_temperature": 37.2,
+      "temperature_site": "耳溫",
+      "pulse": 80,
+      "respiration": 18,
+      "sbp": 124,
+      "dbp": 72,
+      "spo2": 96,
+      "oxygen_therapy": "room air",
+      "measured_by": "N108"
+    },
+    {
+      "record_id": "VS-A-0926-5",
+      "measured_at": "2026-09-26T20:00:00+08:00",
+      "body_temperature": 37.0,
+      "temperature_site": "耳溫",
+      "pulse": 78,
+      "respiration": 18,
+      "sbp": 122,
+      "dbp": 70,
+      "spo2": 97,
+      "oxygen_therapy": "room air",
+      "measured_by": "N108"
+    }
+  ],
+  "lab_results": [],
+  "tubes": [
+    {
+      "tube_id": "TUB-A-09",
+      "tube_type": "IV",
+      "site": "右前臂",
+      "size": "20G",
+      "inserted_on": "2026-09-24",
+      "removed_on": null,
+      "fixation": "透明敷料",
+      "appearance": "正常"
+    }
+  ],
+  "examinations": [
+    {
+      "order_id": "EXM-A-13",
+      "order_name": "Chest PA view",
+      "ordered_at": "2026-09-25T20:15:00+08:00",
+      "performed_at": "2026-09-26T07:30:00+08:00",
+      "status": "正式報告",
+      "is_invasive": false,
+      "report_summary": "New infiltration in right lower lobe, suspect pneumonia"
+    }
+  ],
+  "health_educations": [],
+  "consent_forms": [],
+  "emotional_distress_assessments": []
+}

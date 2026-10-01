@@ -7,8 +7,8 @@ import { cn } from "@/lib/utils";
 
 import {
   isNavItemActive,
+  MOBILE_TAB_ITEMS,
   NAV_DISABLED_HINT,
-  NAV_ITEMS,
   type NavItemConfig,
 } from "./navItems";
 import { PendingBadge } from "./PendingBadge";
@@ -79,7 +79,7 @@ export function MobileTabBar({ pendingBedCount }: MobileTabBarProps) {
       className="glass fixed inset-x-0 bottom-0 z-30 pb-[env(safe-area-inset-bottom)] lg:hidden"
     >
       <ul className="grid grid-cols-5 px-2 pt-1">
-        {NAV_ITEMS.map((item) => (
+        {MOBILE_TAB_ITEMS.map((item) => (
           <li key={item.label}>
             <TabItem
               item={item}

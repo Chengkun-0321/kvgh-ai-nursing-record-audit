@@ -1,0 +1,303 @@
+{
+  "schema_version": "0.1.0",
+  "business_date": "2026-09-29",
+  "ward": {
+    "ward_code": "W51",
+    "ward_name": "內科病房"
+  },
+  "patient": {
+    "patient_id": "D病患",
+    "admission_id": "ADM-D-01",
+    "bed_code": "W51-2",
+    "sex": "F",
+    "age_years": 58,
+    "admission_at": "2026-09-19T14:20:00+08:00",
+    "admission_source": "急診",
+    "admission_diagnosis": "右下肢蜂窩性組織炎合併第二型糖尿病",
+    "attending_physician_id": "D206",
+    "status": "inpatient",
+    "status_changed_at": null
+  },
+  "admission_assessment": null,
+  "daily_physical_assessments": [
+    {
+      "record_id": "DPA-D-0929-1",
+      "assessed_at": "2026-09-29T08:25:00+08:00",
+      "shift": "day",
+      "author_id": "N105",
+      "last_modified_at": null,
+      "items": {
+        "consciousness": {
+          "measured_at": "2026-09-29T08:25:00+08:00",
+          "scale": "GCS",
+          "e": "4",
+          "v": "5",
+          "m": "6",
+          "rass": null
+        },
+        "pain": {
+          "scale": "10分法",
+          "score": 2,
+          "unable_to_assess": false
+        },
+        "sleep": "正常",
+        "airway": "無",
+        "tubes": {
+          "has_tube": true,
+          "description": "IV，置放日期2026-09-27，部位：左前臂，外觀：正常"
+        },
+        "pulse": {
+          "status": "正常",
+          "abnormal_types": []
+        },
+        "limb_circulation": "微血管快速填滿",
+        "breath_sounds": {
+          "status": "正常",
+          "abnormal_types": [],
+          "other": null
+        },
+        "cough": "無",
+        "sore_throat": "無",
+        "bowel_sounds": "正常",
+        "appetite": [
+          "正常"
+        ],
+        "urination": {
+          "status": "正常",
+          "abnormal_types": [],
+          "other": null
+        },
+        "skin_pressure_prone_sites": [
+          "無"
+        ],
+        "muscle_power": {
+          "left_upper": "5",
+          "right_upper": "5",
+          "left_lower": "5",
+          "right_lower": "5"
+        },
+        "mobility": "完全能動",
+        "fall_risk": {
+          "unable_to_move": false,
+          "risk_factors": [],
+          "medications": [
+            "降血糖藥"
+          ],
+          "score": 0,
+          "high_risk": false,
+          "osteoporosis_high_risk": false
+        }
+      }
+    }
+  ],
+  "nursing_progress_notes": [
+    {
+      "record_id": "NPN-D-0929-01",
+      "recorded_at": "2026-09-29T05:40:00+08:00",
+      "title_category": "交班",
+      "title": "交班",
+      "content": "病人夜間睡眠約 7 小時，未使用安眠藥。Oxacillin 依時於 00:00、04:00 滴注。",
+      "author_id": "N114",
+      "last_modified_at": null,
+      "has_image": false
+    },
+    {
+      "record_id": "NPN-D-0929-02",
+      "recorded_at": "2026-09-29T10:30:00+08:00",
+      "title_category": "健康問題",
+      "title": "健康問題 ：皮膚完整性受損",
+      "content": "今日換藥時傷口約 2.5x0.8 公分，傷口底部紅潤肉芽組織生長，滲液少量淡黃色、無異味，周圍紅腫約 7x5 公分，觸痛 2 分，右下肢水腫已消。整形外科醫師查看傷口，表示 9/30 起可停止紗布填塞，改為一般敷料。",
+      "author_id": "N105",
+      "last_modified_at": null,
+      "has_image": false
+    },
+    {
+      "record_id": "NPN-D-0929-03",
+      "recorded_at": "2026-09-29T14:40:00+08:00",
+      "title_category": "護理指導",
+      "title": "護理指導 ：傷口換藥",
+      "content": "向病人及先生示範傷口換藥步驟：洗手、移除舊敷料、生理食鹽水由內往外清潔、覆蓋紗布並固定，觀察有無紅腫熱痛加劇或膿樣分泌物。先生於護理師在旁指導下完成一次換藥，步驟正確。",
+      "author_id": "N105",
+      "last_modified_at": null,
+      "has_image": false
+    },
+    {
+      "record_id": "NPN-D-0929-04",
+      "recorded_at": "2026-09-29T16:10:00+08:00",
+      "title_category": "健康問題",
+      "title": "健康問題 ：焦慮",
+      "content": "臨床心理師今日訪視約 40 分鐘，病人表示說出擔心後心情比較輕鬆，情緒困擾自評 2 分。心理師建議出院後若仍有情緒困擾可至身心科門診。",
+      "author_id": "N105",
+      "last_modified_at": null,
+      "has_image": false
+    },
+    {
+      "record_id": "NPN-D-0929-05",
+      "recorded_at": "2026-09-29T21:30:00+08:00",
+      "title_category": "交班",
+      "title": "交班",
+      "content": "病人晚間在病房內走動，步態穩。16:30 血糖 158、21:00 172 mg/dL。左前臂 IV 留置順暢。",
+      "author_id": "N109",
+      "last_modified_at": null,
+      "has_image": false
+    }
+  ],
+  "transfers": [],
+  "consultations": [],
+  "medication_orders": [],
+  "vital_signs": [
+    {
+      "record_id": "VS-D-0929-1",
+      "measured_at": "2026-09-29T08:00:00+08:00",
+      "body_temperature": 36.6,
+      "temperature_site": "耳溫",
+      "pulse": 76,
+      "respiration": 18,
+      "sbp": 122,
+      "dbp": 74,
+      "spo2": 98,
+      "oxygen_therapy": "room air",
+      "measured_by": "N105"
+    },
+    {
+      "record_id": "VS-D-0929-2",
+      "measured_at": "2026-09-29T12:00:00+08:00",
+      "body_temperature": 36.8,
+      "temperature_site": "耳溫",
+      "pulse": 78,
+      "respiration": 18,
+      "sbp": 124,
+      "dbp": 74,
+      "spo2": 98,
+      "oxygen_therapy": "room air",
+      "measured_by": "N105"
+    },
+    {
+      "record_id": "VS-D-0929-3",
+      "measured_at": "2026-09-29T16:00:00+08:00",
+      "body_temperature": 36.7,
+      "temperature_site": "耳溫",
+      "pulse": 78,
+      "respiration": 18,
+      "sbp": 122,
+      "dbp": 72,
+      "spo2": 98,
+      "oxygen_therapy": "room air",
+      "measured_by": "N109"
+    },
+    {
+      "record_id": "VS-D-0929-4",
+      "measured_at": "2026-09-29T20:00:00+08:00",
+      "body_temperature": 36.6,
+      "temperature_site": "耳溫",
+      "pulse": 74,
+      "respiration": 18,
+      "sbp": 120,
+      "dbp": 72,
+      "spo2": 98,
+      "oxygen_therapy": "room air",
+      "measured_by": "N109"
+    }
+  ],
+  "lab_results": [
+    {
+      "record_id": "LAB-D-0929-01",
+      "order_name": "CBC,DC",
+      "item": "WBC",
+      "value": "8.1",
+      "unit": "K/uL",
+      "reference_range": "3.5-11.0",
+      "abnormal_flag": null,
+      "collected_at": "2026-09-29T06:00:00+08:00",
+      "reported_at": "2026-09-29T06:40:00+08:00"
+    },
+    {
+      "record_id": "LAB-D-0929-02",
+      "order_name": "CRP (Quantitative)",
+      "item": "CRP",
+      "value": "1.8",
+      "unit": "mg/dL",
+      "reference_range": "<0.5",
+      "abnormal_flag": "H",
+      "collected_at": "2026-09-29T06:00:00+08:00",
+      "reported_at": "2026-09-29T07:00:00+08:00"
+    },
+    {
+      "record_id": "LAB-D-0929-03",
+      "order_name": "Glucose (finger)",
+      "item": "Glucose (finger)",
+      "value": "148",
+      "unit": "mg/dL",
+      "reference_range": "80-180",
+      "abnormal_flag": null,
+      "collected_at": "2026-09-29T07:00:00+08:00",
+      "reported_at": "2026-09-29T07:01:00+08:00"
+    },
+    {
+      "record_id": "LAB-D-0929-04",
+      "order_name": "Glucose (finger)",
+      "item": "Glucose (finger)",
+      "value": "176",
+      "unit": "mg/dL",
+      "reference_range": "80-180",
+      "abnormal_flag": null,
+      "collected_at": "2026-09-29T11:00:00+08:00",
+      "reported_at": "2026-09-29T11:01:00+08:00"
+    },
+    {
+      "record_id": "LAB-D-0929-05",
+      "order_name": "Glucose (finger)",
+      "item": "Glucose (finger)",
+      "value": "158",
+      "unit": "mg/dL",
+      "reference_range": "80-180",
+      "abnormal_flag": null,
+      "collected_at": "2026-09-29T16:30:00+08:00",
+      "reported_at": "2026-09-29T16:31:00+08:00"
+    },
+    {
+      "record_id": "LAB-D-0929-06",
+      "order_name": "Glucose (finger)",
+      "item": "Glucose (finger)",
+      "value": "172",
+      "unit": "mg/dL",
+      "reference_range": "80-180",
+      "abnormal_flag": null,
+      "collected_at": "2026-09-29T21:00:00+08:00",
+      "reported_at": "2026-09-29T21:01:00+08:00"
+    }
+  ],
+  "tubes": [
+    {
+      "tube_id": "TUB-D-03",
+      "tube_type": "IV",
+      "site": "左前臂",
+      "size": "20G",
+      "inserted_on": "2026-09-27",
+      "removed_on": null,
+      "fixation": "透明敷料",
+      "appearance": "正常"
+    }
+  ],
+  "examinations": [],
+  "health_educations": [
+    {
+      "record_id": "EDU-D-0929-1",
+      "recorded_at": "2026-09-29T14:40:00+08:00",
+      "topic": "傷口換藥",
+      "target": "病人及家屬",
+      "content": "示範換藥步驟與傷口感染徵象觀察，先生回覆示教正確。",
+      "author_id": "N105"
+    }
+  ],
+  "consent_forms": [],
+  "emotional_distress_assessments": [
+    {
+      "record_id": "EDS-D-0929-1",
+      "assessed_at": "2026-09-29T16:00:00+08:00",
+      "score": 2,
+      "suicidal_ideation": false,
+      "author_id": "N105"
+    }
+  ]
+}

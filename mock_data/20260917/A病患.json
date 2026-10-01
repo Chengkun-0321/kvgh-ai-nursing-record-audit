@@ -1,0 +1,219 @@
+{
+  "schema_version": "0.1.0",
+  "business_date": "2026-09-17",
+  "ward": {
+    "ward_code": "W51",
+    "ward_name": "內科病房"
+  },
+  "patient": {
+    "patient_id": "A病患",
+    "admission_id": "ADM-A-01",
+    "bed_code": "W51-1",
+    "sex": "M",
+    "age_years": 72,
+    "admission_at": "2026-09-01T10:30:00+08:00",
+    "admission_source": "急診",
+    "admission_diagnosis": "非ST段上升心肌梗塞（NSTEMI）",
+    "attending_physician_id": "D201",
+    "status": "inpatient",
+    "status_changed_at": null
+  },
+  "admission_assessment": null,
+  "daily_physical_assessments": [
+    {
+      "record_id": "DPA-A-0917-1",
+      "assessed_at": "2026-09-17T11:30:00+08:00",
+      "shift": "day",
+      "author_id": "N103",
+      "last_modified_at": null,
+      "items": {
+        "consciousness": {
+          "measured_at": "2026-09-17T11:30:00+08:00",
+          "scale": "GCS",
+          "e": "4",
+          "v": "5",
+          "m": "6",
+          "rass": null
+        },
+        "pain": {
+          "scale": "10分法",
+          "score": 0,
+          "unable_to_assess": false
+        },
+        "sleep": "正常",
+        "airway": "無",
+        "tubes": {
+          "has_tube": true,
+          "description": "IV，置放日期2026-09-16，部位：右前臂，外觀：正常"
+        },
+        "pulse": {
+          "status": "正常",
+          "abnormal_types": []
+        },
+        "limb_circulation": "微血管快速填滿",
+        "breath_sounds": {
+          "status": "正常",
+          "abnormal_types": [],
+          "other": null
+        },
+        "cough": "無",
+        "sore_throat": "無",
+        "bowel_sounds": "正常",
+        "appetite": [
+          "正常"
+        ],
+        "urination": {
+          "status": "正常",
+          "abnormal_types": [],
+          "other": null
+        },
+        "skin_pressure_prone_sites": [
+          "無"
+        ],
+        "muscle_power": {
+          "left_upper": "5",
+          "right_upper": "5",
+          "left_lower": "5",
+          "right_lower": "5"
+        },
+        "mobility": "完全能動",
+        "fall_risk": {
+          "unable_to_move": false,
+          "risk_factors": [],
+          "medications": [
+            "降壓藥",
+            "心血管用藥"
+          ],
+          "score": 1,
+          "high_risk": false,
+          "osteoporosis_high_risk": false
+        }
+      }
+    }
+  ],
+  "nursing_progress_notes": [
+    {
+      "record_id": "NPN-A-0917-01",
+      "recorded_at": "2026-09-17T10:40:00+08:00",
+      "title_category": "轉入摘要",
+      "title": "轉入摘要",
+      "content": "由 CCU 轉入，GCS E4V5M6，生命徵象 BP 128/74mmHg、HR 76 次/分、RR 18 次/分、BT 36.5℃。room air，呼吸型態平順，血氧 97%。有右前臂周邊靜脈留置針管路留置。現存健康問題有組織灌流改變：心肺、活動無耐力。",
+      "author_id": "N103",
+      "last_modified_at": null,
+      "has_image": false
+    },
+    {
+      "record_id": "NPN-A-0917-02",
+      "recorded_at": "2026-09-17T11:50:00+08:00",
+      "title_category": "健康問題",
+      "title": "健康問題 ：組織灌流改變：心肺",
+      "content": "病人 9/15 於 CCU 行第二次心導管，於 LCX-m 置放塗藥支架 1 支，RCA 病灶暫以藥物治療。目前無胸悶，生理監視器 sinus rhythm 70–80 次/分。Heparin 已於 9/16 在 CCU 停用，持續 Aspirin、Clopidogrel 治療，已再次提醒病人注意出血徵象。",
+      "author_id": "N103",
+      "last_modified_at": null,
+      "has_image": false
+    },
+    {
+      "record_id": "NPN-A-0917-03",
+      "recorded_at": "2026-09-17T15:30:00+08:00",
+      "title_category": "健康問題",
+      "title": "健康問題 ：活動無耐力",
+      "content": "病人轉回後下午先於病房內走動約 50 公尺，活動後 HR 88 次/分，無胸悶、無喘。因剛做完心導管，與復健師討論後明日再恢復走廊行走，循序漸進增加距離。",
+      "author_id": "N103",
+      "last_modified_at": null,
+      "has_image": false
+    },
+    {
+      "record_id": "NPN-A-0917-04",
+      "recorded_at": "2026-09-17T21:20:00+08:00",
+      "title_category": "交班",
+      "title": "交班",
+      "content": "病人轉回病房後情緒穩定，太太陪伴，晚餐進食約八分。右前臂 IV 留置順暢，生命徵象穩定。",
+      "author_id": "N107",
+      "last_modified_at": null,
+      "has_image": false
+    }
+  ],
+  "transfers": [
+    {
+      "transfer_id": "TRF-A-02",
+      "direction": "in",
+      "occurred_at": "2026-09-17T10:30:00+08:00",
+      "from_unit": "CCU",
+      "to_unit": "W51",
+      "reason": "PCI 術後病情穩定"
+    }
+  ],
+  "consultations": [],
+  "medication_orders": [],
+  "vital_signs": [
+    {
+      "record_id": "VS-A-0917-1",
+      "measured_at": "2026-09-17T10:35:00+08:00",
+      "body_temperature": 36.5,
+      "temperature_site": "耳溫",
+      "pulse": 76,
+      "respiration": 18,
+      "sbp": 128,
+      "dbp": 74,
+      "spo2": 97,
+      "oxygen_therapy": "room air",
+      "measured_by": "N103"
+    },
+    {
+      "record_id": "VS-A-0917-2",
+      "measured_at": "2026-09-17T12:00:00+08:00",
+      "body_temperature": 36.6,
+      "temperature_site": "耳溫",
+      "pulse": 74,
+      "respiration": 18,
+      "sbp": 126,
+      "dbp": 72,
+      "spo2": 97,
+      "oxygen_therapy": "room air",
+      "measured_by": "N103"
+    },
+    {
+      "record_id": "VS-A-0917-3",
+      "measured_at": "2026-09-17T16:00:00+08:00",
+      "body_temperature": 36.7,
+      "temperature_site": "耳溫",
+      "pulse": 78,
+      "respiration": 18,
+      "sbp": 132,
+      "dbp": 76,
+      "spo2": 97,
+      "oxygen_therapy": "room air",
+      "measured_by": "N107"
+    },
+    {
+      "record_id": "VS-A-0917-4",
+      "measured_at": "2026-09-17T20:00:00+08:00",
+      "body_temperature": 36.5,
+      "temperature_site": "耳溫",
+      "pulse": 72,
+      "respiration": 16,
+      "sbp": 124,
+      "dbp": 70,
+      "spo2": 98,
+      "oxygen_therapy": "room air",
+      "measured_by": "N107"
+    }
+  ],
+  "lab_results": [],
+  "tubes": [
+    {
+      "tube_id": "TUB-A-07",
+      "tube_type": "IV",
+      "site": "右前臂",
+      "size": "20G",
+      "inserted_on": "2026-09-16",
+      "removed_on": null,
+      "fixation": "透明敷料",
+      "appearance": "正常"
+    }
+  ],
+  "examinations": [],
+  "health_educations": [],
+  "consent_forms": [],
+  "emotional_distress_assessments": []
+}

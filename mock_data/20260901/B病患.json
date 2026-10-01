@@ -1,0 +1,550 @@
+{
+  "schema_version": "0.1.0",
+  "business_date": "2026-09-01",
+  "ward": {
+    "ward_code": "W51",
+    "ward_name": "內科病房"
+  },
+  "patient": {
+    "patient_id": "B病患",
+    "admission_id": "ADM-B-01",
+    "bed_code": "W51-2",
+    "sex": "F",
+    "age_years": 68,
+    "admission_at": "2026-09-01T11:05:00+08:00",
+    "admission_source": "急診",
+    "admission_diagnosis": "社區型肺炎（右下肺葉）合併第二型糖尿病血糖控制不良",
+    "attending_physician_id": "D203",
+    "status": "inpatient",
+    "status_changed_at": null
+  },
+  "admission_assessment": {
+    "record_id": "AAS-B-01",
+    "assessed_at": "2026-09-01T12:00:00+08:00",
+    "author_id": "N105",
+    "last_modified_at": null,
+    "sections": {
+      "basic_info": {
+        "completed": true,
+        "content": {
+          "education": "國中",
+          "language": "台語、國語",
+          "religion": "民間信仰",
+          "marital_status": "喪偶",
+          "occupation": "家管",
+          "primary_caregiver": "女兒",
+          "admission_method": "輪椅",
+          "accompanied_by": "女兒"
+        }
+      },
+      "personal_history": {
+        "completed": true,
+        "content": {
+          "past_history": [
+            {
+              "disease": "第二型糖尿病",
+              "onset_year": "2014"
+            },
+            {
+              "disease": "高血壓",
+              "onset_year": "2016"
+            }
+          ],
+          "surgical_history": [
+            {
+              "surgery": "膽囊切除術",
+              "year": "2019"
+            }
+          ],
+          "allergy": "無",
+          "blood_type": "O+",
+          "smoking": "無",
+          "alcohol": "無",
+          "home_medications": [
+            "Metformin 500mg BID",
+            "Glimepiride 2mg QD",
+            "Losartan 50mg QD"
+          ]
+        }
+      },
+      "nutrition": {
+        "completed": true,
+        "content": {
+          "height_cm": 155,
+          "weight_kg": 62,
+          "bmi": 25.8,
+          "diet": "糖尿病飲食",
+          "chewing_swallowing": "正常",
+          "nutrition_screening_score": 2,
+          "recent_intake": "近三日進食約半量"
+        }
+      },
+      "daily_living": {
+        "completed": true,
+        "content": {
+          "adl_barthel": 90,
+          "bowel": "兩日1次",
+          "urination": "日間6–7次，夜尿2次",
+          "sleep": "每晚約6小時",
+          "exercise": "偶爾散步"
+        }
+      },
+      "physical_assessment": {
+        "completed": true,
+        "content": {
+          "narrative": "意識清楚，GCS E4V5M6。咳嗽有痰，痰液黃色黏稠可自咳，聽診右下肺有痰音，活動後稍喘，鼻導管 2L/min 使用下 SpO2 95%，呼吸 22 次/分，耳溫 38.1℃。心跳稍快、規律，四肢末梢溫暖，雙下肢無水腫。食慾減少，近三日進食約半量。左前臂 IV 留置，注射部位無紅腫。皮膚完整，薦骨處無壓紅。",
+          "items": {
+            "consciousness": {
+              "measured_at": "2026-09-01T12:00:00+08:00",
+              "scale": "GCS",
+              "e": "4",
+              "v": "5",
+              "m": "6",
+              "rass": null
+            },
+            "pain": {
+              "scale": "10分法",
+              "score": 0,
+              "unable_to_assess": false
+            },
+            "sleep": "正常",
+            "airway": "無",
+            "tubes": {
+              "has_tube": true,
+              "description": "IV，置放日期2026-09-01，部位：左前臂，外觀：正常"
+            },
+            "pulse": {
+              "status": "正常",
+              "abnormal_types": []
+            },
+            "limb_circulation": "微血管快速填滿",
+            "breath_sounds": {
+              "status": "異常",
+              "abnormal_types": [
+                "痰音"
+              ],
+              "other": null
+            },
+            "cough": "有",
+            "sore_throat": "無",
+            "bowel_sounds": "正常",
+            "appetite": [
+              "減少"
+            ],
+            "urination": {
+              "status": "正常",
+              "abnormal_types": [],
+              "other": null
+            },
+            "skin_pressure_prone_sites": [
+              "無"
+            ],
+            "muscle_power": {
+              "left_upper": "5",
+              "right_upper": "5",
+              "left_lower": "5",
+              "right_lower": "5"
+            },
+            "mobility": "完全能動",
+            "fall_risk": {
+              "unable_to_move": false,
+              "risk_factors": [],
+              "medications": [
+                "降壓藥",
+                "降血糖藥"
+              ],
+              "score": 1,
+              "high_risk": false,
+              "osteoporosis_high_risk": false
+            }
+          }
+        }
+      },
+      "psychosocial": {
+        "completed": true,
+        "content": {
+          "mood": "疲倦，擔心血糖",
+          "coping": "配合治療",
+          "support_system": "女兒同住，兒子住台北",
+          "religion_support": "民間信仰"
+        }
+      },
+      "admission_course": {
+        "completed": true,
+        "content": {
+          "text": "病人自 8/29 起發燒，自測耳溫最高 38.9℃，伴隨咳嗽、黃痰及活動後喘，自行服用退燒成藥後仍反覆發燒，食慾變差。9/1 08:40 由女兒陪同至本院急診，急診測量耳溫 38.6℃、SpO2 93%（room air）、呼吸 24 次/分，胸部 X 光示右下肺葉浸潤，抽血 WBC 15.2 K/uL、CRP 12.4 mg/dL、血糖 312 mg/dL，已送痰液及血液培養。急診給予 Ceftriaxone 2g IVD、Azithromycin 500mg PO、Acetaminophen 500mg PO，並予鼻導管 2L/min 使用後 SpO2 95%。因社區型肺炎合併血糖控制不良收住院治療。"
+        }
+      },
+      "environment": {
+        "completed": true,
+        "content": {
+          "introduced_items": [
+            "用餐時間",
+            "陪伴證辦理",
+            "陪伴椅使用",
+            "電動門磁卡",
+            "病床及床欄使用",
+            "緊急呼叫鈴"
+          ],
+          "not_introduced": []
+        }
+      }
+    }
+  },
+  "daily_physical_assessments": [
+    {
+      "record_id": "DPA-B-0901-1",
+      "assessed_at": "2026-09-01T15:30:00+08:00",
+      "shift": "day",
+      "author_id": "N105",
+      "last_modified_at": null,
+      "items": {
+        "consciousness": {
+          "measured_at": "2026-09-01T15:30:00+08:00",
+          "scale": "GCS",
+          "e": "4",
+          "v": "5",
+          "m": "6",
+          "rass": null
+        },
+        "pain": {
+          "scale": "10分法",
+          "score": 0,
+          "unable_to_assess": false
+        },
+        "sleep": "正常",
+        "airway": "無",
+        "tubes": {
+          "has_tube": true,
+          "description": "IV，置放日期2026-09-01，部位：左前臂，外觀：正常"
+        },
+        "pulse": {
+          "status": "正常",
+          "abnormal_types": []
+        },
+        "limb_circulation": "微血管快速填滿",
+        "breath_sounds": {
+          "status": "異常",
+          "abnormal_types": [
+            "痰音"
+          ],
+          "other": null
+        },
+        "cough": "有",
+        "sore_throat": "無",
+        "bowel_sounds": "正常",
+        "appetite": [
+          "減少"
+        ],
+        "urination": {
+          "status": "正常",
+          "abnormal_types": [],
+          "other": null
+        },
+        "skin_pressure_prone_sites": [
+          "無"
+        ],
+        "muscle_power": {
+          "left_upper": "5",
+          "right_upper": "5",
+          "left_lower": "5",
+          "right_lower": "5"
+        },
+        "mobility": "完全能動",
+        "fall_risk": {
+          "unable_to_move": false,
+          "risk_factors": [],
+          "medications": [
+            "降壓藥",
+            "降血糖藥"
+          ],
+          "score": 1,
+          "high_risk": false,
+          "osteoporosis_high_risk": false
+        }
+      }
+    }
+  ],
+  "nursing_progress_notes": [
+    {
+      "record_id": "NPN-B-0901-01",
+      "recorded_at": "2026-09-01T11:50:00+08:00",
+      "title_category": "入院護理",
+      "title": "入院護理",
+      "content": "病人於 11:05 由急診以輪椅入院，女兒陪同，意識清楚，咳嗽有黃痰，鼻導管 2L/min 使用中，SpO2 95%，耳溫 38.1℃。已完成入院護理評估，介紹病房環境、用餐時間、陪伴證、陪伴椅、電動門磁卡、病床及床欄使用與緊急呼叫鈴位置，女兒表示了解。",
+      "author_id": "N105",
+      "last_modified_at": null,
+      "has_image": false
+    },
+    {
+      "record_id": "NPN-B-0901-02",
+      "recorded_at": "2026-09-01T14:50:00+08:00",
+      "title_category": "健康問題",
+      "title": "健康問題 ：呼吸道清除功能失效",
+      "content": "病人咳嗽有痰，痰液黃色黏稠，可自咳但較費力，聽診右下肺痰音明顯，呼吸 22 次/分，鼻導管 2L/min 使用下 SpO2 95%。協助半坐臥，予背部叩擊後咳出黃痰約 3ml。依醫囑 Ceftriaxone 2g IVD QD、Azithromycin 500mg PO QD 使用，已留痰液培養。衛教深呼吸及有效咳嗽方法，鼓勵每日飲水 1500–2000ml。",
+      "author_id": "N105",
+      "last_modified_at": null,
+      "has_image": false
+    },
+    {
+      "record_id": "NPN-B-0901-03",
+      "recorded_at": "2026-09-01T17:40:00+08:00",
+      "title_category": "健康問題",
+      "title": "健康問題 ：體溫過高",
+      "content": "16:00 測量耳溫 38.3℃，脈搏 104 次/分，病人表示畏寒、全身痠軟。通知醫師，依醫囑 16:10 予 Acetaminophen 500mg 1# PO STAT，並予冰枕使用、協助更換汗濕衣物。17:30 複測耳溫 37.6℃，脈搏 94 次/分，畏寒改善。",
+      "author_id": "N109",
+      "last_modified_at": null,
+      "has_image": false
+    },
+    {
+      "record_id": "NPN-B-0901-04",
+      "recorded_at": "2026-09-01T21:20:00+08:00",
+      "title_category": "健康問題",
+      "title": "健康問題 ：血糖不穩定",
+      "content": "病人有糖尿病史，今日急診血糖 312 mg/dL，HbA1c 8.9%。16:30 晚餐前指尖血糖 268 mg/dL，21:00 睡前 245 mg/dL。依醫囑因感染暫停 Metformin，飯前及睡前監測指尖血糖，血糖 >300 mg/dL 時通知醫師。病人晚餐進食約半量。",
+      "author_id": "N109",
+      "last_modified_at": null,
+      "has_image": false
+    },
+    {
+      "record_id": "NPN-B-0901-05",
+      "recorded_at": "2026-09-01T22:30:00+08:00",
+      "title_category": "交班",
+      "title": "交班",
+      "content": "病人 20:00 耳溫 37.4℃，咳嗽有痰可自咳，鼻導管 2L/min 使用中 SpO2 95%，女兒陪宿。左前臂 IV 留置順暢。",
+      "author_id": "N109",
+      "last_modified_at": null,
+      "has_image": false
+    }
+  ],
+  "transfers": [],
+  "consultations": [],
+  "medication_orders": [
+    {
+      "order_id": "MED-B-001",
+      "order_category": "臨時",
+      "drug_name": "Acetaminophen Tab 500mg",
+      "route": "PO",
+      "dose": 1,
+      "unit": "TAB",
+      "frequency": "STAT",
+      "is_high_alert": false,
+      "ordered_at": "2026-09-01T16:05:00+08:00",
+      "prescriber_id": "D203",
+      "status": "已執行",
+      "administrations": [
+        {
+          "administration_id": "MAR-B-0901-01",
+          "administered_at": "2026-09-01T16:10:00+08:00",
+          "administered_by": "N109",
+          "dose": 1,
+          "unit": "TAB",
+          "rate": null,
+          "status": "已執行",
+          "remark": null
+        }
+      ]
+    }
+  ],
+  "vital_signs": [
+    {
+      "record_id": "VS-B-0901-1",
+      "measured_at": "2026-09-01T11:15:00+08:00",
+      "body_temperature": 38.1,
+      "temperature_site": "耳溫",
+      "pulse": 102,
+      "respiration": 22,
+      "sbp": 138,
+      "dbp": 78,
+      "spo2": 95,
+      "oxygen_therapy": "鼻導管 2L/min",
+      "measured_by": "N105"
+    },
+    {
+      "record_id": "VS-B-0901-2",
+      "measured_at": "2026-09-01T12:00:00+08:00",
+      "body_temperature": 37.9,
+      "temperature_site": "耳溫",
+      "pulse": 98,
+      "respiration": 22,
+      "sbp": 134,
+      "dbp": 76,
+      "spo2": 95,
+      "oxygen_therapy": "鼻導管 2L/min",
+      "measured_by": "N105"
+    },
+    {
+      "record_id": "VS-B-0901-3",
+      "measured_at": "2026-09-01T16:00:00+08:00",
+      "body_temperature": 38.3,
+      "temperature_site": "耳溫",
+      "pulse": 104,
+      "respiration": 22,
+      "sbp": 136,
+      "dbp": 76,
+      "spo2": 94,
+      "oxygen_therapy": "鼻導管 2L/min",
+      "measured_by": "N109"
+    },
+    {
+      "record_id": "VS-B-0901-4",
+      "measured_at": "2026-09-01T17:30:00+08:00",
+      "body_temperature": 37.6,
+      "temperature_site": "耳溫",
+      "pulse": 94,
+      "respiration": 20,
+      "sbp": 130,
+      "dbp": 74,
+      "spo2": 95,
+      "oxygen_therapy": "鼻導管 2L/min",
+      "measured_by": "N109"
+    },
+    {
+      "record_id": "VS-B-0901-5",
+      "measured_at": "2026-09-01T20:00:00+08:00",
+      "body_temperature": 37.4,
+      "temperature_site": "耳溫",
+      "pulse": 92,
+      "respiration": 20,
+      "sbp": 130,
+      "dbp": 74,
+      "spo2": 95,
+      "oxygen_therapy": "鼻導管 2L/min",
+      "measured_by": "N109"
+    }
+  ],
+  "lab_results": [
+    {
+      "record_id": "LAB-B-0901-01",
+      "order_name": "CBC,DC",
+      "item": "WBC",
+      "value": "15.2",
+      "unit": "K/uL",
+      "reference_range": "3.5-11.0",
+      "abnormal_flag": "H",
+      "collected_at": "2026-09-01T09:00:00+08:00",
+      "reported_at": "2026-09-01T09:40:00+08:00"
+    },
+    {
+      "record_id": "LAB-B-0901-02",
+      "order_name": "CRP (Quantitative)",
+      "item": "CRP",
+      "value": "12.4",
+      "unit": "mg/dL",
+      "reference_range": "<0.5",
+      "abnormal_flag": "H",
+      "collected_at": "2026-09-01T09:00:00+08:00",
+      "reported_at": "2026-09-01T09:50:00+08:00"
+    },
+    {
+      "record_id": "LAB-B-0901-03",
+      "order_name": "Glucose",
+      "item": "Glucose",
+      "value": "312",
+      "unit": "mg/dL",
+      "reference_range": "70-100",
+      "abnormal_flag": "H",
+      "collected_at": "2026-09-01T09:00:00+08:00",
+      "reported_at": "2026-09-01T09:45:00+08:00"
+    },
+    {
+      "record_id": "LAB-B-0901-04",
+      "order_name": "BUN,CREA,NA,K",
+      "item": "NA",
+      "value": "134",
+      "unit": "mmol/L",
+      "reference_range": "136-145",
+      "abnormal_flag": "L",
+      "collected_at": "2026-09-01T09:00:00+08:00",
+      "reported_at": "2026-09-01T09:45:00+08:00"
+    },
+    {
+      "record_id": "LAB-B-0901-05",
+      "order_name": "BUN,CREA,NA,K",
+      "item": "CREA",
+      "value": "0.9",
+      "unit": "mg/dL",
+      "reference_range": "0.5-1.1",
+      "abnormal_flag": null,
+      "collected_at": "2026-09-01T09:00:00+08:00",
+      "reported_at": "2026-09-01T09:45:00+08:00"
+    },
+    {
+      "record_id": "LAB-B-0901-06",
+      "order_name": "HbA1c",
+      "item": "HbA1c",
+      "value": "8.9",
+      "unit": "%",
+      "reference_range": "4.0-5.6",
+      "abnormal_flag": "H",
+      "collected_at": "2026-09-01T09:00:00+08:00",
+      "reported_at": "2026-09-01T13:20:00+08:00"
+    },
+    {
+      "record_id": "LAB-B-0901-07",
+      "order_name": "Glucose (finger)",
+      "item": "Glucose (finger)",
+      "value": "268",
+      "unit": "mg/dL",
+      "reference_range": "80-180",
+      "abnormal_flag": "H",
+      "collected_at": "2026-09-01T16:30:00+08:00",
+      "reported_at": "2026-09-01T16:31:00+08:00"
+    },
+    {
+      "record_id": "LAB-B-0901-08",
+      "order_name": "Glucose (finger)",
+      "item": "Glucose (finger)",
+      "value": "245",
+      "unit": "mg/dL",
+      "reference_range": "80-180",
+      "abnormal_flag": "H",
+      "collected_at": "2026-09-01T21:00:00+08:00",
+      "reported_at": "2026-09-01T21:01:00+08:00"
+    }
+  ],
+  "tubes": [
+    {
+      "tube_id": "TUB-B-01",
+      "tube_type": "IV",
+      "site": "左前臂",
+      "size": "22G",
+      "inserted_on": "2026-09-01",
+      "removed_on": null,
+      "fixation": "透明敷料",
+      "appearance": "正常"
+    }
+  ],
+  "examinations": [
+    {
+      "order_id": "EXM-B-01",
+      "order_name": "Chest PA view",
+      "ordered_at": "2026-09-01T08:50:00+08:00",
+      "performed_at": "2026-09-01T09:10:00+08:00",
+      "status": "正式報告",
+      "is_invasive": false,
+      "report_summary": "Consolidation in right lower lobe"
+    },
+    {
+      "order_id": "EXM-B-02",
+      "order_name": "BLOOD CULT. & S.-Blood x2",
+      "ordered_at": "2026-09-01T08:50:00+08:00",
+      "performed_at": "2026-09-01T09:00:00+08:00",
+      "status": "已執行",
+      "is_invasive": false,
+      "report_summary": null
+    },
+    {
+      "order_id": "EXM-B-03",
+      "order_name": "Sputum culture",
+      "ordered_at": "2026-09-01T08:50:00+08:00",
+      "performed_at": "2026-09-01T14:40:00+08:00",
+      "status": "已執行",
+      "is_invasive": false,
+      "report_summary": null
+    }
+  ],
+  "health_educations": [],
+  "consent_forms": [],
+  "emotional_distress_assessments": []
+}

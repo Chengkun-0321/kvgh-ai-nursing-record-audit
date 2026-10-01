@@ -1,0 +1,28 @@
+{
+  "schema_version": "0.1.0",
+  "ward_code": "W51",
+  "ward_name": "內科病房",
+  "business_date": "2026-09-08",
+  "generated_at": "2026-09-09T01:00:00+08:00",
+  "patient_count": 3,
+  "patients": [
+    {
+      "patient_id": "A病患",
+      "file": "A病患.json",
+      "bed_code": "W51-1",
+      "status": "inpatient"
+    },
+    {
+      "patient_id": "B病患",
+      "file": "B病患.json",
+      "bed_code": "W51-2",
+      "status": "inpatient"
+    },
+    {
+      "patient_id": "C病患",
+      "file": "C病患.json",
+      "bed_code": "W51-3",
+      "status": "inpatient"
+    }
+  ]
+}

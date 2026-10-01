@@ -1,0 +1,239 @@
+{
+  "schema_version": "0.1.0",
+  "business_date": "2026-09-18",
+  "ward": {
+    "ward_code": "W51",
+    "ward_name": "內科病房"
+  },
+  "patient": {
+    "patient_id": "C病患",
+    "admission_id": "ADM-C-01",
+    "bed_code": "W51-3",
+    "sex": "M",
+    "age_years": 81,
+    "admission_at": "2026-09-08T09:50:00+08:00",
+    "admission_source": "急診",
+    "admission_diagnosis": "慢性阻塞性肺病急性惡化（COPD AE）",
+    "attending_physician_id": "D204",
+    "status": "inpatient",
+    "status_changed_at": null
+  },
+  "admission_assessment": null,
+  "daily_physical_assessments": [
+    {
+      "record_id": "DPA-C-0918-1",
+      "assessed_at": "2026-09-18T08:30:00+08:00",
+      "shift": "day",
+      "author_id": "N106",
+      "last_modified_at": null,
+      "items": {
+        "consciousness": {
+          "measured_at": "2026-09-18T08:30:00+08:00",
+          "scale": "GCS",
+          "e": "4",
+          "v": "5",
+          "m": "6",
+          "rass": null
+        },
+        "pain": {
+          "scale": "10分法",
+          "score": 0,
+          "unable_to_assess": false
+        },
+        "sleep": "正常",
+        "airway": "無",
+        "tubes": {
+          "has_tube": true,
+          "description": "IV，置放日期2026-09-18，部位：左前臂，外觀：正常"
+        },
+        "pulse": {
+          "status": "正常",
+          "abnormal_types": []
+        },
+        "limb_circulation": "微血管快速填滿",
+        "breath_sounds": {
+          "status": "異常",
+          "abnormal_types": [
+            "哮喘音"
+          ],
+          "other": null
+        },
+        "cough": "有",
+        "sore_throat": "無",
+        "bowel_sounds": "正常",
+        "appetite": [
+          "減少"
+        ],
+        "urination": {
+          "status": "正常",
+          "abnormal_types": [],
+          "other": null
+        },
+        "skin_pressure_prone_sites": [
+          "薦骨"
+        ],
+        "muscle_power": {
+          "left_upper": "4",
+          "right_upper": "4",
+          "left_lower": "4",
+          "right_lower": "4"
+        },
+        "mobility": "尚可自行翻身",
+        "fall_risk": {
+          "unable_to_move": false,
+          "risk_factors": [
+            "步態不穩",
+            "下肢肌力0~4分"
+          ],
+          "medications": [
+            "降壓藥"
+          ],
+          "score": 4,
+          "high_risk": true,
+          "osteoporosis_high_risk": false
+        }
+      }
+    }
+  ],
+  "nursing_progress_notes": [
+    {
+      "record_id": "NPN-C-0918-01",
+      "recorded_at": "2026-09-18T09:10:00+08:00",
+      "title_category": "導管照護",
+      "title": "導管照護",
+      "content": "右前臂 IV 留置滿 4 天，08:50 依常規移除，穿刺處無紅腫；於左前臂重新置放 22G 靜脈留置針，透明敷料固定。",
+      "author_id": "N106",
+      "last_modified_at": null,
+      "has_image": false
+    },
+    {
+      "record_id": "NPN-C-0918-02",
+      "recorded_at": "2026-09-18T14:30:00+08:00",
+      "title_category": "營養照會建議",
+      "title": "營養照會建議",
+      "content": "營養師(R301)會診，[訪視日期：2026-09-18 10:00]■給食途徑及方法：Oral：軟質高蛋白飲食 1600kcal，蛋白質 65g■食物及營養素給予：依目前飲食醫囑，另予濃縮高熱量營養品 2 罐/日（早、晚點心）■營養教育及諮商：1. 少量多餐，每日 5–6 餐，餐前先完成吸入治療並休息。2. 避免產氣食物以減少腹脹影響呼吸。病人及兒子表示了解，持續觀察病人情形。護理師已協助今日起加入營養品，午餐進食約四成，下午點心營養品喝完一罐。",
+      "author_id": "N106",
+      "last_modified_at": null,
+      "has_image": false
+    },
+    {
+      "record_id": "NPN-C-0918-03",
+      "recorded_at": "2026-09-18T16:20:00+08:00",
+      "title_category": "健康問題",
+      "title": "健康問題 ：氣體交換障礙",
+      "content": "今日改口服 KCl 補充。鼻導管 2L/min 下 SpO2 95%，呼吸 20 次/分，偶有哮喘音，咳嗽少量白痰。下午床旁站立 3 分鐘，SpO2 最低 93%。",
+      "author_id": "N106",
+      "last_modified_at": null,
+      "has_image": false
+    },
+    {
+      "record_id": "NPN-C-0918-04",
+      "recorded_at": "2026-09-18T21:30:00+08:00",
+      "title_category": "交班",
+      "title": "交班",
+      "content": "病人晚餐進食約五成，睡前營養品已喝完。兒子陪宿，床欄拉起。",
+      "author_id": "N110",
+      "last_modified_at": null,
+      "has_image": false
+    }
+  ],
+  "transfers": [],
+  "consultations": [
+    {
+      "consultation_id": "CON-C-02",
+      "consultant_role": "營養師",
+      "department": "營養室",
+      "consult_type": "REGULAR",
+      "ordered_at": "2026-09-17T11:00:00+08:00",
+      "requested_by": "D204",
+      "signed_at": "2026-09-18T08:40:00+08:00",
+      "signed_by": "R301",
+      "replied_at": "2026-09-18T10:40:00+08:00",
+      "status": "已回覆",
+      "condition_summary": "81 歲男性 COPD AE，BMI 18.7，近兩日進食約三成，入院後體重下降 1.2 公斤，請協助營養評估及飲食調整。",
+      "reply_content": "營養師(R301)會診，[訪視日期：2026-09-18 10:00]■給食途徑及方法：Oral：軟質高蛋白飲食 1600kcal，蛋白質 65g■食物及營養素給予：依目前飲食醫囑，另予濃縮高熱量營養品 2 罐/日（早、晚點心）■營養教育及諮商：1. 少量多餐，每日 5–6 餐，餐前先完成吸入治療並休息。2. 避免產氣食物以減少腹脹影響呼吸。病人及兒子表示了解，持續觀察病人情形。"
+    }
+  ],
+  "medication_orders": [],
+  "vital_signs": [
+    {
+      "record_id": "VS-C-0918-1",
+      "measured_at": "2026-09-18T08:00:00+08:00",
+      "body_temperature": 36.5,
+      "temperature_site": "耳溫",
+      "pulse": 84,
+      "respiration": 20,
+      "sbp": 128,
+      "dbp": 70,
+      "spo2": 95,
+      "oxygen_therapy": "鼻導管 2L/min",
+      "measured_by": "N106"
+    },
+    {
+      "record_id": "VS-C-0918-2",
+      "measured_at": "2026-09-18T12:00:00+08:00",
+      "body_temperature": 36.7,
+      "temperature_site": "耳溫",
+      "pulse": 86,
+      "respiration": 20,
+      "sbp": 130,
+      "dbp": 72,
+      "spo2": 95,
+      "oxygen_therapy": "鼻導管 2L/min",
+      "measured_by": "N106"
+    },
+    {
+      "record_id": "VS-C-0918-3",
+      "measured_at": "2026-09-18T16:00:00+08:00",
+      "body_temperature": 36.8,
+      "temperature_site": "耳溫",
+      "pulse": 88,
+      "respiration": 20,
+      "sbp": 130,
+      "dbp": 70,
+      "spo2": 95,
+      "oxygen_therapy": "鼻導管 2L/min",
+      "measured_by": "N110"
+    },
+    {
+      "record_id": "VS-C-0918-4",
+      "measured_at": "2026-09-18T20:00:00+08:00",
+      "body_temperature": 36.6,
+      "temperature_site": "耳溫",
+      "pulse": 84,
+      "respiration": 20,
+      "sbp": 126,
+      "dbp": 70,
+      "spo2": 95,
+      "oxygen_therapy": "鼻導管 2L/min",
+      "measured_by": "N110"
+    }
+  ],
+  "lab_results": [],
+  "tubes": [
+    {
+      "tube_id": "TUB-C-04",
+      "tube_type": "IV",
+      "site": "右前臂",
+      "size": "22G",
+      "inserted_on": "2026-09-14",
+      "removed_on": "2026-09-18",
+      "fixation": "透明敷料",
+      "appearance": "正常"
+    },
+    {
+      "tube_id": "TUB-C-05",
+      "tube_type": "IV",
+      "site": "左前臂",
+      "size": "22G",
+      "inserted_on": "2026-09-18",
+      "removed_on": null,
+      "fixation": "透明敷料",
+      "appearance": "正常"
+    }
+  ],
+  "examinations": [],
+  "health_educations": [],
+  "consent_forms": [],
+  "emotional_distress_assessments": []
+}

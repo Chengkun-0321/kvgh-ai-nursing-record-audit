@@ -1,0 +1,247 @@
+{
+  "schema_version": "0.1.0",
+  "business_date": "2026-09-11",
+  "ward": {
+    "ward_code": "W51",
+    "ward_name": "內科病房"
+  },
+  "patient": {
+    "patient_id": "C病患",
+    "admission_id": "ADM-C-01",
+    "bed_code": "W51-3",
+    "sex": "M",
+    "age_years": 81,
+    "admission_at": "2026-09-08T09:50:00+08:00",
+    "admission_source": "急診",
+    "admission_diagnosis": "慢性阻塞性肺病急性惡化（COPD AE）",
+    "attending_physician_id": "D204",
+    "status": "inpatient",
+    "status_changed_at": null
+  },
+  "admission_assessment": null,
+  "daily_physical_assessments": [
+    {
+      "record_id": "DPA-C-0911-1",
+      "assessed_at": "2026-09-11T08:30:00+08:00",
+      "shift": "day",
+      "author_id": "N104",
+      "last_modified_at": null,
+      "items": {
+        "consciousness": {
+          "measured_at": "2026-09-11T08:30:00+08:00",
+          "scale": "GCS",
+          "e": "4",
+          "v": "5",
+          "m": "6",
+          "rass": null
+        },
+        "pain": {
+          "scale": "10分法",
+          "score": 0,
+          "unable_to_assess": false
+        },
+        "sleep": "正常",
+        "airway": "無",
+        "tubes": {
+          "has_tube": true,
+          "description": "IV，置放日期2026-09-08，部位：右前臂，外觀：正常"
+        },
+        "pulse": {
+          "status": "正常",
+          "abnormal_types": []
+        },
+        "limb_circulation": "微血管快速填滿",
+        "breath_sounds": {
+          "status": "異常",
+          "abnormal_types": [
+            "哮喘音"
+          ],
+          "other": null
+        },
+        "cough": "有",
+        "sore_throat": "無",
+        "bowel_sounds": "正常",
+        "appetite": [
+          "減少"
+        ],
+        "urination": {
+          "status": "正常",
+          "abnormal_types": [],
+          "other": null
+        },
+        "skin_pressure_prone_sites": [
+          "薦骨"
+        ],
+        "muscle_power": {
+          "left_upper": "4",
+          "right_upper": "4",
+          "left_lower": "4",
+          "right_lower": "4"
+        },
+        "mobility": "尚可自行翻身",
+        "fall_risk": {
+          "unable_to_move": false,
+          "risk_factors": [
+            "步態不穩",
+            "下肢肌力0~4分"
+          ],
+          "medications": [
+            "降壓藥"
+          ],
+          "score": 4,
+          "high_risk": true,
+          "osteoporosis_high_risk": false
+        }
+      }
+    }
+  ],
+  "nursing_progress_notes": [
+    {
+      "record_id": "NPN-C-0911-01",
+      "recorded_at": "2026-09-11T05:40:00+08:00",
+      "title_category": "交班",
+      "title": "交班",
+      "content": "病人夜間睡眠約 6 小時，04:00 SpO2 94%（鼻導管 2L/min）。昨日 24 小時輸入 2100ml、輸出 1350ml。",
+      "author_id": "N114",
+      "last_modified_at": null,
+      "has_image": false
+    },
+    {
+      "record_id": "NPN-C-0911-02",
+      "recorded_at": "2026-09-11T09:30:00+08:00",
+      "title_category": "會診",
+      "title": "會診",
+      "content": "【會診】\n- 2026/09/10 10:40 腎臟科 醫師(D312)會診，評估為脫水及使用止痛藥（NSAID）引起之急性腎損傷，建議持續 N/S 40–60ml/hr 補充水分並記錄輸入輸出量、避免 NSAID 及顯影劑、安排腎臟超音波，每兩天追蹤 BUN/CREA/K。今晨 CREA 1.8 mg/dL，較前下降。已向病人及兒子說明避免自行服用止痛藥，兒子表示會將家中止痛藥收起。",
+      "author_id": "N104",
+      "last_modified_at": null,
+      "has_image": false
+    },
+    {
+      "record_id": "NPN-C-0911-03",
+      "recorded_at": "2026-09-11T14:50:00+08:00",
+      "title_category": "健康問題",
+      "title": "健康問題 ：活動無耐力",
+      "content": "14:00 完成腎臟超音波。下午由兒子及護理師協助下床坐椅 20 分鐘，坐起時 SpO2 93%、呼吸 22 次/分，回床後稍喘，休息 5 分鐘緩解。薦骨處皮膚稍紅，按壓可反白，持續每 2 小時翻身並使用減壓氣墊床。",
+      "author_id": "N104",
+      "last_modified_at": null,
+      "has_image": false
+    },
+    {
+      "record_id": "NPN-C-0911-04",
+      "recorded_at": "2026-09-11T21:50:00+08:00",
+      "title_category": "交班",
+      "title": "交班",
+      "content": "病人晚餐軟質飲食進食約五成，夜間吸入治療已完成，聽診仍有輕微哮喘音，咳嗽白痰可自咳，SpO2 94%。右前臂 IV 留置第 4 天，明日依常規更換。",
+      "author_id": "N108",
+      "last_modified_at": null,
+      "has_image": false
+    }
+  ],
+  "transfers": [],
+  "consultations": [],
+  "medication_orders": [],
+  "vital_signs": [
+    {
+      "record_id": "VS-C-0911-1",
+      "measured_at": "2026-09-11T08:00:00+08:00",
+      "body_temperature": 36.7,
+      "temperature_site": "耳溫",
+      "pulse": 86,
+      "respiration": 20,
+      "sbp": 130,
+      "dbp": 72,
+      "spo2": 94,
+      "oxygen_therapy": "鼻導管 2L/min",
+      "measured_by": "N104"
+    },
+    {
+      "record_id": "VS-C-0911-2",
+      "measured_at": "2026-09-11T12:00:00+08:00",
+      "body_temperature": 36.8,
+      "temperature_site": "耳溫",
+      "pulse": 88,
+      "respiration": 20,
+      "sbp": 132,
+      "dbp": 74,
+      "spo2": 94,
+      "oxygen_therapy": "鼻導管 2L/min",
+      "measured_by": "N104"
+    },
+    {
+      "record_id": "VS-C-0911-3",
+      "measured_at": "2026-09-11T16:00:00+08:00",
+      "body_temperature": 36.9,
+      "temperature_site": "耳溫",
+      "pulse": 90,
+      "respiration": 22,
+      "sbp": 134,
+      "dbp": 74,
+      "spo2": 93,
+      "oxygen_therapy": "鼻導管 2L/min",
+      "measured_by": "N108"
+    },
+    {
+      "record_id": "VS-C-0911-4",
+      "measured_at": "2026-09-11T20:00:00+08:00",
+      "body_temperature": 36.8,
+      "temperature_site": "耳溫",
+      "pulse": 88,
+      "respiration": 20,
+      "sbp": 130,
+      "dbp": 72,
+      "spo2": 94,
+      "oxygen_therapy": "鼻導管 2L/min",
+      "measured_by": "N108"
+    }
+  ],
+  "lab_results": [
+    {
+      "record_id": "LAB-C-0911-01",
+      "order_name": "BUN,CREA,NA,K",
+      "item": "CREA",
+      "value": "1.8",
+      "unit": "mg/dL",
+      "reference_range": "0.7-1.3",
+      "abnormal_flag": "H",
+      "collected_at": "2026-09-11T06:00:00+08:00",
+      "reported_at": "2026-09-11T07:00:00+08:00"
+    },
+    {
+      "record_id": "LAB-C-0911-02",
+      "order_name": "BUN,CREA,NA,K",
+      "item": "K",
+      "value": "4.0",
+      "unit": "mmol/L",
+      "reference_range": "3.5-5.1",
+      "abnormal_flag": null,
+      "collected_at": "2026-09-11T06:00:00+08:00",
+      "reported_at": "2026-09-11T07:00:00+08:00"
+    }
+  ],
+  "tubes": [
+    {
+      "tube_id": "TUB-C-01",
+      "tube_type": "IV",
+      "site": "右前臂",
+      "size": "22G",
+      "inserted_on": "2026-09-08",
+      "removed_on": null,
+      "fixation": "透明敷料",
+      "appearance": "正常"
+    }
+  ],
+  "examinations": [
+    {
+      "order_id": "EXM-C-03",
+      "order_name": "Renal echo",
+      "ordered_at": "2026-09-10T11:00:00+08:00",
+      "performed_at": "2026-09-11T14:00:00+08:00",
+      "status": "正式報告",
+      "is_invasive": false,
+      "report_summary": "Bilateral kidneys normal size, increased parenchymal echogenicity, no hydronephrosis"
+    }
+  ],
+  "health_educations": [],
+  "consent_forms": [],
+  "emotional_distress_assessments": []
+}

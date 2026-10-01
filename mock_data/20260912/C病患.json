@@ -1,0 +1,372 @@
+{
+  "schema_version": "0.1.0",
+  "business_date": "2026-09-12",
+  "ward": {
+    "ward_code": "W51",
+    "ward_name": "內科病房"
+  },
+  "patient": {
+    "patient_id": "C病患",
+    "admission_id": "ADM-C-01",
+    "bed_code": "W51-3",
+    "sex": "M",
+    "age_years": 81,
+    "admission_at": "2026-09-08T09:50:00+08:00",
+    "admission_source": "急診",
+    "admission_diagnosis": "慢性阻塞性肺病急性惡化（COPD AE）",
+    "attending_physician_id": "D204",
+    "status": "transferred_out",
+    "status_changed_at": "2026-09-12T16:30:00+08:00"
+  },
+  "admission_assessment": null,
+  "daily_physical_assessments": [
+    {
+      "record_id": "DPA-C-0912-1",
+      "assessed_at": "2026-09-12T08:30:00+08:00",
+      "shift": "day",
+      "author_id": "N104",
+      "last_modified_at": null,
+      "items": {
+        "consciousness": {
+          "measured_at": "2026-09-12T08:30:00+08:00",
+          "scale": "GCS",
+          "e": "4",
+          "v": "5",
+          "m": "6",
+          "rass": null
+        },
+        "pain": {
+          "scale": "10分法",
+          "score": 0,
+          "unable_to_assess": false
+        },
+        "sleep": "正常",
+        "airway": "無",
+        "tubes": {
+          "has_tube": true,
+          "description": "IV，置放日期2026-09-12，部位：左前臂，外觀：正常"
+        },
+        "pulse": {
+          "status": "正常",
+          "abnormal_types": []
+        },
+        "limb_circulation": "微血管快速填滿",
+        "breath_sounds": {
+          "status": "異常",
+          "abnormal_types": [
+            "哮喘音"
+          ],
+          "other": null
+        },
+        "cough": "有",
+        "sore_throat": "無",
+        "bowel_sounds": "正常",
+        "appetite": [
+          "減少"
+        ],
+        "urination": {
+          "status": "正常",
+          "abnormal_types": [],
+          "other": null
+        },
+        "skin_pressure_prone_sites": [
+          "薦骨"
+        ],
+        "muscle_power": {
+          "left_upper": "4",
+          "right_upper": "4",
+          "left_lower": "4",
+          "right_lower": "4"
+        },
+        "mobility": "尚可自行翻身",
+        "fall_risk": {
+          "unable_to_move": false,
+          "risk_factors": [
+            "步態不穩",
+            "下肢肌力0~4分"
+          ],
+          "medications": [
+            "降壓藥"
+          ],
+          "score": 4,
+          "high_risk": true,
+          "osteoporosis_high_risk": false
+        }
+      }
+    },
+    {
+      "record_id": "DPA-C-0912-2",
+      "assessed_at": "2026-09-12T14:15:00+08:00",
+      "shift": "day",
+      "author_id": "N104",
+      "last_modified_at": null,
+      "items": {
+        "consciousness": {
+          "measured_at": "2026-09-12T14:15:00+08:00",
+          "scale": "GCS",
+          "e": "3",
+          "v": "5",
+          "m": "6",
+          "rass": null
+        },
+        "pain": {
+          "scale": "10分法",
+          "score": 0,
+          "unable_to_assess": false
+        },
+        "sleep": "嗜睡",
+        "airway": "無",
+        "tubes": {
+          "has_tube": true,
+          "description": "IV，置放日期2026-09-12，部位：左前臂，外觀：正常"
+        },
+        "pulse": {
+          "status": "異常",
+          "abnormal_types": [
+            "快"
+          ]
+        },
+        "limb_circulation": "微血管快速填滿",
+        "breath_sounds": {
+          "status": "異常",
+          "abnormal_types": [
+            "哮喘音",
+            "痰音"
+          ],
+          "other": null
+        },
+        "cough": "有",
+        "sore_throat": "無",
+        "bowel_sounds": "正常",
+        "appetite": [
+          "減少"
+        ],
+        "urination": {
+          "status": "正常",
+          "abnormal_types": [],
+          "other": null
+        },
+        "skin_pressure_prone_sites": [
+          "薦骨"
+        ],
+        "muscle_power": {
+          "left_upper": "4",
+          "right_upper": "4",
+          "left_lower": "4",
+          "right_lower": "4"
+        },
+        "mobility": "尚可自行翻身",
+        "fall_risk": {
+          "unable_to_move": false,
+          "risk_factors": [
+            "步態不穩",
+            "下肢肌力0~4分"
+          ],
+          "medications": [
+            "降壓藥"
+          ],
+          "score": 4,
+          "high_risk": true,
+          "osteoporosis_high_risk": false
+        }
+      }
+    }
+  ],
+  "nursing_progress_notes": [
+    {
+      "record_id": "NPN-C-0912-01",
+      "recorded_at": "2026-09-12T09:20:00+08:00",
+      "title_category": "導管照護",
+      "title": "導管照護",
+      "content": "右前臂 IV 留置滿 4 天，09:00 依常規移除，穿刺處無紅腫；於左前臂重新置放 22G 靜脈留置針，透明敷料固定，N/S 40ml/hr 續滴。",
+      "author_id": "N104",
+      "last_modified_at": null,
+      "has_image": false
+    },
+    {
+      "record_id": "NPN-C-0912-02",
+      "recorded_at": "2026-09-12T14:20:00+08:00",
+      "title_category": "健康問題",
+      "title": "健康問題 ：氣體交換障礙",
+      "content": "14:00 病人喘加劇，呼吸 32 次/分，使用呼吸輔助肌，鼻導管 2L/min 下 SpO2 86%，脈搏 118 次/分，叫喚可睜眼、對答切題但嗜睡，GCS E3V5M6，雙側哮喘音及痰音明顯。立即予抽痰、改 Venturi mask 40%，通知主治醫師 D204 至床邊評估，14:10 抽 ABG：pH 7.25、PaCO2 72 mmHg、PaO2 54 mmHg。依醫囑予 Combivent 吸入，並準備非侵襲性正壓呼吸器（BiPAP）。",
+      "author_id": "N104",
+      "last_modified_at": null,
+      "has_image": false
+    },
+    {
+      "record_id": "NPN-C-0912-03",
+      "recorded_at": "2026-09-12T15:55:00+08:00",
+      "title_category": "健康問題",
+      "title": "健康問題 ：氣體交換障礙",
+      "content": "15:10 依醫囑使用 BiPAP（IPAP 14、EPAP 6 cmH2O、FiO2 40%），面罩密合，病人可配合。15:30 呼吸 26 次/分，SpO2 93%，脈搏 110 次/分，意識 GCS E3V5M6。15:50 依醫囑放置 16Fr Foley 監測尿量。主治醫師評估需密切監測呼吸型態與血液氣體，已聯絡 MICU 床位，並向兒子說明病情與轉床原因。",
+      "author_id": "N104",
+      "last_modified_at": null,
+      "has_image": false
+    },
+    {
+      "record_id": "NPN-C-0912-04",
+      "recorded_at": "2026-09-12T16:10:00+08:00",
+      "title_category": "轉出摘要",
+      "title": "轉出摘要",
+      "content": "入院經過：病人有 COPD 病史，9/6 起咳嗽痰多、活動後喘，9/8 清晨喘到無法平躺至急診，ABG pH 7.31、PaCO2 58 mmHg，診斷 COPD 急性惡化收住院。住院期間因咳嗽痰多行痰液培養（報告待回），胸部 X 光示肺過度充氣無浸潤；入院時 CREA 2.1 mg/dL，9/9 會診腎臟科，診斷脫水及 NSAID 引起之急性腎損傷，給予 N/S 40ml/hr 補充水分並停用 NSAID，9/11 腎臟超音波無水腎，CREA 降至 1.8 mg/dL。因 COPD 急性惡化給予 Combivent、Pulmicort 吸入、Solu-Medrol 及 Levofloxacin 治療，9/9–9/11 喘曾改善，氧氣由 Venturi 28% 降為鼻導管 2L/min。（續）",
+      "author_id": "N104",
+      "last_modified_at": null,
+      "has_image": false
+    },
+    {
+      "record_id": "NPN-C-0912-05",
+      "recorded_at": "2026-09-12T16:12:00+08:00",
+      "title_category": "轉出摘要",
+      "title": "轉出摘要",
+      "content": "（續）今日 14:00 喘加劇、SpO2 86%，ABG pH 7.25、PaCO2 72 mmHg，予 BiPAP 使用。目前 GCS E3V5M6，生命徵象 BP 154/86mmHg、HR 110 次/分、RR 26 次/分、BT 37.6℃，BiPAP FiO2 40% 使用，血氧 93%。左前臂周邊靜脈留置針（9/12 置放）、16Fr Foley（9/12 置放）管路留置。無傷口，薦骨處皮膚發紅、按壓可反白，無壓傷。目前健康問題為氣體交換障礙、呼吸道清除功能失效、營養少於身體需要、跌倒高危險。因高碳酸血症呼吸衰竭需密切監測，故轉 MICU 續治療，已向兒子說明轉床原因，並填妥轉床同意書。攜帶高貴藥物無、貴重物品無。",
+      "author_id": "N104",
+      "last_modified_at": null,
+      "has_image": false
+    }
+  ],
+  "transfers": [
+    {
+      "transfer_id": "TRF-C-01",
+      "direction": "out",
+      "occurred_at": "2026-09-12T16:30:00+08:00",
+      "from_unit": "W51",
+      "to_unit": "MICU",
+      "reason": "高碳酸血症呼吸衰竭，需使用 BiPAP 並密切監測"
+    }
+  ],
+  "consultations": [],
+  "medication_orders": [],
+  "vital_signs": [
+    {
+      "record_id": "VS-C-0912-1",
+      "measured_at": "2026-09-12T08:00:00+08:00",
+      "body_temperature": 37.0,
+      "temperature_site": "耳溫",
+      "pulse": 90,
+      "respiration": 22,
+      "sbp": 136,
+      "dbp": 76,
+      "spo2": 93,
+      "oxygen_therapy": "鼻導管 2L/min",
+      "measured_by": "N104"
+    },
+    {
+      "record_id": "VS-C-0912-2",
+      "measured_at": "2026-09-12T12:00:00+08:00",
+      "body_temperature": 37.3,
+      "temperature_site": "耳溫",
+      "pulse": 98,
+      "respiration": 24,
+      "sbp": 142,
+      "dbp": 80,
+      "spo2": 91,
+      "oxygen_therapy": "鼻導管 2L/min",
+      "measured_by": "N104"
+    },
+    {
+      "record_id": "VS-C-0912-3",
+      "measured_at": "2026-09-12T14:00:00+08:00",
+      "body_temperature": 37.8,
+      "temperature_site": "耳溫",
+      "pulse": 118,
+      "respiration": 32,
+      "sbp": 168,
+      "dbp": 92,
+      "spo2": 86,
+      "oxygen_therapy": "鼻導管 2L/min",
+      "measured_by": "N104"
+    },
+    {
+      "record_id": "VS-C-0912-4",
+      "measured_at": "2026-09-12T15:30:00+08:00",
+      "body_temperature": 37.6,
+      "temperature_site": "耳溫",
+      "pulse": 110,
+      "respiration": 26,
+      "sbp": 154,
+      "dbp": 86,
+      "spo2": 93,
+      "oxygen_therapy": "BiPAP FiO2 40%",
+      "measured_by": "N104"
+    }
+  ],
+  "lab_results": [
+    {
+      "record_id": "LAB-C-0912-01",
+      "order_name": "ABG",
+      "item": "pH",
+      "value": "7.25",
+      "unit": null,
+      "reference_range": "7.35-7.45",
+      "abnormal_flag": "L",
+      "collected_at": "2026-09-12T14:10:00+08:00",
+      "reported_at": "2026-09-12T14:20:00+08:00"
+    },
+    {
+      "record_id": "LAB-C-0912-02",
+      "order_name": "ABG",
+      "item": "PaCO2",
+      "value": "72",
+      "unit": "mmHg",
+      "reference_range": "35-45",
+      "abnormal_flag": "H",
+      "collected_at": "2026-09-12T14:10:00+08:00",
+      "reported_at": "2026-09-12T14:20:00+08:00"
+    },
+    {
+      "record_id": "LAB-C-0912-03",
+      "order_name": "ABG",
+      "item": "PaO2",
+      "value": "54",
+      "unit": "mmHg",
+      "reference_range": "80-100",
+      "abnormal_flag": "L",
+      "collected_at": "2026-09-12T14:10:00+08:00",
+      "reported_at": "2026-09-12T14:20:00+08:00"
+    }
+  ],
+  "tubes": [
+    {
+      "tube_id": "TUB-C-01",
+      "tube_type": "IV",
+      "site": "右前臂",
+      "size": "22G",
+      "inserted_on": "2026-09-08",
+      "removed_on": "2026-09-12",
+      "fixation": "透明敷料",
+      "appearance": "正常"
+    },
+    {
+      "tube_id": "TUB-C-02",
+      "tube_type": "IV",
+      "site": "左前臂",
+      "size": "22G",
+      "inserted_on": "2026-09-12",
+      "removed_on": null,
+      "fixation": "透明敷料",
+      "appearance": "正常"
+    },
+    {
+      "tube_id": "TUB-C-03",
+      "tube_type": "Foley",
+      "site": "尿道",
+      "size": "16Fr",
+      "inserted_on": "2026-09-12",
+      "removed_on": null,
+      "fixation": "固定於左大腿內側",
+      "appearance": "引流淡黃色尿液"
+    }
+  ],
+  "examinations": [],
+  "health_educations": [],
+  "consent_forms": [
+    {
+      "consent_id": "CNS-C-01",
+      "form_name": "轉床同意書",
+      "related_order_id": null,
+      "status": "已簽",
+      "signed_at": "2026-09-12T16:00:00+08:00"
+    }
+  ],
+  "emotional_distress_assessments": []
+}

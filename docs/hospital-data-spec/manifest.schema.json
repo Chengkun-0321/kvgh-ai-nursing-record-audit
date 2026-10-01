@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kvgh-ai-nursing-record-audit/schemas/manifest/0.1.0",
+  "title": "每日資料包清單（manifest）",
+  "description": "每個日期資料夾一份，列出當天資料包內的病患檔案。說明見 docs/hospital-data-spec.md。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "ward_code",
+    "ward_name",
+    "business_date",
+    "generated_at",
+    "patient_count",
+    "patients"
+  ],
+  "properties": {
+    "schema_version": { "const": "0.1.0" },
+    "ward_code": { "type": "string", "minLength": 1 },
+    "ward_name": { "type": "string", "minLength": 1 },
+    "business_date": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+    },
+    "generated_at": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\+08:00$"
+    },
+    "patient_count": { "type": "integer", "minimum": 0 },
+    "patients": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["patient_id", "file", "bed_code", "status"],
+        "properties": {
+          "patient_id": { "type": "string", "minLength": 1 },
+          "file": { "type": "string", "pattern": "\\.json$" },
+          "bed_code": { "type": "string", "minLength": 1 },
+          "status": { "enum": ["inpatient", "transferred_out", "discharged"] }
+        }
+      }
+    }
+  }
+}

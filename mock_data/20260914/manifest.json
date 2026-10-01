@@ -1,0 +1,16 @@
+{
+  "schema_version": "0.1.0",
+  "ward_code": "W51",
+  "ward_name": "內科病房",
+  "business_date": "2026-09-14",
+  "generated_at": "2026-09-15T01:00:00+08:00",
+  "patient_count": 1,
+  "patients": [
+    {
+      "patient_id": "A病患",
+      "file": "A病患.json",
+      "bed_code": "W51-1",
+      "status": "transferred_out"
+    }
+  ]
+}

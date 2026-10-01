@@ -1,0 +1,323 @@
+{
+  "schema_version": "0.1.0",
+  "business_date": "2026-09-03",
+  "ward": {
+    "ward_code": "W51",
+    "ward_name": "內科病房"
+  },
+  "patient": {
+    "patient_id": "A病患",
+    "admission_id": "ADM-A-01",
+    "bed_code": "W51-1",
+    "sex": "M",
+    "age_years": 72,
+    "admission_at": "2026-09-01T10:30:00+08:00",
+    "admission_source": "急診",
+    "admission_diagnosis": "非ST段上升心肌梗塞（NSTEMI）",
+    "attending_physician_id": "D201",
+    "status": "inpatient",
+    "status_changed_at": null
+  },
+  "admission_assessment": null,
+  "daily_physical_assessments": [
+    {
+      "record_id": "DPA-A-0903-1",
+      "assessed_at": "2026-09-03T08:30:00+08:00",
+      "shift": "day",
+      "author_id": "N103",
+      "last_modified_at": null,
+      "items": {
+        "consciousness": {
+          "measured_at": "2026-09-03T08:30:00+08:00",
+          "scale": "GCS",
+          "e": "4",
+          "v": "5",
+          "m": "6",
+          "rass": null
+        },
+        "pain": {
+          "scale": "10分法",
+          "score": 0,
+          "unable_to_assess": false
+        },
+        "sleep": "正常",
+        "airway": "無",
+        "tubes": {
+          "has_tube": true,
+          "description": "IV，置放日期2026-09-01，部位：左前臂，外觀：正常"
+        },
+        "pulse": {
+          "status": "正常",
+          "abnormal_types": []
+        },
+        "limb_circulation": "微血管快速填滿",
+        "breath_sounds": {
+          "status": "正常",
+          "abnormal_types": [],
+          "other": null
+        },
+        "cough": "無",
+        "sore_throat": "無",
+        "bowel_sounds": "正常",
+        "appetite": [
+          "正常"
+        ],
+        "urination": {
+          "status": "正常",
+          "abnormal_types": [],
+          "other": null
+        },
+        "skin_pressure_prone_sites": [
+          "無"
+        ],
+        "muscle_power": {
+          "left_upper": "5",
+          "right_upper": "5",
+          "left_lower": "5",
+          "right_lower": "5"
+        },
+        "mobility": "完全能動",
+        "fall_risk": {
+          "unable_to_move": false,
+          "risk_factors": [],
+          "medications": [
+            "降壓藥",
+            "心血管用藥"
+          ],
+          "score": 1,
+          "high_risk": false,
+          "osteoporosis_high_risk": false
+        }
+      }
+    }
+  ],
+  "nursing_progress_notes": [
+    {
+      "record_id": "NPN-A-0903-01",
+      "recorded_at": "2026-09-03T03:40:00+08:00",
+      "title_category": "健康問題",
+      "title": "健康問題 ：潛在危險性出血",
+      "content": "02:00 依 protocol 抽血 APTT：59.8 sec，維持 Heparin pump 7ml/hr。右橈動脈穿刺處敷料乾燥，無滲血、無血腫，右手指末梢溫暖、活動正常。夜間解尿 1 次約 300ml，淡黃色，無血尿。",
+      "author_id": "N111",
+      "last_modified_at": null,
+      "has_image": false
+    },
+    {
+      "record_id": "NPN-A-0903-02",
+      "recorded_at": "2026-09-03T10:15:00+08:00",
+      "title_category": "健康問題",
+      "title": "健康問題 ：潛在危險性出血",
+      "content": "依醫囑 10:00 停止 Heparin pump，自 9/1 13:00 起共使用約 45 小時，期間 APTT 介於 58.2–72.5 sec，曾於 9/2 01:30 依 protocol 調降速率一次。使用期間牙齦、皮膚、注射部位、尿液及糞便皆無出血情形，右橈動脈穿刺處無血腫。已告知病人停藥後仍持續口服 Aspirin 及 Clopidogrel，刷牙改用軟毛牙刷，有出血情形需告知。",
+      "author_id": "N103",
+      "last_modified_at": null,
+      "has_image": false
+    },
+    {
+      "record_id": "NPN-A-0903-03",
+      "recorded_at": "2026-09-03T14:20:00+08:00",
+      "title_category": "會診",
+      "title": "會診",
+      "content": "【會診】\n- 2026/09/03 11:40 心臟外科 醫師(D305)會診，評估病人為三條冠狀動脈病變，LAD 已置放支架，建議完成冠狀動脈繞道手術術前評估：心臟超音波、頸動脈超音波及肺功能檢查，待評估完成後再與病人及家屬討論手術或分次 PCI。已向病人及太太說明後續檢查安排，病人表示了解，太太表示會與兒子討論。",
+      "author_id": "N103",
+      "last_modified_at": null,
+      "has_image": false
+    },
+    {
+      "record_id": "NPN-A-0903-04",
+      "recorded_at": "2026-09-03T19:50:00+08:00",
+      "title_category": "健康問題",
+      "title": "健康問題 ：活動無耐力",
+      "content": "15:00 完成心臟超音波，LVEF 48%，前壁運動稍減弱。病人下午於床旁坐椅約 30 分鐘並在室內行走，行走後 HR 由 74 升至 88 次/分，無胸悶、無喘，休息 3 分鐘恢復。衛教活動以不感到疲累為原則，若出現胸悶、冒冷汗需立即停止並告知。",
+      "author_id": "N107",
+      "last_modified_at": null,
+      "has_image": false
+    },
+    {
+      "record_id": "NPN-A-0903-05",
+      "recorded_at": "2026-09-03T22:20:00+08:00",
+      "title_category": "交班",
+      "title": "交班",
+      "content": "病人意識清楚，生命徵象穩定，無胸悶主訴。Heparin 已於今日 10:00 停用，右橈動脈穿刺處已癒合良好。明日安排頸動脈超音波及肺功能檢查，已告知病人。",
+      "author_id": "N107",
+      "last_modified_at": null,
+      "has_image": false
+    }
+  ],
+  "transfers": [],
+  "consultations": [
+    {
+      "consultation_id": "CON-A-01",
+      "consultant_role": "醫師",
+      "department": "心臟外科",
+      "consult_type": "REGULAR",
+      "ordered_at": "2026-09-02T15:30:00+08:00",
+      "requested_by": "D201",
+      "signed_at": "2026-09-03T09:10:00+08:00",
+      "signed_by": "D305",
+      "replied_at": "2026-09-03T11:40:00+08:00",
+      "status": "已回覆",
+      "condition_summary": "72 歲男性，NSTEMI，CAG：LAD-p 90% s/p DES x1、LCX-m 80%、RCA-m 70%，三條冠狀動脈病變，請評估 CABG 適應症。",
+      "reply_content": "Impression: CAD, 3VD s/p PCI to LAD-p. Suggestion: 1. Complete pre-CABG survey: echocardiography, carotid duplex, pulmonary function test. 2. Will discuss CABG vs staged PCI with patient and family after survey. Thanks for consultation."
+    }
+  ],
+  "medication_orders": [
+    {
+      "order_id": "MED-A-001",
+      "order_category": "常規",
+      "drug_name": "Heparin 25000U + N/S 250ml",
+      "route": "IV pump",
+      "dose": 25000,
+      "unit": "U",
+      "frequency": "CONT",
+      "is_high_alert": true,
+      "ordered_at": "2026-09-01T12:40:00+08:00",
+      "prescriber_id": "D201",
+      "status": "DC",
+      "administrations": [
+        {
+          "administration_id": "MAR-A-0903-01",
+          "administered_at": "2026-09-03T10:00:00+08:00",
+          "administered_by": "N103",
+          "dose": null,
+          "unit": null,
+          "rate": null,
+          "status": "停止",
+          "remark": "依醫囑停用"
+        }
+      ]
+    }
+  ],
+  "vital_signs": [
+    {
+      "record_id": "VS-A-0903-1",
+      "measured_at": "2026-09-03T08:00:00+08:00",
+      "body_temperature": 36.4,
+      "temperature_site": "耳溫",
+      "pulse": 72,
+      "respiration": 18,
+      "sbp": 128,
+      "dbp": 74,
+      "spo2": 98,
+      "oxygen_therapy": "room air",
+      "measured_by": "N103"
+    },
+    {
+      "record_id": "VS-A-0903-2",
+      "measured_at": "2026-09-03T12:00:00+08:00",
+      "body_temperature": 36.6,
+      "temperature_site": "耳溫",
+      "pulse": 76,
+      "respiration": 18,
+      "sbp": 124,
+      "dbp": 70,
+      "spo2": 98,
+      "oxygen_therapy": "room air",
+      "measured_by": "N103"
+    },
+    {
+      "record_id": "VS-A-0903-3",
+      "measured_at": "2026-09-03T16:00:00+08:00",
+      "body_temperature": 36.7,
+      "temperature_site": "耳溫",
+      "pulse": 74,
+      "respiration": 18,
+      "sbp": 130,
+      "dbp": 76,
+      "spo2": 97,
+      "oxygen_therapy": "room air",
+      "measured_by": "N107"
+    },
+    {
+      "record_id": "VS-A-0903-4",
+      "measured_at": "2026-09-03T20:00:00+08:00",
+      "body_temperature": 36.5,
+      "temperature_site": "耳溫",
+      "pulse": 70,
+      "respiration": 17,
+      "sbp": 126,
+      "dbp": 72,
+      "spo2": 98,
+      "oxygen_therapy": "room air",
+      "measured_by": "N107"
+    }
+  ],
+  "lab_results": [
+    {
+      "record_id": "LAB-A-0903-01",
+      "order_name": "APTT",
+      "item": "APTT",
+      "value": "59.8",
+      "unit": "sec",
+      "reference_range": "25.5-36.5",
+      "abnormal_flag": "H",
+      "collected_at": "2026-09-03T02:00:00+08:00",
+      "reported_at": "2026-09-03T02:30:00+08:00"
+    },
+    {
+      "record_id": "LAB-A-0903-02",
+      "order_name": "CBC,DC",
+      "item": "HGB",
+      "value": "13.1",
+      "unit": "g/dL",
+      "reference_range": "13.5-17.5",
+      "abnormal_flag": "L",
+      "collected_at": "2026-09-03T06:00:00+08:00",
+      "reported_at": "2026-09-03T06:40:00+08:00"
+    },
+    {
+      "record_id": "LAB-A-0903-03",
+      "order_name": "CBC,DC",
+      "item": "PLT",
+      "value": "218",
+      "unit": "K/uL",
+      "reference_range": "150-400",
+      "abnormal_flag": null,
+      "collected_at": "2026-09-03T06:00:00+08:00",
+      "reported_at": "2026-09-03T06:40:00+08:00"
+    }
+  ],
+  "tubes": [
+    {
+      "tube_id": "TUB-A-01",
+      "tube_type": "IV",
+      "site": "左前臂",
+      "size": "20G",
+      "inserted_on": "2026-09-01",
+      "removed_on": null,
+      "fixation": "透明敷料",
+      "appearance": "正常"
+    }
+  ],
+  "examinations": [
+    {
+      "order_id": "EXM-A-04",
+      "order_name": "Transthoracic echocardiography",
+      "ordered_at": "2026-09-02T16:00:00+08:00",
+      "performed_at": "2026-09-03T15:00:00+08:00",
+      "status": "正式報告",
+      "is_invasive": false,
+      "report_summary": "LVEF 48%, hypokinesia of anterior wall, mild MR"
+    },
+    {
+      "order_id": "EXM-A-05",
+      "order_name": "Carotid duplex",
+      "ordered_at": "2026-09-03T12:00:00+08:00",
+      "performed_at": null,
+      "status": "已開立",
+      "is_invasive": false,
+      "report_summary": null
+    },
+    {
+      "order_id": "EXM-A-06",
+      "order_name": "Pulmonary function test",
+      "ordered_at": "2026-09-03T12:00:00+08:00",
+      "performed_at": null,
+      "status": "已開立",
+      "is_invasive": false,
+      "report_summary": null
+    }
+  ],
+  "health_educations": [],
+  "consent_forms": [],
+  "emotional_distress_assessments": []
+}

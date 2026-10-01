@@ -4,6 +4,7 @@ import {
   GearIcon,
   type Icon,
   ListChecksIcon,
+  NotebookIcon,
   WarningCircleIcon,
 } from "@/components/ui/icons";
 
@@ -15,6 +16,8 @@ export type NavItemConfig = {
   /** 屬於此項目的路徑前綴，用於標示目前所在位置 */
   activePathPrefixes: readonly string[];
   hasPendingBadge: boolean;
+  /** 手機底部分頁列最多 5 項；`false` 的項目只出現在桌機頂部導覽 */
+  showInMobileTabBar: boolean;
 };
 
 // 導覽名稱直接描述內容；未實作的頁面先停用，保留位置讓使用者預期之後的功能
@@ -25,6 +28,16 @@ export const NAV_ITEMS: readonly NavItemConfig[] = [
     icon: BedIcon,
     activePathPrefixes: ["/patients"],
     hasPendingBadge: false,
+    showInMobileTabBar: true,
+  },
+  {
+    // 瀏覽 mock_data 的虛構紀錄（見 ADR 0010），屬開發驗證用途，手機分頁列不放
+    label: "護理紀錄",
+    href: "/nursing-records",
+    icon: NotebookIcon,
+    activePathPrefixes: ["/nursing-records"],
+    hasPendingBadge: false,
+    showInMobileTabBar: false,
   },
   {
     label: "待處理項目",
@@ -32,6 +45,7 @@ export const NAV_ITEMS: readonly NavItemConfig[] = [
     icon: ListChecksIcon,
     activePathPrefixes: [],
     hasPendingBadge: true,
+    showInMobileTabBar: true,
   },
   {
     label: "異常紀錄",
@@ -39,6 +53,7 @@ export const NAV_ITEMS: readonly NavItemConfig[] = [
     icon: WarningCircleIcon,
     activePathPrefixes: [],
     hasPendingBadge: false,
+    showInMobileTabBar: true,
   },
   {
     label: "統計報表",
@@ -46,6 +61,7 @@ export const NAV_ITEMS: readonly NavItemConfig[] = [
     icon: ChartBarIcon,
     activePathPrefixes: [],
     hasPendingBadge: false,
+    showInMobileTabBar: true,
   },
   {
     label: "設定",
@@ -53,8 +69,13 @@ export const NAV_ITEMS: readonly NavItemConfig[] = [
     icon: GearIcon,
     activePathPrefixes: ["/settings"],
     hasPendingBadge: false,
+    showInMobileTabBar: true,
   },
 ];
+
+export const MOBILE_TAB_ITEMS: readonly NavItemConfig[] = NAV_ITEMS.filter(
+  (item) => item.showInMobileTabBar,
+);
 
 export const NAV_DISABLED_HINT = "即將推出";
 

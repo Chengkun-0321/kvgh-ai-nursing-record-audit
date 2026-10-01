@@ -1,0 +1,321 @@
+{
+  "schema_version": "0.1.0",
+  "business_date": "2026-09-21",
+  "ward": {
+    "ward_code": "W51",
+    "ward_name": "內科病房"
+  },
+  "patient": {
+    "patient_id": "D病患",
+    "admission_id": "ADM-D-01",
+    "bed_code": "W51-2",
+    "sex": "F",
+    "age_years": 58,
+    "admission_at": "2026-09-19T14:20:00+08:00",
+    "admission_source": "急診",
+    "admission_diagnosis": "右下肢蜂窩性組織炎合併第二型糖尿病",
+    "attending_physician_id": "D206",
+    "status": "inpatient",
+    "status_changed_at": null
+  },
+  "admission_assessment": null,
+  "daily_physical_assessments": [
+    {
+      "record_id": "DPA-D-0921-1",
+      "assessed_at": "2026-09-21T08:30:00+08:00",
+      "shift": "day",
+      "author_id": "N106",
+      "last_modified_at": null,
+      "items": {
+        "consciousness": {
+          "measured_at": "2026-09-21T08:30:00+08:00",
+          "scale": "GCS",
+          "e": "4",
+          "v": "5",
+          "m": "6",
+          "rass": null
+        },
+        "pain": {
+          "scale": "10分法",
+          "score": 3,
+          "unable_to_assess": false
+        },
+        "sleep": "正常",
+        "airway": "無",
+        "tubes": {
+          "has_tube": true,
+          "description": "IV，置放日期2026-09-19，部位：左前臂，外觀：正常"
+        },
+        "pulse": {
+          "status": "正常",
+          "abnormal_types": []
+        },
+        "limb_circulation": "輕微水腫(無壓窩)",
+        "breath_sounds": {
+          "status": "正常",
+          "abnormal_types": [],
+          "other": null
+        },
+        "cough": "無",
+        "sore_throat": "無",
+        "bowel_sounds": "正常",
+        "appetite": [
+          "正常"
+        ],
+        "urination": {
+          "status": "正常",
+          "abnormal_types": [],
+          "other": null
+        },
+        "skin_pressure_prone_sites": [
+          "無"
+        ],
+        "muscle_power": {
+          "left_upper": "5",
+          "right_upper": "5",
+          "left_lower": "5",
+          "right_lower": "4"
+        },
+        "mobility": "完全能動",
+        "fall_risk": {
+          "unable_to_move": false,
+          "risk_factors": [
+            "步態不穩"
+          ],
+          "medications": [
+            "降血糖藥"
+          ],
+          "score": 2,
+          "high_risk": true,
+          "osteoporosis_high_risk": false
+        }
+      }
+    }
+  ],
+  "nursing_progress_notes": [
+    {
+      "record_id": "NPN-D-0921-01",
+      "recorded_at": "2026-09-21T05:10:00+08:00",
+      "title_category": "交班",
+      "title": "交班",
+      "content": "病人夜間睡眠約 6 小時，04:00 耳溫 37.3℃。06:00 Cefazolin 已滴注。",
+      "author_id": "N114",
+      "last_modified_at": null,
+      "has_image": false
+    },
+    {
+      "record_id": "NPN-D-0921-02",
+      "recorded_at": "2026-09-21T10:50:00+08:00",
+      "title_category": "健康問題",
+      "title": "健康問題 ：皮膚完整性受損",
+      "content": "右小腿紅腫範圍約 13x9 公分，較昨日略縮小，但小腿中段約 3x3 公分處觸診較硬、有波動感，觸痛 3 分。已告知主治醫師，醫師表示若持續有波動感將安排軟組織超音波。持續抬高患肢。",
+      "author_id": "N106",
+      "last_modified_at": null,
+      "has_image": false
+    },
+    {
+      "record_id": "NPN-D-0921-03",
+      "recorded_at": "2026-09-21T15:10:00+08:00",
+      "title_category": "護理指導",
+      "title": "護理指導 ：糖尿病足部照護",
+      "content": "指導病人每日檢查雙腳有無傷口、水泡、顏色變化，洗腳水溫以手肘測試不燙，避免赤腳行走，剪指甲平剪。病人表示這次小腿紅腫前曾被蚊子叮咬後抓破，了解傷口需及早處理。",
+      "author_id": "N106",
+      "last_modified_at": null,
+      "has_image": false
+    },
+    {
+      "record_id": "NPN-D-0921-04",
+      "recorded_at": "2026-09-21T21:40:00+08:00",
+      "title_category": "交班",
+      "title": "交班",
+      "content": "病人今日最高耳溫 37.6℃，晚間 37.2℃，晚餐進食約九分。右下肢抬高中，疼痛 3 分。",
+      "author_id": "N110",
+      "last_modified_at": null,
+      "has_image": false
+    }
+  ],
+  "transfers": [],
+  "consultations": [],
+  "medication_orders": [
+    {
+      "order_id": "MED-D-001",
+      "order_category": "常規",
+      "drug_name": "Cefazolin Inj 1g",
+      "route": "IVA",
+      "dose": 1,
+      "unit": "G",
+      "frequency": "Q6H",
+      "is_high_alert": false,
+      "ordered_at": "2026-09-19T15:00:00+08:00",
+      "prescriber_id": "D206",
+      "status": "執行中",
+      "administrations": [
+        {
+          "administration_id": "MAR-D-0921-01",
+          "administered_at": "2026-09-21T00:00:00+08:00",
+          "administered_by": "N114",
+          "dose": 1,
+          "unit": "G",
+          "rate": null,
+          "status": "已執行",
+          "remark": null
+        },
+        {
+          "administration_id": "MAR-D-0921-02",
+          "administered_at": "2026-09-21T06:00:00+08:00",
+          "administered_by": "N114",
+          "dose": 1,
+          "unit": "G",
+          "rate": null,
+          "status": "已執行",
+          "remark": null
+        },
+        {
+          "administration_id": "MAR-D-0921-03",
+          "administered_at": "2026-09-21T12:00:00+08:00",
+          "administered_by": "N106",
+          "dose": 1,
+          "unit": "G",
+          "rate": null,
+          "status": "已執行",
+          "remark": null
+        },
+        {
+          "administration_id": "MAR-D-0921-04",
+          "administered_at": "2026-09-21T18:00:00+08:00",
+          "administered_by": "N110",
+          "dose": 1,
+          "unit": "G",
+          "rate": null,
+          "status": "已執行",
+          "remark": null
+        }
+      ]
+    }
+  ],
+  "vital_signs": [
+    {
+      "record_id": "VS-D-0921-1",
+      "measured_at": "2026-09-21T08:00:00+08:00",
+      "body_temperature": 37.6,
+      "temperature_site": "耳溫",
+      "pulse": 90,
+      "respiration": 18,
+      "sbp": 134,
+      "dbp": 80,
+      "spo2": 98,
+      "oxygen_therapy": "room air",
+      "measured_by": "N106"
+    },
+    {
+      "record_id": "VS-D-0921-2",
+      "measured_at": "2026-09-21T12:00:00+08:00",
+      "body_temperature": 37.4,
+      "temperature_site": "耳溫",
+      "pulse": 88,
+      "respiration": 18,
+      "sbp": 132,
+      "dbp": 80,
+      "spo2": 98,
+      "oxygen_therapy": "room air",
+      "measured_by": "N106"
+    },
+    {
+      "record_id": "VS-D-0921-3",
+      "measured_at": "2026-09-21T16:00:00+08:00",
+      "body_temperature": 37.3,
+      "temperature_site": "耳溫",
+      "pulse": 88,
+      "respiration": 18,
+      "sbp": 130,
+      "dbp": 78,
+      "spo2": 98,
+      "oxygen_therapy": "room air",
+      "measured_by": "N110"
+    },
+    {
+      "record_id": "VS-D-0921-4",
+      "measured_at": "2026-09-21T20:00:00+08:00",
+      "body_temperature": 37.2,
+      "temperature_site": "耳溫",
+      "pulse": 86,
+      "respiration": 18,
+      "sbp": 128,
+      "dbp": 78,
+      "spo2": 98,
+      "oxygen_therapy": "room air",
+      "measured_by": "N110"
+    }
+  ],
+  "lab_results": [
+    {
+      "record_id": "LAB-D-0921-01",
+      "order_name": "CBC,DC",
+      "item": "WBC",
+      "value": "11.6",
+      "unit": "K/uL",
+      "reference_range": "3.5-11.0",
+      "abnormal_flag": "H",
+      "collected_at": "2026-09-21T06:00:00+08:00",
+      "reported_at": "2026-09-21T06:40:00+08:00"
+    },
+    {
+      "record_id": "LAB-D-0921-02",
+      "order_name": "CRP (Quantitative)",
+      "item": "CRP",
+      "value": "7.2",
+      "unit": "mg/dL",
+      "reference_range": "<0.5",
+      "abnormal_flag": "H",
+      "collected_at": "2026-09-21T06:00:00+08:00",
+      "reported_at": "2026-09-21T07:00:00+08:00"
+    },
+    {
+      "record_id": "LAB-D-0921-03",
+      "order_name": "Glucose (finger)",
+      "item": "Glucose (finger)",
+      "value": "204",
+      "unit": "mg/dL",
+      "reference_range": "80-180",
+      "abnormal_flag": "H",
+      "collected_at": "2026-09-21T07:00:00+08:00",
+      "reported_at": "2026-09-21T07:01:00+08:00"
+    },
+    {
+      "record_id": "LAB-D-0921-04",
+      "order_name": "Glucose (finger)",
+      "item": "Glucose (finger)",
+      "value": "238",
+      "unit": "mg/dL",
+      "reference_range": "80-180",
+      "abnormal_flag": "H",
+      "collected_at": "2026-09-21T11:00:00+08:00",
+      "reported_at": "2026-09-21T11:01:00+08:00"
+    }
+  ],
+  "tubes": [
+    {
+      "tube_id": "TUB-D-01",
+      "tube_type": "IV",
+      "site": "左前臂",
+      "size": "20G",
+      "inserted_on": "2026-09-19",
+      "removed_on": null,
+      "fixation": "透明敷料",
+      "appearance": "正常"
+    }
+  ],
+  "examinations": [],
+  "health_educations": [
+    {
+      "record_id": "EDU-D-0921-1",
+      "recorded_at": "2026-09-21T15:10:00+08:00",
+      "topic": "糖尿病足部照護",
+      "target": "病人",
+      "content": "每日檢查雙腳、水溫測試、避免赤腳、指甲平剪，病人表示了解傷口需及早處理。",
+      "author_id": "N106"
+    }
+  ],
+  "consent_forms": [],
+  "emotional_distress_assessments": []
+}

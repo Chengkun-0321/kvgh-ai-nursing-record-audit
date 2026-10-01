@@ -1,0 +1,274 @@
+{
+  "schema_version": "0.1.0",
+  "business_date": "2026-09-09",
+  "ward": {
+    "ward_code": "W51",
+    "ward_name": "內科病房"
+  },
+  "patient": {
+    "patient_id": "B病患",
+    "admission_id": "ADM-B-01",
+    "bed_code": "W51-2",
+    "sex": "F",
+    "age_years": 68,
+    "admission_at": "2026-09-01T11:05:00+08:00",
+    "admission_source": "急診",
+    "admission_diagnosis": "社區型肺炎（右下肺葉）合併第二型糖尿病血糖控制不良",
+    "attending_physician_id": "D203",
+    "status": "inpatient",
+    "status_changed_at": null
+  },
+  "admission_assessment": null,
+  "daily_physical_assessments": [
+    {
+      "record_id": "DPA-B-0909-1",
+      "assessed_at": "2026-09-09T08:20:00+08:00",
+      "shift": "day",
+      "author_id": "N106",
+      "last_modified_at": null,
+      "items": {
+        "consciousness": {
+          "measured_at": "2026-09-09T08:20:00+08:00",
+          "scale": "GCS",
+          "e": "4",
+          "v": "5",
+          "m": "6",
+          "rass": null
+        },
+        "pain": {
+          "scale": "10分法",
+          "score": 0,
+          "unable_to_assess": false
+        },
+        "sleep": "正常",
+        "airway": "無",
+        "tubes": {
+          "has_tube": true,
+          "description": "IV，置放日期2026-09-09，部位：左前臂，外觀：正常"
+        },
+        "pulse": {
+          "status": "正常",
+          "abnormal_types": []
+        },
+        "limb_circulation": "微血管快速填滿",
+        "breath_sounds": {
+          "status": "正常",
+          "abnormal_types": [],
+          "other": null
+        },
+        "cough": "有",
+        "sore_throat": "無",
+        "bowel_sounds": "正常",
+        "appetite": [
+          "正常"
+        ],
+        "urination": {
+          "status": "正常",
+          "abnormal_types": [],
+          "other": null
+        },
+        "skin_pressure_prone_sites": [
+          "無"
+        ],
+        "muscle_power": {
+          "left_upper": "5",
+          "right_upper": "5",
+          "left_lower": "5",
+          "right_lower": "5"
+        },
+        "mobility": "完全能動",
+        "fall_risk": {
+          "unable_to_move": false,
+          "risk_factors": [],
+          "medications": [
+            "降壓藥",
+            "降血糖藥"
+          ],
+          "score": 1,
+          "high_risk": false,
+          "osteoporosis_high_risk": false
+        }
+      }
+    }
+  ],
+  "nursing_progress_notes": [
+    {
+      "record_id": "NPN-B-0909-01",
+      "recorded_at": "2026-09-09T09:20:00+08:00",
+      "title_category": "導管照護",
+      "title": "導管照護",
+      "content": "右前臂 IV 留置滿 4 天，09:00 依常規移除，穿刺處無紅腫；於左前臂重新置放 22G 靜脈留置針，供今日最後一劑 Tazocin 使用。",
+      "author_id": "N106",
+      "last_modified_at": null,
+      "has_image": false
+    },
+    {
+      "record_id": "NPN-B-0909-02",
+      "recorded_at": "2026-09-09T11:30:00+08:00",
+      "title_category": "健康問題",
+      "title": "健康問題 ：呼吸道清除功能失效",
+      "content": "病人偶有輕咳、白痰少量，雙側呼吸音清晰，room air 下 SpO2 96%。醫師表示 Tazocin 今日 14:00 為最後一劑，明日起改口服 Augmentin 共 5 天，若狀況穩定明日下午出院。",
+      "author_id": "N106",
+      "last_modified_at": null,
+      "has_image": false
+    },
+    {
+      "record_id": "NPN-B-0909-03",
+      "recorded_at": "2026-09-09T15:40:00+08:00",
+      "title_category": "護理指導",
+      "title": "護理指導 ：居家血糖監測",
+      "content": "醫師今日恢復 Metformin 500mg BID 並新增 Linagliptin 5mg QD。指導病人及女兒使用血糖機：洗手、採血部位輪替、記錄飯前及睡前血糖，血糖 <70 mg/dL 時立即喝半杯含糖飲料並 15 分鐘後複測。病人能獨立完成一次血糖測量（162 mg/dL），女兒會協助記錄。",
+      "author_id": "N106",
+      "last_modified_at": null,
+      "has_image": false
+    },
+    {
+      "record_id": "NPN-B-0909-04",
+      "recorded_at": "2026-09-09T21:40:00+08:00",
+      "title_category": "交班",
+      "title": "交班",
+      "content": "病人晚間情緒愉快，已整理部分行李。20:00 耳溫 36.6℃，SpO2 97%（room air）。左前臂 IV 留置，明日出院前移除。",
+      "author_id": "N110",
+      "last_modified_at": null,
+      "has_image": false
+    }
+  ],
+  "transfers": [],
+  "consultations": [],
+  "medication_orders": [],
+  "vital_signs": [
+    {
+      "record_id": "VS-B-0909-1",
+      "measured_at": "2026-09-09T08:00:00+08:00",
+      "body_temperature": 36.6,
+      "temperature_site": "耳溫",
+      "pulse": 84,
+      "respiration": 18,
+      "sbp": 122,
+      "dbp": 70,
+      "spo2": 96,
+      "oxygen_therapy": "room air",
+      "measured_by": "N106"
+    },
+    {
+      "record_id": "VS-B-0909-2",
+      "measured_at": "2026-09-09T12:00:00+08:00",
+      "body_temperature": 36.8,
+      "temperature_site": "耳溫",
+      "pulse": 82,
+      "respiration": 18,
+      "sbp": 124,
+      "dbp": 72,
+      "spo2": 97,
+      "oxygen_therapy": "room air",
+      "measured_by": "N106"
+    },
+    {
+      "record_id": "VS-B-0909-3",
+      "measured_at": "2026-09-09T16:00:00+08:00",
+      "body_temperature": 36.7,
+      "temperature_site": "耳溫",
+      "pulse": 80,
+      "respiration": 18,
+      "sbp": 120,
+      "dbp": 70,
+      "spo2": 97,
+      "oxygen_therapy": "room air",
+      "measured_by": "N110"
+    },
+    {
+      "record_id": "VS-B-0909-4",
+      "measured_at": "2026-09-09T20:00:00+08:00",
+      "body_temperature": 36.6,
+      "temperature_site": "耳溫",
+      "pulse": 78,
+      "respiration": 18,
+      "sbp": 118,
+      "dbp": 68,
+      "spo2": 97,
+      "oxygen_therapy": "room air",
+      "measured_by": "N110"
+    }
+  ],
+  "lab_results": [
+    {
+      "record_id": "LAB-B-0909-01",
+      "order_name": "CBC,DC",
+      "item": "WBC",
+      "value": "8.6",
+      "unit": "K/uL",
+      "reference_range": "3.5-11.0",
+      "abnormal_flag": null,
+      "collected_at": "2026-09-09T06:00:00+08:00",
+      "reported_at": "2026-09-09T06:40:00+08:00"
+    },
+    {
+      "record_id": "LAB-B-0909-02",
+      "order_name": "CRP (Quantitative)",
+      "item": "CRP",
+      "value": "3.2",
+      "unit": "mg/dL",
+      "reference_range": "<0.5",
+      "abnormal_flag": "H",
+      "collected_at": "2026-09-09T06:00:00+08:00",
+      "reported_at": "2026-09-09T07:00:00+08:00"
+    },
+    {
+      "record_id": "LAB-B-0909-03",
+      "order_name": "Glucose (finger)",
+      "item": "Glucose (finger)",
+      "value": "158",
+      "unit": "mg/dL",
+      "reference_range": "80-180",
+      "abnormal_flag": null,
+      "collected_at": "2026-09-09T07:00:00+08:00",
+      "reported_at": "2026-09-09T07:01:00+08:00"
+    },
+    {
+      "record_id": "LAB-B-0909-04",
+      "order_name": "Glucose (finger)",
+      "item": "Glucose (finger)",
+      "value": "162",
+      "unit": "mg/dL",
+      "reference_range": "80-180",
+      "abnormal_flag": null,
+      "collected_at": "2026-09-09T15:30:00+08:00",
+      "reported_at": "2026-09-09T15:31:00+08:00"
+    }
+  ],
+  "tubes": [
+    {
+      "tube_id": "TUB-B-02",
+      "tube_type": "IV",
+      "site": "右前臂",
+      "size": "22G",
+      "inserted_on": "2026-09-05",
+      "removed_on": "2026-09-09",
+      "fixation": "透明敷料",
+      "appearance": "正常"
+    },
+    {
+      "tube_id": "TUB-B-03",
+      "tube_type": "IV",
+      "site": "左前臂",
+      "size": "22G",
+      "inserted_on": "2026-09-09",
+      "removed_on": null,
+      "fixation": "透明敷料",
+      "appearance": "正常"
+    }
+  ],
+  "examinations": [],
+  "health_educations": [
+    {
+      "record_id": "EDU-B-0909-1",
+      "recorded_at": "2026-09-09T15:40:00+08:00",
+      "topic": "居家血糖監測及降血糖藥",
+      "target": "病人及家屬",
+      "content": "血糖機操作、記錄方式、低血糖處理，並說明 Metformin、Linagliptin 作用及腸胃不適等副作用，病人能獨立完成血糖測量。",
+      "author_id": "N106"
+    }
+  ],
+  "consent_forms": [],
+  "emotional_distress_assessments": []
+}

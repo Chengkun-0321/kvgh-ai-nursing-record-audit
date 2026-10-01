@@ -1,0 +1,312 @@
+{
+  "schema_version": "0.1.0",
+  "business_date": "2026-09-20",
+  "ward": {
+    "ward_code": "W51",
+    "ward_name": "內科病房"
+  },
+  "patient": {
+    "patient_id": "D病患",
+    "admission_id": "ADM-D-01",
+    "bed_code": "W51-2",
+    "sex": "F",
+    "age_years": 58,
+    "admission_at": "2026-09-19T14:20:00+08:00",
+    "admission_source": "急診",
+    "admission_diagnosis": "右下肢蜂窩性組織炎合併第二型糖尿病",
+    "attending_physician_id": "D206",
+    "status": "inpatient",
+    "status_changed_at": null
+  },
+  "admission_assessment": null,
+  "daily_physical_assessments": [
+    {
+      "record_id": "DPA-D-0920-1",
+      "assessed_at": "2026-09-20T08:40:00+08:00",
+      "shift": "day",
+      "author_id": "N105",
+      "last_modified_at": null,
+      "items": {
+        "consciousness": {
+          "measured_at": "2026-09-20T08:40:00+08:00",
+          "scale": "GCS",
+          "e": "4",
+          "v": "5",
+          "m": "6",
+          "rass": null
+        },
+        "pain": {
+          "scale": "10分法",
+          "score": 4,
+          "unable_to_assess": false
+        },
+        "sleep": "正常",
+        "airway": "無",
+        "tubes": {
+          "has_tube": true,
+          "description": "IV，置放日期2026-09-19，部位：左前臂，外觀：正常"
+        },
+        "pulse": {
+          "status": "正常",
+          "abnormal_types": []
+        },
+        "limb_circulation": "輕微水腫(無壓窩)",
+        "breath_sounds": {
+          "status": "正常",
+          "abnormal_types": [],
+          "other": null
+        },
+        "cough": "無",
+        "sore_throat": "無",
+        "bowel_sounds": "正常",
+        "appetite": [
+          "正常"
+        ],
+        "urination": {
+          "status": "正常",
+          "abnormal_types": [],
+          "other": null
+        },
+        "skin_pressure_prone_sites": [
+          "無"
+        ],
+        "muscle_power": {
+          "left_upper": "5",
+          "right_upper": "5",
+          "left_lower": "5",
+          "right_lower": "4"
+        },
+        "mobility": "完全能動",
+        "fall_risk": {
+          "unable_to_move": false,
+          "risk_factors": [
+            "步態不穩"
+          ],
+          "medications": [
+            "降血糖藥"
+          ],
+          "score": 2,
+          "high_risk": true,
+          "osteoporosis_high_risk": false
+        }
+      }
+    }
+  ],
+  "nursing_progress_notes": [
+    {
+      "record_id": "NPN-D-0920-01",
+      "recorded_at": "2026-09-20T03:40:00+08:00",
+      "title_category": "交班",
+      "title": "交班",
+      "content": "病人夜間因右小腿脹痛醒來 1 次，疼痛 4 分，抬高患肢後可再入睡。00:00 Cefazolin 已滴注。",
+      "author_id": "N113",
+      "last_modified_at": null,
+      "has_image": false
+    },
+    {
+      "record_id": "NPN-D-0920-02",
+      "recorded_at": "2026-09-20T10:30:00+08:00",
+      "title_category": "健康問題",
+      "title": "健康問題 ：皮膚完整性受損",
+      "content": "右小腿紅腫範圍約 14x10 公分，未超出昨日標記線，局部溫熱，觸痛 4 分，輕微水腫。今日最高耳溫 38.1℃（08:00），依醫囑予冰枕使用。病人下床如廁時右腳步態不穩，已衛教下床前先坐床緣、穿防滑鞋並請先生陪同。",
+      "author_id": "N105",
+      "last_modified_at": null,
+      "has_image": false
+    },
+    {
+      "record_id": "NPN-D-0920-03",
+      "recorded_at": "2026-09-20T15:20:00+08:00",
+      "title_category": "健康問題",
+      "title": "健康問題 ：血糖不穩定",
+      "content": "今日指尖血糖：07:00 228、11:00 262 mg/dL。衛教糖尿病飲食份量與定時進食，感染期間血糖較高，需每日監測並按時服藥。病人表示會請先生從家中帶藥盒。",
+      "author_id": "N105",
+      "last_modified_at": null,
+      "has_image": false
+    },
+    {
+      "record_id": "NPN-D-0920-04",
+      "recorded_at": "2026-09-20T21:50:00+08:00",
+      "title_category": "交班",
+      "title": "交班",
+      "content": "20:00 耳溫 37.5℃，右下肢持續抬高，晚餐進食約八分。左前臂 IV 留置順暢，Cefazolin 依時給予。",
+      "author_id": "N109",
+      "last_modified_at": null,
+      "has_image": false
+    }
+  ],
+  "transfers": [],
+  "consultations": [],
+  "medication_orders": [
+    {
+      "order_id": "MED-D-001",
+      "order_category": "常規",
+      "drug_name": "Cefazolin Inj 1g",
+      "route": "IVA",
+      "dose": 1,
+      "unit": "G",
+      "frequency": "Q6H",
+      "is_high_alert": false,
+      "ordered_at": "2026-09-19T15:00:00+08:00",
+      "prescriber_id": "D206",
+      "status": "執行中",
+      "administrations": [
+        {
+          "administration_id": "MAR-D-0920-01",
+          "administered_at": "2026-09-20T00:00:00+08:00",
+          "administered_by": "N113",
+          "dose": 1,
+          "unit": "G",
+          "rate": null,
+          "status": "已執行",
+          "remark": null
+        },
+        {
+          "administration_id": "MAR-D-0920-02",
+          "administered_at": "2026-09-20T06:00:00+08:00",
+          "administered_by": "N113",
+          "dose": 1,
+          "unit": "G",
+          "rate": null,
+          "status": "已執行",
+          "remark": null
+        },
+        {
+          "administration_id": "MAR-D-0920-03",
+          "administered_at": "2026-09-20T12:00:00+08:00",
+          "administered_by": "N105",
+          "dose": 1,
+          "unit": "G",
+          "rate": null,
+          "status": "已執行",
+          "remark": null
+        },
+        {
+          "administration_id": "MAR-D-0920-04",
+          "administered_at": "2026-09-20T18:00:00+08:00",
+          "administered_by": "N109",
+          "dose": 1,
+          "unit": "G",
+          "rate": null,
+          "status": "已執行",
+          "remark": null
+        }
+      ]
+    }
+  ],
+  "vital_signs": [
+    {
+      "record_id": "VS-D-0920-1",
+      "measured_at": "2026-09-20T08:00:00+08:00",
+      "body_temperature": 38.1,
+      "temperature_site": "耳溫",
+      "pulse": 98,
+      "respiration": 18,
+      "sbp": 138,
+      "dbp": 84,
+      "spo2": 98,
+      "oxygen_therapy": "room air",
+      "measured_by": "N105"
+    },
+    {
+      "record_id": "VS-D-0920-2",
+      "measured_at": "2026-09-20T12:00:00+08:00",
+      "body_temperature": 37.8,
+      "temperature_site": "耳溫",
+      "pulse": 94,
+      "respiration": 18,
+      "sbp": 136,
+      "dbp": 82,
+      "spo2": 98,
+      "oxygen_therapy": "room air",
+      "measured_by": "N105"
+    },
+    {
+      "record_id": "VS-D-0920-3",
+      "measured_at": "2026-09-20T16:00:00+08:00",
+      "body_temperature": 37.6,
+      "temperature_site": "耳溫",
+      "pulse": 92,
+      "respiration": 18,
+      "sbp": 134,
+      "dbp": 80,
+      "spo2": 98,
+      "oxygen_therapy": "room air",
+      "measured_by": "N109"
+    },
+    {
+      "record_id": "VS-D-0920-4",
+      "measured_at": "2026-09-20T20:00:00+08:00",
+      "body_temperature": 37.5,
+      "temperature_site": "耳溫",
+      "pulse": 90,
+      "respiration": 18,
+      "sbp": 132,
+      "dbp": 80,
+      "spo2": 98,
+      "oxygen_therapy": "room air",
+      "measured_by": "N109"
+    }
+  ],
+  "lab_results": [
+    {
+      "record_id": "LAB-D-0920-01",
+      "order_name": "Glucose (finger)",
+      "item": "Glucose (finger)",
+      "value": "228",
+      "unit": "mg/dL",
+      "reference_range": "80-180",
+      "abnormal_flag": "H",
+      "collected_at": "2026-09-20T07:00:00+08:00",
+      "reported_at": "2026-09-20T07:01:00+08:00"
+    },
+    {
+      "record_id": "LAB-D-0920-02",
+      "order_name": "Glucose (finger)",
+      "item": "Glucose (finger)",
+      "value": "262",
+      "unit": "mg/dL",
+      "reference_range": "80-180",
+      "abnormal_flag": "H",
+      "collected_at": "2026-09-20T11:00:00+08:00",
+      "reported_at": "2026-09-20T11:01:00+08:00"
+    },
+    {
+      "record_id": "LAB-D-0920-03",
+      "order_name": "Glucose (finger)",
+      "item": "Glucose (finger)",
+      "value": "236",
+      "unit": "mg/dL",
+      "reference_range": "80-180",
+      "abnormal_flag": "H",
+      "collected_at": "2026-09-20T16:30:00+08:00",
+      "reported_at": "2026-09-20T16:31:00+08:00"
+    },
+    {
+      "record_id": "LAB-D-0920-04",
+      "order_name": "Glucose (finger)",
+      "item": "Glucose (finger)",
+      "value": "224",
+      "unit": "mg/dL",
+      "reference_range": "80-180",
+      "abnormal_flag": "H",
+      "collected_at": "2026-09-20T21:00:00+08:00",
+      "reported_at": "2026-09-20T21:01:00+08:00"
+    }
+  ],
+  "tubes": [
+    {
+      "tube_id": "TUB-D-01",
+      "tube_type": "IV",
+      "site": "左前臂",
+      "size": "20G",
+      "inserted_on": "2026-09-19",
+      "removed_on": null,
+      "fixation": "透明敷料",
+      "appearance": "正常"
+    }
+  ],
+  "examinations": [],
+  "health_educations": [],
+  "consent_forms": [],
+  "emotional_distress_assessments": []
+}
