@@ -18,7 +18,7 @@
 
 ## 前端（Vitest + React Testing Library）
 
-- 位置：與被測檔案同目錄，`*.test.ts(x)`
+- 位置：`frontend/tests/`，目錄結構對應 `src/`，檔名 `*.test.ts(x)`，以 `@/` 匯入被測模組（測試與程式分開目錄，規格驅動流程才能隔離 coder 與測試角色，見 [spec-flow.md](spec-flow.md)）
 - 測使用者可見行為（文字、角色、互動），不測實作細節
 
 ## 共通

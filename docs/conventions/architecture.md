@@ -35,6 +35,10 @@ Next.js：病床總覽 → 點選病床顯示詳情 → 進入病患頁面 → �
 
 依賴方向：`api → services → crud → models`，不可反向。
 
+- 例外：`api/deps.py` 提供 `get_db`，可 import `db`。
+- `core/` 的「可 import 標準庫與第三方」指 `app` 外的套件；`app` 內只能 import `core/` 自己的模組。
+- 規格驅動流程的架構測試依此表檢查（[spec-flow.md](spec-flow.md) 的 A1）。
+
 ### `services/` 內部結構
 
 ```

@@ -4,5 +4,7 @@ set -eu
 cd "$(dirname "$0")/../.."
 # spec 必須經人確認、且確認後未被修改，否則不開始
 python3 .claude/flow/state.py check_spec
+# 角色讀寫範圍不得破壞 coder／test-designer 的隔離
+python3 .claude/flow/state.py check_config
 rm -rf .flow
 python3 .claude/flow/state.py init

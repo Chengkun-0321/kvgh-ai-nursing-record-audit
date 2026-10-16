@@ -40,6 +40,13 @@ disable-model-invocation: true
    - finish.sh 的輸出（狀態、輪數）。`done` 表示測試通過且報告一致；`needs_review` 表示測試失敗或報告不一致，需要人特別檢查
    - 每一輪的測試結果（通過／失敗；失敗時註明是套件白名單、安裝或測試哪一段）
    - `.flow/report.md` 第 0 節「摘要」原文
-   - 報告中判定為「不一致」「未覆蓋」的編號（A／B／R／E）
+   - 報告中判定為「不一致」「未覆蓋」的編號（A／B／BR／E）
    - 報告第 6 節「規格本身的問題」原文
    - 提醒：完整報告在 `.flow/report.md`。不符合需求時，人只需要修改規格目錄下的 architecture.md、boundaries.md、rules.md（或用 /spec-draft 修改），重新確認後重跑 /senior-flow
+   - ⑨ 收尾清單（本專案；流程結束後 status 已不是 running，主對話不再受 guard 限制，由人決定何時做）：
+     1. 有 model 變更：在 `backend/` 執行 `alembic revision --autogenerate -m "繁中描述"`，人工檢查產出後 `alembic upgrade head`（流程角色不能寫 `alembic/`）
+     2. 同步 `docs/glossary.md`、ADR、`docs/conventions/audit-rules.md`（新詞彙、新決策、規則清單狀態）
+     3. 檢查 `frontend/package-lock.json` 的 diff（安裝會改寫 lock；套件有變動才 commit）
+     4. 與 Codex 互審本次 diff
+     5. 跑完整 Definition of Done 檢查（見 CLAUDE.md）
+     6. 使用者要求時才 commit；`spec/` 與 `spec/.approved` 和程式放同一個 commit

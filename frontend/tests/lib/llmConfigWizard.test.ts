@@ -2,12 +2,12 @@ import { describe, expect, it } from "vitest";
 
 import type { LlmConfig } from "@/lib/api/llmConfigs";
 
-import { createEmptyDraft, type LlmConfigDraft } from "./llmConfigForm";
+import { createEmptyDraft, type LlmConfigDraft } from "@/lib/llmConfigForm";
 import {
   applyProviderChoice,
   suggestConfigName,
   validateStep,
-} from "./llmConfigWizard";
+} from "@/lib/llmConfigWizard";
 
 const STORED_CODEX: LlmConfig = {
   id: "c1",

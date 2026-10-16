@@ -6,7 +6,7 @@ import {
   describeSavedResult,
   describeSavedSystemPrompt,
   isSystemPromptChanged,
-} from "./systemPrompt";
+} from "@/lib/systemPrompt";
 
 const SAVED: LlmSystemPrompt = {
   version: 3,

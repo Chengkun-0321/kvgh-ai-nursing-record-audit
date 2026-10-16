@@ -1,7 +1,7 @@
 import { expect, it } from "vitest";
 
-import { WARD_KITS } from "./wardKit";
-import { buildWardLayout } from "./wardLayout";
+import { WARD_KITS } from "@/lib/wardKit";
+import { buildWardLayout } from "@/lib/wardLayout";
 import {
   createWardView,
   type Vec3,
@@ -12,7 +12,7 @@ import {
   getSpritePlane,
   projectToMap,
   type WardView,
-} from "./wardProjection";
+} from "@/lib/wardProjection";
 
 // 正視（yaw 0）與斜視兩個視角都要通過同一組檢查
 const FIXTURES = Object.entries(WARD_KITS).map(([id, kit]) => {

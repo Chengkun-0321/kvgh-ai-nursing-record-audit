@@ -1,3 +1,5 @@
+> **本專案註記**：本檔為上游流程的原始說明，保留作為參考。本專案做了調整（guard 只在流程中限制、`reference_paths`、`BR*` 編號、前端測試位置、安裝只用 `.venv`），以 [conventions/spec-flow.md](conventions/spec-flow.md) 為準。
+
 # 學長方法開發流程（Claude Code 版）
 
 ## 人只做三件事

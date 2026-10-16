@@ -7,7 +7,7 @@ import {
   getZoomAvailability,
   MAP_LIMITS,
   zoomAt,
-} from "./wardMap";
+} from "@/lib/wardMap";
 
 const world = { width: 1600, height: 1000 };
 const viewport = { x: 0, y: 0, width: 1200, height: 900 };

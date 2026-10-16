@@ -1,11 +1,11 @@
 import { expect, it } from "vitest";
 
-import { WARD_KITS, type WardKit } from "./wardKit";
+import { WARD_KITS, type WardKit } from "@/lib/wardKit";
 import {
   buildWardLayout,
   getWardGrid,
   type ModulePlacement,
-} from "./wardLayout";
+} from "@/lib/wardLayout";
 
 function bedsOf(count: number) {
   return Array.from({ length: count }, (_, index) => ({

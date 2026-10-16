@@ -5,14 +5,51 @@
   "parallel_coder_tester": true,
   "spec_dir": "spec/",
   "src_dirs": [
-    "src/"
+    "backend/app/",
+    "backend/requirements.txt",
+    "frontend/src/",
+    "frontend/package.json"
   ],
   "test_dirs": [
-    "tests/"
+    "backend/tests/",
+    "frontend/tests/",
+    "frontend/vitest.config.mts"
   ],
-  "test_framework": "Python 標準函式庫 unittest",
-  "setup_command": "",
-  "test_command": "PYTHONPATH=src python3 -m unittest discover -s tests -v",
-  "no_tests_regex": "^Ran 0 tests",
-  "deps_check": []
+  "coder_read_paths": [
+    "backend/app/",
+    "frontend/src/"
+  ],
+  "tester_read_paths": [],
+  "reference_paths": [
+    "CLAUDE.md",
+    "backend/CLAUDE.md",
+    "frontend/CLAUDE.md",
+    "docs/conventions/",
+    "docs/glossary.md",
+    "docs/adr/",
+    "docs/hospital-data-spec.md",
+    "docs/hospital-data-spec/",
+    "mock_data/README.md"
+  ],
+  "test_framework": "後端：pytest（backend/tests/，目錄結構對應 app/，asyncio_mode=auto，共用 fixture 在 backend/tests/conftest.py，DB 用記憶體 SQLite，LLM 一律 mock gateway、不得發出網路請求）。前端：Vitest（frontend/tests/，檔名 *.test.ts(x)，以 @/ 匯入 frontend/src/）。測試設定檔 frontend/vitest.config.mts 由測試角色負責。",
+  "setup_command": "cd backend && .venv/bin/python -m pip install -q -r requirements-dev.txt && .venv/bin/ruff format -q app tests && { .venv/bin/ruff check --fix -q app tests || true; } && cd ../frontend && npm install --no-audit --no-fund --legacy-peer-deps --silent && npx prettier --write --log-level warn src tests",
+  "test_command": "cd backend && .venv/bin/python -m pytest -q && .venv/bin/ruff check . && .venv/bin/ruff format --check . && .venv/bin/mypy app && cd ../frontend && npx vitest run && npx eslint && npx tsc --noEmit",
+  "no_tests_regex": "no tests ran|No test files found",
+  "deps_check": [
+    {
+      "type": "pip",
+      "file": "backend/requirements.txt",
+      "allow": ["fastapi", "uvicorn", "sqlalchemy", "aiosqlite", "asyncpg", "alembic", "pydantic-settings", "litellm", "cryptography", "jinja2", "httpx"]
+    },
+    {
+      "type": "npm",
+      "file": "frontend/package.json",
+      "allow": [
+        "next", "react", "react-dom", "motion", "clsx", "tailwind-merge", "@phosphor-icons/react", "three", "@react-three/fiber", "@react-three/drei",
+        "@tailwindcss/postcss", "tailwindcss", "typescript", "@types/node", "@types/react", "@types/react-dom", "@types/three",
+        "babel-plugin-react-compiler", "eslint", "eslint-config-next", "openapi-typescript", "prettier", "prettier-plugin-tailwindcss",
+        "vitest", "@testing-library/react", "@testing-library/jest-dom", "jsdom"
+      ]
+    }
+  ]
 }

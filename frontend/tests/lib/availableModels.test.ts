@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest";
 
 import type { LlmConfig } from "@/lib/api/llmConfigs";
 
-import { planModelList } from "./availableModels";
-import { createEmptyDraft, type LlmConfigDraft } from "./llmConfigForm";
+import { planModelList } from "@/lib/availableModels";
+import { createEmptyDraft, type LlmConfigDraft } from "@/lib/llmConfigForm";
 
 const STORED_LOCAL: LlmConfig = {
   id: "local-1",

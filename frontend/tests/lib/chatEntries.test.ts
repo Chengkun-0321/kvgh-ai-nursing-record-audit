@@ -9,7 +9,7 @@ import {
   settleReply,
   toChatHistory,
   updateEntry,
-} from "./chatEntries";
+} from "@/lib/chatEntries";
 
 function exchange(question: string, answer: string): ChatEntry[] {
   const reply = createReplyEntry();

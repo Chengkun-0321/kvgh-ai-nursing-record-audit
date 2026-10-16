@@ -38,3 +38,4 @@
 | [0009](0009-hospital-daily-data-format.md) | 院方每日資料交換格式（每人每日一檔、增量）與自製假資料 `mock_data/` | 提議 |
 | [0010](0010-mock-data-viewer.md) | 護理紀錄頁由前端伺服器直接讀取 `mock_data/`（時間軸＋紀錄類型篩選） | 提議 |
 | [0011](0011-same-origin-api-proxy.md) | 瀏覽器經 Next.js rewrites 同網域呼叫後端（取代 `NEXT_PUBLIC_API_BASE_URL`） | 提議 |
+| [0012](0012-spec-driven-flow.md) | 採用規格驅動的多代理開發流程，並依本專案調整（guard 只在流程中限制、參考文件、前端測試搬出 `src/`、`BR*` 編號） | 提議 |

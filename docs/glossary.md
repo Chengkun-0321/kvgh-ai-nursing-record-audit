@@ -114,3 +114,17 @@
 | 每日資料包 | `daily_package` | 院方每天產出的一個業務日資料夾（`YYYYMMDD/`） |
 | 資料包清單 | `manifest`      | 資料包內的 `manifest.json`，列出當天病患檔案 |
 | 假資料目錄 | `mock_data`     | 專案根目錄的自製虛構資料包 |
+
+## 開發流程（規格驅動）
+
+見 [spec-flow.md](conventions/spec-flow.md)。以下為流程用語，不是程式識別字。
+
+| 中文         | 英文／代號             | 說明                                                                 |
+| ------------ | ---------------------- | -------------------------------------------------------------------- |
+| 規格         | `spec`                 | `spec/` 的 architecture.md、boundaries.md、rules.md                   |
+| 規格確認     | spec approval          | 人執行 `approve_spec.sh`，把規格與 `flow.config.json` 的雜湊記到 `spec/.approved` |
+| 架構約束     | `A*`                   | A1～A7 為專案固定約束，本次功能從 A8 起編                            |
+| 系統邊界     | `B*`                   | 範圍、外部介面、API 合約                                             |
+| 業務規則     | `BR*`                  | 正常行為；與稽核項目代碼 `R01`～`R11` 不同                           |
+| 異常行為     | `E*`                   | 不合法輸入、例外情況的預期行為                                       |
+| 一致性報告   | consistency report     | 一致性 Agent 比對規格、測試、程式後的報告（`.flow/report.md`）       |

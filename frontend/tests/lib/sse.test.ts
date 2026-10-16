@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { parseSseBlock, readSseData, splitSseBuffer } from "./sse";
+import { parseSseBlock, readSseData, splitSseBuffer } from "@/lib/sse";
 
 function streamOf(chunks: Uint8Array[]): ReadableStream<Uint8Array> {
   return new ReadableStream({

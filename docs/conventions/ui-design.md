@@ -8,8 +8,8 @@
 
 依據兩份專案內 skill：
 
-- `.claude/skill/apple-design/SKILL.md`：動態（spring、可中斷、速度延續）、材質與層次、字體、設計原則
-- `.claude/skill/ui-ux-pro-max/`：無障礙與互動檢查清單、圖示規範、Next.js 準則（查詢指令見文末）
+- `.claude/skills/apple-design/SKILL.md`：動態（spring、可中斷、速度延續）、材質與層次、字體、設計原則
+- `.claude/skills/ui-ux-pro-max/`：無障礙與互動檢查清單、圖示規範、Next.js 準則（查詢指令見文末）
 
 token 實作在 `frontend/src/app/globals.css` 的 `@theme`；元件只用語意 token，禁止任意色碼與 inline style。
 
@@ -244,9 +244,9 @@ token 實作在 `frontend/src/app/globals.css` 的 `@theme`；元件只用語意
 在專案根目錄執行（使用系統內建的 `python3`，不另外安裝）：
 
 ```bash
-python3 .claude/skill/ui-ux-pro-max/scripts/search.py "<關鍵字>" --domain ux
+python3 .claude/skills/ui-ux-pro-max/scripts/search.py "<關鍵字>" --domain ux
 ```
 
 ```bash
-python3 .claude/skill/ui-ux-pro-max/scripts/search.py "<關鍵字>" --stack nextjs
+python3 .claude/skills/ui-ux-pro-max/scripts/search.py "<關鍵字>" --stack nextjs
 ```

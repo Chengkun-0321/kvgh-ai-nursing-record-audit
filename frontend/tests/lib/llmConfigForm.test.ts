@@ -7,7 +7,7 @@ import {
   toCreatePayload,
   toUpdatePayload,
   validateDraft,
-} from "./llmConfigForm";
+} from "@/lib/llmConfigForm";
 
 function draftOf(fields: Partial<LlmConfigDraft>): LlmConfigDraft {
   return { ...createEmptyDraft(), name: "測試", model: "m", ...fields };

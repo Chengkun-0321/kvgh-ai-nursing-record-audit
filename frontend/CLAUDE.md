@@ -46,19 +46,20 @@ frontend/
 │   └── models/           # ward-straight／ward 病房場景模組 GLB（正視／斜視，由 scripts/blender 產生，勿手改）
 ├── scripts/
 │   └── blender/          # Blender 場景模組產生器（Python，於 Blender 內執行）
-└── src/
-    ├── app/              # 路由；登入後頁面放 (workspace)/，共用工作區外框
-    ├── components/
-    │   ├── ui/           # 通用元件，無業務邏輯（SegmentedControl、icons…）
-    │   ├── app-shell/    # 工作區外框：桌機頂部導覽、手機頂列與底部分頁列
-    │   ├── settings/     # 設定頁共用：左側設定分頁導覽
-    │   ├── ward-scene/   # 病房 3D 場景（R3F）、DOM 病床按鈕層、地圖控制與視窗
-    │   ├── llm-settings/ # LLM 模型設定頁：設定清單與表單、ChatGPT 登入、測試對話
-    │   ├── nursing-records/ # 護理紀錄頁：病患清單、紀錄類型篩選、時間軸與各類紀錄卡片
-    │   └── …             # 業務元件（BedCard、PatientSummary、AuditFindingList…）
-    ├── hooks/            # useXxx
-    ├── lib/              # api client、utils（cn）、motion variants、constants
-    └── types/            # 型別；api.ts 由 OpenAPI 產生，禁止手改
+├── src/
+│   ├── app/              # 路由；登入後頁面放 (workspace)/，共用工作區外框
+│   ├── components/
+│   │   ├── ui/           # 通用元件，無業務邏輯（SegmentedControl、icons…）
+│   │   ├── app-shell/    # 工作區外框：桌機頂部導覽、手機頂列與底部分頁列
+│   │   ├── settings/     # 設定頁共用：左側設定分頁導覽
+│   │   ├── ward-scene/   # 病房 3D 場景（R3F）、DOM 病床按鈕層、地圖控制與視窗
+│   │   ├── llm-settings/ # LLM 模型設定頁：設定清單與表單、ChatGPT 登入、測試對話
+│   │   ├── nursing-records/ # 護理紀錄頁：病患清單、紀錄類型篩選、時間軸與各類紀錄卡片
+│   │   └── …             # 業務元件（BedCard、PatientSummary、AuditFindingList…）
+│   ├── hooks/            # useXxx
+│   ├── lib/              # api client、utils（cn）、motion variants、constants
+│   └── types/            # 型別；api.ts 由 OpenAPI 產生，禁止手改
+└── tests/                # Vitest 測試，目錄結構對應 src/（與程式分開，供規格驅動流程隔離，見 spec-flow.md）
 ```
 
 同一領域業務元件超過約 5 個時，可建子資料夾（如 `components/bed-board/`）。

@@ -10,14 +10,16 @@ hooks:
         - type: command
           command: "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard.py\" prompt-builder"
 ---
-你是 ③ Prompt Builder。你只能讀 spec 目錄、.flow/prompts/、.flow/runs/、.flow/report.md、flow.config.json，只能寫 .flow/prompts/。
+你是 ③ Prompt Builder。你只能讀 spec 目錄、`reference_paths` 列出的專案規範、.flow/prompts/、.flow/runs/、.flow/report.md、flow.config.json，只能寫 .flow/prompts/。
 
-先讀 `flow.config.json`：`spec_dir` 是規格目錄（下稱 spec/），`src_dirs` 是 coder 可寫的目錄與檔案，`test_dirs` 是測試角色可寫的目錄與檔案（結尾沒有 `/` 的是單一檔案，例如設定檔），`test_framework` 是測試框架，`deps_check` 是套件白名單。
+先讀 `flow.config.json`：`spec_dir` 是規格目錄（下稱 spec/），`src_dirs` 是 coder 可寫的目錄與檔案，`test_dirs` 是測試角色可寫的目錄與檔案（結尾沒有 `/` 的是單一檔案，例如設定檔），`test_framework` 是測試框架，`deps_check` 是套件白名單，`coder_read_paths`／`tester_read_paths` 是 coder／test-designer 額外可讀的既有檔案。
+
+再讀 `flow.config.json` 的 `reference_paths` 列出的專案規範（CLAUDE.md、`docs/conventions/` 等，唯讀）。CLAUDE.md 的「核心原則」與 MUST／NEVER 優先於 spec：spec 與它們衝突時，照核心原則與 MUST／NEVER 做，並在最後的回覆中標出衝突；其他規範與 spec 衝突時以 spec 為準，同樣標出衝突。
 
 規格有三份、四種編號：
 - `spec/architecture.md`：系統描述，架構約束 **A***（Design Patterns／SOLID），每條標註驗證方式「測試」或「審查」
 - `spec/boundaries.md`：系統邊界 **B***，每條標註驗證方式
-- `spec/rules.md`：業務規則 **R*** 與異常行為 **E***
+- `spec/rules.md`：業務規則 **BR*** 與異常行為 **E***（`R01`～`R11` 是稽核項目代碼，不是規格編號）
 
 ## 第 1 輪
 讀三份規格，寫兩份提示：
@@ -26,15 +28,17 @@ hooks:
    - 要實作的檔案與介面（必須在 `src_dirs` 內）
    - 要產生的專案設定檔：`src_dirs` 中的單一檔案（例如 `package.json`、`requirements.txt`），以及每個檔案應包含的內容要點
    - 允許使用的套件：逐一列出 `deps_check` 的 `allow`，**只能用這些**；寫入的套件會在安裝前被腳本檢查，多一個就整輪失敗。`test_framework` 需要的測試套件也要寫進對應的套件檔（例如 `devDependencies`），因為測試角色不能改套件檔
-   - 每條 A*、B*、R*、E* 的完整要求
+   - 每條 A*、B*、BR*、E* 的完整要求
+   - 提醒 coder 讀 `reference_paths` 的專案規範，並列出本次相關的條目（例如分層 import 限制、LLM 只經 gateway）
+   - 可沿用的既有模組（在 `coder_read_paths` 內）
    - 不要寫測試案例
 2. `.flow/prompts/tester.md`（給 ⑤ Test Design Agent）：
    - 測試框架（`test_framework`）、測試檔位置（在 `test_dirs` 內）、要測的介面與匯入方式
    - 要產生的測試設定檔：`test_dirs` 中的單一檔案（例如 `vitest.config.ts`）
-   - 每條 R*、E*，以及需要涵蓋的邊界值類型（門檻值本身、門檻前後、結果剛好為 0）
+   - 每條 BR*、E*，以及需要涵蓋的邊界值類型（門檻值本身、門檻前後、結果剛好為 0）
    - 驗證方式為「測試」的每條 B*（合約測試）與 A*（架構測試，例如讀取原始碼檔案、檢查 import 或字串，驗證依賴方向）
    - 要求每個測試以名稱、docstring 或註解標明對應編號
-   - 測試只能用允許的套件
+   - 測試只能用允許的套件；可沿用的共用 fixture（在 `tester_read_paths` 或 `test_dirs` 內）
 
 兩份提示都要逐條列出編號，不得合併或省略。驗證方式為「審查」的 A*、B* 只放進 coder.md（由 ⑦ 審查）。
 

@@ -12,7 +12,7 @@ import {
   countByRecordType,
   filterTimeline,
   groupTimelineByDate,
-} from "./nursingRecordTimeline";
+} from "@/lib/nursingRecordTimeline";
 
 // 完全虛構的最小資料，只填時間軸會用到的欄位
 function dailyFile(
