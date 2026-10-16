@@ -1,0 +1,18 @@
+{
+  "max_rounds": 5,
+  "coder_can_read_tests": false,
+  "on_fail_update": "coder_only",
+  "parallel_coder_tester": true,
+  "spec_dir": "spec/",
+  "src_dirs": [
+    "src/"
+  ],
+  "test_dirs": [
+    "tests/"
+  ],
+  "test_framework": "Python 標準函式庫 unittest",
+  "setup_command": "",
+  "test_command": "PYTHONPATH=src python3 -m unittest discover -s tests -v",
+  "no_tests_regex": "^Ran 0 tests",
+  "deps_check": []
+}

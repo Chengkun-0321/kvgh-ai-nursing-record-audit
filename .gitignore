@@ -1,3 +1,11 @@
+.DS_Store
+__pycache__/
+*.pyc
+# 每次 /senior-flow 都會重建的過程紀錄
+.flow/
+# 個人本機設定
+.claude/settings.local.json
+
 # 環境變數與機密
 .env
 .env.*

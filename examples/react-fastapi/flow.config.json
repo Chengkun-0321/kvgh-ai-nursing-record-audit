@@ -1,0 +1,32 @@
+{
+  "max_rounds": 5,
+  "coder_can_read_tests": false,
+  "on_fail_update": "coder_only",
+  "parallel_coder_tester": true,
+  "spec_dir": "spec/",
+  "src_dirs": [
+    "backend/app/",
+    "backend/requirements.txt",
+    "frontend/src/",
+    "frontend/package.json",
+    "frontend/vite.config.ts",
+    "frontend/tsconfig.json",
+    "frontend/index.html"
+  ],
+  "test_dirs": [
+    "backend/tests/",
+    "frontend/tests/",
+    "frontend/vitest.config.ts"
+  ],
+  "test_framework": "後端：pytest + FastAPI TestClient，測試檔放 backend/tests/，以 from app.main import app 匯入（在 backend/ 執行）。前端：Vitest + React Testing Library + jsdom，測試檔放 frontend/tests/，從 ../src 匯入；frontend/vitest.config.ts 由測試角色負責，設定 environment: 'jsdom'。",
+  "setup_command": "cd backend && python3 -m pip install -q -r requirements.txt && cd ../frontend && npm install --silent --no-audit --no-fund",
+  "test_command": "cd backend && python3 -m pytest tests -v && cd ../frontend && npx vitest run",
+  "no_tests_regex": "no tests ran|No test files found",
+  "deps_check": [
+    {"type": "pip", "file": "backend/requirements.txt",
+     "allow": ["fastapi", "pydantic", "uvicorn", "pytest", "httpx"]},
+    {"type": "npm", "file": "frontend/package.json",
+     "allow": ["react", "react-dom", "@types/react", "@types/react-dom", "typescript", "vite", "@vitejs/plugin-react",
+               "vitest", "jsdom", "@testing-library/react", "@testing-library/user-event", "@testing-library/jest-dom"]}
+  ]
+}
