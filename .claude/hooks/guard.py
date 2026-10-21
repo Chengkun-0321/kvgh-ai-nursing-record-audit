@@ -238,6 +238,8 @@ def deny_hint(role, tool, target, running):
         return "（流程執行中，主對話只能單獨執行 `bash .claude/flow/<名稱>.sh [輪次]`，不可加 cd、&&、管線或其他指令）"
     if role == "main" and tool in WRITE_TOOLS and running:
         return "（流程執行中，spec 與 config 已鎖定；若流程中斷，人可刪除 .flow/ 解鎖）"
+    if target == "<outside>" and not running:
+        return "（只能讀寫專案目錄內的檔案）"
     if role == "main":
         return "（流程執行中，主對話只能讀規格目錄與流程檔，不能讀寫程式與測試目錄）"
     return ""

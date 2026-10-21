@@ -5,21 +5,44 @@
   "parallel_coder_tester": true,
   "spec_dir": "spec/",
   "src_dirs": [
-    "backend/app/",
+    "backend/app/core/",
+    "backend/app/models/",
+    "backend/app/schemas/",
+    "backend/app/crud/",
+    "backend/app/services/audit/",
+    "backend/app/services/ingestion/",
+    "backend/app/services/llm/gateway.py",
+    "backend/app/services/llm/prompt_loader.py",
+    "backend/app/prompts/",
+    "backend/app/api/v1/",
     "backend/requirements.txt",
-    "frontend/src/",
+    "frontend/src/app/(workspace)/patients/",
+    "frontend/src/components/patient-audit/",
+    "frontend/src/components/nursing-records/",
+    "frontend/src/lib/api/patientAudits.ts",
+    "frontend/src/lib/dailyAudit.ts",
+    "frontend/src/types/patientAudit.ts",
     "frontend/package.json"
   ],
   "test_dirs": [
-    "backend/tests/",
-    "frontend/tests/",
+    "backend/tests/architecture/",
+    "backend/tests/services/audit/",
+    "backend/tests/services/ingestion/",
+    "backend/tests/services/llm/test_gateway_structured.py",
+    "backend/tests/api/v1/test_patient_audits_api.py",
+    "backend/tests/fixtures/daily_packages/",
+    "frontend/tests/lib/dailyAudit.test.ts",
+    "frontend/tests/lib/api/patientAudits.test.ts",
+    "frontend/tests/components/patient-audit/",
     "frontend/vitest.config.mts"
   ],
   "coder_read_paths": [
     "backend/app/",
     "frontend/src/"
   ],
-  "tester_read_paths": [],
+  "tester_read_paths": [
+    "backend/tests/conftest.py"
+  ],
   "reference_paths": [
     "CLAUDE.md",
     "backend/CLAUDE.md",
@@ -31,7 +54,7 @@
     "docs/hospital-data-spec/",
     "mock_data/README.md"
   ],
-  "test_framework": "後端：pytest（backend/tests/，目錄結構對應 app/，asyncio_mode=auto，共用 fixture 在 backend/tests/conftest.py，DB 用記憶體 SQLite，LLM 一律 mock gateway、不得發出網路請求）。前端：Vitest（frontend/tests/，檔名 *.test.ts(x)，以 @/ 匯入 frontend/src/）。測試設定檔 frontend/vitest.config.mts 由測試角色負責。",
+  "test_framework": "後端：pytest（backend/tests/，目錄結構對應 app/，asyncio_mode=auto，共用 fixture 在 backend/tests/conftest.py，DB 用記憶體 SQLite，LLM 一律 mock gateway、不得發出網路請求）。前端：Vitest（frontend/tests/，檔名 *.test.ts(x)，以 @/ 匯入 frontend/src/）。測試設定檔 frontend/vitest.config.mts 由測試角色負責。 本次後端資料包 fixture 放 backend/tests/fixtures/daily_packages/（完全虛構），測試中以 tmp_path 複製後設為 MOCK_DATA_DIR，RAW_DATA_DIR 也指向 tmp_path。前端元件測試用 jsdom＋@testing-library/react。",
   "setup_command": "cd backend && .venv/bin/python -m pip install -q -r requirements-dev.txt && .venv/bin/ruff format -q app tests && { .venv/bin/ruff check --fix -q app tests || true; } && cd ../frontend && npm install --no-audit --no-fund --legacy-peer-deps --silent && npx prettier --write --log-level warn src tests",
   "test_command": "cd backend && .venv/bin/python -m pytest -q && .venv/bin/ruff check . && .venv/bin/ruff format --check . && .venv/bin/mypy app && cd ../frontend && npx vitest run && npx eslint && npx tsc --noEmit",
   "no_tests_regex": "no tests ran|No test files found",
@@ -39,16 +62,51 @@
     {
       "type": "pip",
       "file": "backend/requirements.txt",
-      "allow": ["fastapi", "uvicorn", "sqlalchemy", "aiosqlite", "asyncpg", "alembic", "pydantic-settings", "litellm", "cryptography", "jinja2", "httpx"]
+      "allow": [
+        "fastapi",
+        "uvicorn",
+        "sqlalchemy",
+        "aiosqlite",
+        "asyncpg",
+        "alembic",
+        "pydantic-settings",
+        "litellm",
+        "cryptography",
+        "jinja2",
+        "httpx"
+      ]
     },
     {
       "type": "npm",
       "file": "frontend/package.json",
       "allow": [
-        "next", "react", "react-dom", "motion", "clsx", "tailwind-merge", "@phosphor-icons/react", "three", "@react-three/fiber", "@react-three/drei",
-        "@tailwindcss/postcss", "tailwindcss", "typescript", "@types/node", "@types/react", "@types/react-dom", "@types/three",
-        "babel-plugin-react-compiler", "eslint", "eslint-config-next", "openapi-typescript", "prettier", "prettier-plugin-tailwindcss",
-        "vitest", "@testing-library/react", "@testing-library/jest-dom", "jsdom"
+        "next",
+        "react",
+        "react-dom",
+        "motion",
+        "clsx",
+        "tailwind-merge",
+        "@phosphor-icons/react",
+        "three",
+        "@react-three/fiber",
+        "@react-three/drei",
+        "@tailwindcss/postcss",
+        "tailwindcss",
+        "typescript",
+        "@types/node",
+        "@types/react",
+        "@types/react-dom",
+        "@types/three",
+        "babel-plugin-react-compiler",
+        "eslint",
+        "eslint-config-next",
+        "openapi-typescript",
+        "prettier",
+        "prettier-plugin-tailwindcss",
+        "vitest",
+        "@testing-library/react",
+        "@testing-library/jest-dom",
+        "jsdom"
       ]
     }
   ]

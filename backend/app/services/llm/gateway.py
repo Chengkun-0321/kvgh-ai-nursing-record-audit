@@ -5,6 +5,7 @@ API 金鑰只在呼叫當下解密，不寫入 log、例外訊息或任何快取
 
 import logging
 import os
+import re
 import time
 import uuid
 from collections.abc import AsyncIterator, Callable, Sequence
@@ -13,15 +14,26 @@ from typing import Any, Final
 
 import litellm
 from litellm import exceptions as litellm_errors
+from pydantic import BaseModel, ValidationError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import get_settings
 from app.core.enums import LlmProvider
-from app.core.exceptions import LLMConnectionError
+from app.core.exceptions import (
+    LLMConnectionError,
+    LLMNotConfiguredError,
+    LLMOutputError,
+    LLMServiceError,
+    LLMTimeoutError,
+)
 from app.core.security import decrypt_secret
+from app.crud import llm_config as llm_config_crud
+from app.db.session import get_session_factory
 from app.schemas.llm_chat import ChatDeltaEvent, ChatDoneEvent, ChatErrorEvent, ChatMessage
+from app.schemas.llm_structured import LLMRequest, LLMResult
 from app.services.llm import chatgpt_auth, config_service, system_prompt_service
 from app.services.llm.config_service import StoredLlmConfig
+from app.services.llm.prompt_loader import prompt_id, render_prompt
 from app.services.llm.providers import (
     LOCAL_SERVER_PLACEHOLDER_API_KEY,
     build_litellm_model,
@@ -29,6 +41,16 @@ from app.services.llm.providers import (
 )
 from app.services.llm.redaction import redact_provider_detail
 from app.services.llm.system_prompt_service import SystemPromptForCall
+
+__all__ = [
+    "LITELLM_ERRORS",
+    "ActiveModelSettings",
+    "LLMOutputError",
+    "complete_structured",
+    "load_active_model_settings",
+    "lookup_model_mode",
+    "open_chat_stream",
+]
 
 logger = logging.getLogger(__name__)
 
@@ -296,3 +318,218 @@ def lookup_model_mode(provider: LlmProvider, model_id: str) -> str | None:
     info = litellm.model_cost.get(prefixed) or litellm.model_cost.get(model_id)
     mode = info.get("mode") if isinstance(info, dict) else None
     return mode if isinstance(mode, str) else None
+
+
+# ---- 結構化呼叫（稽核規則使用）----
+
+_JSON_FENCE_PATTERN: Final = re.compile(r"^\s*```(?:json)?\s*(.*?)\s*```\s*$", re.DOTALL)
+_RETRY_INSTRUCTION: Final = "上一個回覆不符合要求的 JSON 格式，請修正下列問題後，只回傳 JSON："
+# 成本只是附加資訊：LiteLLM 對價格表未收錄的模型會拋出一般 Exception，取不到就記為 None，
+# 不讓整次稽核失敗
+_COST_ERRORS: Final[tuple[type[Exception], ...]] = (Exception,)
+
+
+@dataclass(frozen=True)
+class ActiveModelSettings:
+    """結構化呼叫使用的模型設定；`api_key` 為呼叫當下才解密的明文，不可寫入 log 或快取。"""
+
+    provider: str
+    # LiteLLM 完整模型名稱，例：`openai/gpt-4.1`
+    model: str
+    api_key: str | None
+    api_base: str | None
+    timeout_seconds: float
+    # 共用 system prompt；空字串表示不使用
+    system_prompt: str
+    system_prompt_version: int | None
+
+
+async def load_active_model_settings() -> ActiveModelSettings:
+    """讀取使用中的模型設定（解密金鑰）與最新的共用 system prompt。
+
+    Raises:
+        LLMNotConfiguredError: 尚未設定使用中的模型。
+        ChatgptAuthRequiredError: ChatGPT 訂閱尚未登入。
+    """
+    async with get_session_factory()() as session:
+        active = await llm_config_crud.get_active(session)
+        if active is None:
+            raise LLMNotConfiguredError
+        config = await config_service.get_stored_config(session, active.id)
+        system_prompt = await system_prompt_service.get_for_call(session)
+    if config.provider == LlmProvider.CHATGPT:
+        await chatgpt_auth.ensure_access_token()
+    return ActiveModelSettings(
+        provider=config.provider.value,
+        model=build_litellm_model(config.provider, config.model),
+        api_key=_resolve_api_key(config),
+        api_base=resolve_api_base(config.provider, config.api_base),
+        timeout_seconds=float(config.timeout_seconds),
+        system_prompt=_system_prompt_content(system_prompt) or "",
+        system_prompt_version=system_prompt.version if system_prompt else None,
+    )
+
+
+async def complete_structured[T: BaseModel](
+    request: LLMRequest, output_schema: type[T]
+) -> LLMResult[T]:
+    """以使用中的模型執行規則 prompt，並以 `output_schema` 驗證輸出。
+
+    訊息依序為共用 system prompt（有內容時）與規則 prompt；輸出不符格式時附上驗證錯誤重試，
+    最多 `LLM_MAX_RETRIES` 次。
+
+    Args:
+        request: 規則代碼、prompt 名稱與版本、模板變數。
+        output_schema: 期望輸出的 Pydantic model。
+
+    Returns:
+        驗證後的輸出與模型、prompt 版本、token 用量、成本、耗時。
+
+    Raises:
+        LLMNotConfiguredError: 尚未設定使用中的模型。
+        LLMOutputError: 重試用盡仍不符格式。
+        LLMTimeoutError: 呼叫逾時（`TimeoutError` 子類別）。
+        LLMServiceError: 連線失敗或服務錯誤（`ConnectionError` 子類別）。
+    """
+    settings = await load_active_model_settings()
+    messages = _preprocess(_structured_messages(settings, request))
+    if settings.provider == LlmProvider.CHATGPT:
+        _apply_chatgpt_instructions(
+            SystemPromptForCall(
+                version=settings.system_prompt_version or 0, content=settings.system_prompt
+            )
+        )
+    started = time.perf_counter()
+    parsed, response = await _complete_and_validate(settings, messages, output_schema)
+    usage = getattr(response, "usage", None)
+    # 只記規則代碼與版本，不記 prompt 與輸出內容
+    logger.info(
+        "結構化呼叫完成：rule_code=%s prompt=%s system_prompt_version=%s",
+        request.rule_code,
+        prompt_id(request.prompt_name, request.prompt_version),
+        settings.system_prompt_version,
+    )
+    return LLMResult(
+        parsed=parsed,
+        model=_litellm_model_name(settings),
+        prompt_version=prompt_id(request.prompt_name, request.prompt_version),
+        system_prompt_version=settings.system_prompt_version,
+        prompt_tokens=_int_or_none(getattr(usage, "prompt_tokens", None)),
+        completion_tokens=_int_or_none(getattr(usage, "completion_tokens", None)),
+        cost_usd=_completion_cost(response),
+        duration_ms=_elapsed_ms(started, time.perf_counter()),
+    )
+
+
+def _structured_messages(
+    settings: ActiveModelSettings, request: LLMRequest
+) -> list[dict[str, str]]:
+    prompt = render_prompt(request.prompt_name, request.prompt_version, request.variables)
+    user_message = {"role": "user", "content": prompt}
+    if not settings.system_prompt:
+        return [user_message]
+    return [{"role": "system", "content": settings.system_prompt}, user_message]
+
+
+def _preprocess(messages: list[dict[str, str]]) -> list[dict[str, str]]:
+    """送出前的處理點；目前原樣送出，接真實資料時在此插入去識別化（ADR 0002）。"""
+    return messages
+
+
+async def _complete_and_validate[T: BaseModel](
+    settings: ActiveModelSettings, messages: list[dict[str, str]], output_schema: type[T]
+) -> tuple[T, Any]:
+    conversation = list(messages)
+    max_attempts = 1 + max(get_settings().LLM_MAX_RETRIES, 0)
+    for attempt in range(1, max_attempts + 1):
+        response = await _acompletion(settings, conversation)
+        content = _response_content(response)
+        try:
+            return output_schema.model_validate_json(_strip_json_fence(content)), response
+        except ValidationError as exc:
+            logger.warning(
+                "模型輸出不符格式：attempt=%d/%d errors=%d",
+                attempt,
+                max_attempts,
+                exc.error_count(),
+            )
+            conversation = [
+                *conversation,
+                {"role": "assistant", "content": content},
+                {"role": "user", "content": _retry_instruction(exc)},
+            ]
+    raise LLMOutputError
+
+
+def _litellm_model_name(settings: ActiveModelSettings) -> str:
+    """送出與回傳共用的 LiteLLM 完整模型名稱（`<provider>/<model>`）。
+
+    `settings.model` 已含 `/` 時原樣使用；否則依服務類型補上 LiteLLM 前綴。
+    """
+    if "/" in settings.model:
+        return settings.model
+    try:
+        provider = LlmProvider(settings.provider)
+    except ValueError:
+        return f"{settings.provider}/{settings.model}"
+    return build_litellm_model(provider, settings.model)
+
+
+async def _acompletion(settings: ActiveModelSettings, messages: list[dict[str, str]]) -> Any:
+    """呼叫 LiteLLM；逾時與服務錯誤轉成標準例外，gateway 以外不必認識 LiteLLM 的例外。"""
+    model_name = _litellm_model_name(settings)
+    kwargs: dict[str, Any] = {
+        "model": model_name,
+        "messages": messages,
+        "temperature": 0,
+        "timeout": settings.timeout_seconds,
+        "drop_params": True,
+    }
+    if settings.api_key:
+        kwargs["api_key"] = settings.api_key
+    if settings.api_base:
+        kwargs["api_base"] = settings.api_base
+    try:
+        return await litellm.acompletion(**kwargs)
+    except litellm_errors.Timeout as exc:
+        logger.warning("模型呼叫逾時：model=%s", model_name)
+        raise LLMTimeoutError("模型回應逾時") from exc
+    except LITELLM_ERRORS as exc:
+        logger.warning("模型服務呼叫失敗：model=%s error=%s", model_name, type(exc).__name__)
+        raise LLMServiceError("無法連線到模型服務或服務回應錯誤") from exc
+
+
+def _response_content(response: Any) -> str:
+    choices = getattr(response, "choices", None)
+    if not choices:
+        return ""
+    content = getattr(getattr(choices[0], "message", None), "content", None)
+    return content if isinstance(content, str) else ""
+
+
+def _strip_json_fence(content: str) -> str:
+    """去除 ```json 程式碼區塊標記。"""
+    match = _JSON_FENCE_PATTERN.match(content)
+    return match.group(1) if match else content.strip()
+
+
+def _retry_instruction(exc: ValidationError) -> str:
+    """把驗證錯誤整理成給模型的修正說明；不附上輸入值。"""
+    details = [
+        f"- {'.'.join(str(part) for part in error['loc']) or '整體'}：{error['msg']}"
+        for error in exc.errors(include_url=False, include_context=False, include_input=False)
+    ]
+    return "\n".join([_RETRY_INSTRUCTION, *details])
+
+
+def _completion_cost(response: Any) -> float | None:
+    try:
+        cost = litellm.completion_cost(completion_response=response)
+    except _COST_ERRORS as exc:
+        logger.warning("無法計算模型呼叫成本：error=%s", type(exc).__name__)
+        return None
+    return float(cost) if isinstance(cost, int | float) else None
+
+
+def _int_or_none(value: object) -> int | None:
+    return value if isinstance(value, int) and not isinstance(value, bool) else None

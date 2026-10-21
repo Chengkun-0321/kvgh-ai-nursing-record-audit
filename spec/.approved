@@ -1,0 +1,10 @@
+{
+  "sha256": "ae6b990f6d645991c95e792f216c342851f38fe6a954e7f7cea2a716c5a4c9ae",
+  "approved_at": "2026-10-17 20:50:10",
+  "files": [
+    "spec/architecture.md",
+    "spec/boundaries.md",
+    "spec/rules.md",
+    "flow.config.json"
+  ]
+}

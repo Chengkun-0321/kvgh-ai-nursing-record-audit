@@ -1,0 +1,63 @@
+{
+  "schema_version": "0.1.0",
+  "business_date": "2026-09-01",
+  "ward": { "ward_code": "W99", "ward_name": "虛構測試病房" },
+  "patient": {
+    "patient_id": "P001",
+    "admission_id": "ADM-P001-01",
+    "bed_code": "W99-1",
+    "sex": "M",
+    "age_years": 70,
+    "admission_at": "2026-09-01T08:00:00+08:00",
+    "admission_source": "急診",
+    "admission_diagnosis": "虛構診斷甲",
+    "attending_physician_id": "D201",
+    "status": "inpatient",
+    "status_changed_at": null
+  },
+  "admission_assessment": null,
+  "daily_physical_assessments": [],
+  "nursing_progress_notes": [
+    {
+      "record_id": "NPN-P001-0901-01",
+      "recorded_at": "2026-09-01T10:00:00+08:00",
+      "title_category": "入院護理",
+      "title": "入院護理：虛構入院紀錄",
+      "content": "虛構入院紀錄甲，病人由急診入院，意識清楚，已完成環境介紹。",
+      "author_id": "N101",
+      "last_modified_at": null,
+      "has_image": false
+    }
+  ],
+  "transfers": [],
+  "consultations": [],
+  "medication_orders": [],
+  "vital_signs": [
+    {
+      "record_id": "VS-P001-0901-1",
+      "measured_at": "2026-09-01T09:00:00+08:00",
+      "body_temperature": 36.8,
+      "temperature_site": "耳溫",
+      "pulse": 80,
+      "respiration": 18,
+      "sbp": 120,
+      "dbp": 70,
+      "spo2": 98,
+      "oxygen_therapy": "room air",
+      "measured_by": "N101"
+    }
+  ],
+  "lab_results": [],
+  "tubes": [
+    {
+      "tube_id": "TUB-P001-01",
+      "tube_type": "IV",
+      "site": "左前臂",
+      "size": "22G",
+      "inserted_on": "2026-09-01",
+      "removed_on": null,
+      "fixation": "透明敷料",
+      "appearance": "無紅腫"
+    }
+  ]
+}

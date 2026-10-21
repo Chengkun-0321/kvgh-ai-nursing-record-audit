@@ -1,0 +1,12 @@
+{
+  "schema_version": "0.1.0",
+  "ward_code": "W99",
+  "ward_name": "虛構測試病房",
+  "business_date": "2026-09-02",
+  "generated_at": "2026-09-03T01:00:00+08:00",
+  "patient_count": 2,
+  "patients": [
+    { "patient_id": "P001", "file": "P001.json", "bed_code": "W99-1", "status": "inpatient" },
+    { "patient_id": "P002", "file": "P002.json", "bed_code": "W99-2", "status": "discharged" }
+  ]
+}

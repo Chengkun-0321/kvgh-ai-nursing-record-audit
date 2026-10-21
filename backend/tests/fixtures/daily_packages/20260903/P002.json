@@ -1,0 +1,63 @@
+{
+  "schema_version": "0.1.0",
+  "business_date": "2026-09-03",
+  "ward": { "ward_code": "W99", "ward_name": "虛構測試病房" },
+  "patient": {
+    "patient_id": "P002",
+    "admission_id": "ADM-P002-02",
+    "bed_code": "W99-3",
+    "sex": "F",
+    "age_years": 55,
+    "admission_at": "2026-09-03T09:00:00+08:00",
+    "admission_source": "急診",
+    "admission_diagnosis": "虛構診斷丙",
+    "attending_physician_id": "D202",
+    "status": "inpatient",
+    "status_changed_at": null
+  },
+  "admission_assessment": null,
+  "daily_physical_assessments": [],
+  "nursing_progress_notes": [
+    {
+      "record_id": "NPN-P002-0903-01",
+      "recorded_at": "2026-09-03T11:00:00+08:00",
+      "title_category": "入院護理",
+      "title": "入院護理：虛構病患乙再次入院",
+      "content": "虛構病患乙再次入院紀錄，病人因發燒再次入院。",
+      "author_id": "N104",
+      "last_modified_at": null,
+      "has_image": false
+    }
+  ],
+  "transfers": [],
+  "consultations": [],
+  "medication_orders": [],
+  "vital_signs": [
+    {
+      "record_id": "VS-P002-0903-1",
+      "measured_at": "2026-09-03T10:00:00+08:00",
+      "body_temperature": 38.4,
+      "temperature_site": "耳溫",
+      "pulse": 104,
+      "respiration": 22,
+      "sbp": 110,
+      "dbp": 70,
+      "spo2": 95,
+      "oxygen_therapy": "鼻導管 2L/min",
+      "measured_by": "N104"
+    }
+  ],
+  "lab_results": [],
+  "tubes": [
+    {
+      "tube_id": "TUB-P002-01",
+      "tube_type": "IV",
+      "site": "右前臂",
+      "size": "20G",
+      "inserted_on": "2026-09-03",
+      "removed_on": null,
+      "fixation": "透明敷料",
+      "appearance": "無紅腫"
+    }
+  ]
+}

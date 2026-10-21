@@ -25,6 +25,11 @@ async def get_by_name(session: AsyncSession, name: str) -> LlmConfig | None:
     return await session.scalar(select(LlmConfig).where(LlmConfig.name == name))
 
 
+async def get_active(session: AsyncSession) -> LlmConfig | None:
+    """取得使用中的設定；尚未設定時回傳 `None`。"""
+    return await session.scalar(select(LlmConfig).where(LlmConfig.is_active.is_(True)))
+
+
 async def has_any(session: AsyncSession) -> bool:
     """是否已有任何設定。"""
     return await session.scalar(select(LlmConfig.id).limit(1)) is not None

@@ -38,6 +38,8 @@ if [ "$RC" -eq 0 ]; then
 fi
 
 python3 .claude/flow/state.py test "$N" "$RC"
+# 節點紀錄：保存本輪測試 log 到 flow-records/（失敗不影響流程）
+python3 .claude/flow/record.py tests "$N" "$RC" > /dev/null 2>&1 || true
 SUMMARY=$(tail -n 3 "$LOG" | tr '\n' ' ')
 if [ "$RC" -eq 0 ]; then
   echo "第 $N 輪：通過。$SUMMARY（紀錄：$LOG）"

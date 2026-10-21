@@ -3,6 +3,8 @@ __pycache__/
 *.pyc
 # 每次 /senior-flow 都會重建的過程紀錄
 .flow/
+# 流程節點紀錄（輸入／過程／輸出，供報告使用，只留本機）
+flow-records/
 # 個人本機設定
 .claude/settings.local.json
 

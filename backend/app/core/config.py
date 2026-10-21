@@ -7,6 +7,7 @@ from pydantic import SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 BACKEND_ROOT = Path(__file__).resolve().parents[2]
+PROJECT_ROOT = BACKEND_ROOT.parent
 DATA_DIR = BACKEND_ROOT / "data"
 
 
@@ -38,6 +39,20 @@ class Settings(BaseSettings):
     CHATGPT_CLIENT_VERSION_FALLBACK: str = "0.159.2"
     CODEX_LATEST_VERSION_URL: str = "https://registry.npmjs.org/@openai/codex/latest"
     CODEX_VERSION_CACHE_SECONDS: int = 86400
+
+    # 稽核格式重試：LLM 輸出不符 schema 時附上驗證錯誤再問，最多重試這麼多次（總呼叫 1 + 此值）。
+    # 環境變數 LLM_MAX_RETRIES，預設 2（待補進 .env.example）
+    LLM_MAX_RETRIES: int = 2
+
+    # 院方每日資料包根目錄（`<YYYYMMDD>/manifest.json`＋病患檔），只讀不寫。
+    # 環境變數 MOCK_DATA_DIR，預設為專案根目錄的 mock_data/（待補進 .env.example）
+    MOCK_DATA_DIR: Path = PROJECT_ROOT / "mock_data"
+    # 匯入時原封保存原始檔的目錄（`<YYYY-MM-DD>/<檔名>`），不進版控。
+    # 環境變數 RAW_DATA_DIR，預設 backend/data/raw/（待補進 .env.example）
+    RAW_DATA_DIR: Path = DATA_DIR / "raw"
+    # R02 比對範圍：當日之外，再往前取幾個「有資料包」的業務日。
+    # 環境變數 R02_LOOKBACK_DAYS，預設 2（待補進 .env.example）
+    R02_LOOKBACK_DAYS: int = 2
 
 
 @lru_cache

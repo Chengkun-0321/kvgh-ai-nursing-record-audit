@@ -8,3 +8,5 @@ python3 .claude/flow/state.py check_spec
 python3 .claude/flow/state.py check_config
 rm -rf .flow
 python3 .claude/flow/state.py init
+# 建立本次的節點紀錄目錄（flow-records/<開始時間>/），快照 spec 與 config
+python3 .claude/flow/record.py init

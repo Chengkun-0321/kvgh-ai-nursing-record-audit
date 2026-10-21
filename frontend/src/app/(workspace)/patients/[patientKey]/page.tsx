@@ -1,42 +1,54 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
 
+import { AuditDaysLoadError } from "@/components/patient-audit/AuditDaysLoadError";
+import { PatientDailyAudits } from "@/components/patient-audit/PatientDailyAudits";
 import { CaretLeftIcon } from "@/components/ui/icons";
-import { getPatientBed } from "@/lib/api/wards";
-import { DEFAULT_WARD_CODE } from "@/lib/constants";
+import { getAuditDays } from "@/lib/api/patientAudits";
+import { decodePatientKey } from "@/lib/dailyAudit";
+import type { AuditDays } from "@/types/patientAudit";
 
 type PatientPageProps = {
   params: Promise<{ patientKey: string }>;
 };
 
-// TODO(待決): 病患頁面內容（病患摘要、各規則稽核結果、Evidence）待討論後實作
-export default async function PatientPage({ params }: PatientPageProps) {
-  const { patientKey } = await params;
-  const bed = await getPatientBed(DEFAULT_WARD_CODE, patientKey);
-  if (!bed) {
-    notFound();
+async function loadAuditDays(patientKey: string): Promise<AuditDays | null> {
+  try {
+    return await getAuditDays(patientKey);
+  } catch {
+    // 錯誤訊息由 AuditDaysLoadError 統一呈現，不顯示任何卡片
+    return null;
   }
+}
+
+/** 病患頁：依業務日期列出 R02 每日稽核結果，可對單日執行稽核。 */
+export default async function PatientPage({ params }: PatientPageProps) {
+  const { patientKey: rawPatientKey } = await params;
+  const patientKey = decodePatientKey(rawPatientKey);
+  const auditDays = await loadAuditDays(patientKey);
 
   return (
-    <div className="mx-auto mt-4 max-w-3xl rounded-panel bg-surface p-6 shadow-card max-lg:mx-4">
+    <div className="mx-auto mt-4 flex max-w-3xl flex-col gap-4 pb-8 max-lg:mx-4">
       <Link
-        href="/"
-        className="-ml-2 inline-flex min-h-11 pressable items-center gap-1 rounded-xl px-2 text-body text-ink-secondary focus-ring hover:text-ink"
+        href={{ pathname: "/nursing-records", query: { patient: patientKey } }}
+        className="-ml-2 inline-flex min-h-11 pressable items-center gap-1 self-start rounded-xl px-2 text-body text-ink-secondary focus-ring hover:text-ink"
       >
         <CaretLeftIcon aria-hidden="true" className="size-4.5" />
-        病房總覽
+        護理紀錄
       </Link>
-      <p className="mt-2 text-footnote font-semibold text-ink-secondary">
-        {bed.bedCode}
-      </p>
-      <h1 className="text-large-title">{bed.patient.name}</h1>
-
-      <section className="mt-8 rounded-card bg-canvas p-8 text-center">
-        <h2 className="text-headline">病患頁面建置中</h2>
-        <p className="mt-2 text-body text-ink-secondary">
-          病患摘要、各規則稽核結果與 Evidence 原文待討論後提供。
+      <header>
+        <p className="text-footnote font-semibold text-ink-secondary">
+          {patientKey}
         </p>
-      </section>
+        <h1 className="text-large-title">每日稽核結果</h1>
+        <p className="mt-1 text-body text-ink-secondary">
+          比對當日與最近幾個有資料日的護理過程紀錄，提醒可能沿用前日內容或引用非當日資料的情形；相似度為模型估計。
+        </p>
+      </header>
+      {auditDays === null ? (
+        <AuditDaysLoadError patientKey={patientKey} />
+      ) : (
+        <PatientDailyAudits patientKey={patientKey} days={auditDays.days} />
+      )}
     </div>
   );
 }
