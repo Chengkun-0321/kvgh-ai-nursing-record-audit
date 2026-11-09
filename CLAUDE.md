@@ -59,7 +59,7 @@
 | 任務 | 必讀 |
 |---|---|
 | 任何程式撰寫 | [clean-code.md](docs/conventions/clean-code.md)、[architecture.md](docs/conventions/architecture.md) |
-| 前端 UI、樣式、動畫 | [ui-design.md](docs/conventions/ui-design.md)（依據 `.claude/skill/apple-design`、`.claude/skill/ui-ux-pro-max`） |
+| 前端 UI、樣式、動畫 | [ui-design.md](docs/conventions/ui-design.md)（依據 `.claude/skills/apple-design`、`.claude/skills/ui-ux-pro-max`） |
 | 新增／修改稽核規則 | [audit-rules.md](docs/conventions/audit-rules.md)、[llm.md](docs/conventions/llm.md) |
 | LLM 呼叫、prompt、模型設定 | [llm.md](docs/conventions/llm.md)、[security-privacy.md](docs/conventions/security-privacy.md) |
 | 資料匯入（假資料／中繼站 JSON） | [data-ingestion.md](docs/conventions/data-ingestion.md) |
