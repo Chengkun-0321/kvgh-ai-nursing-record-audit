@@ -52,3 +52,4 @@ class DataSource(Protocol):
 |---|---|---|
 | 院方提供的假資料 | `backend/data/fixtures/` | ❌（`backend/data/` 整個被 gitignore） |
 | 測試用自製最小資料 | `backend/tests/fixtures/` | ✅（必須完全虛構） |
+| 依院方格式自編的虛構範例資料 | `data/<YYYYMMDD>/<病房>/` | ✅（必須完全虛構，不得混入院方資料） |

@@ -33,7 +33,7 @@ docs: 詞彙表新增轉入摘要
 
 ## 禁止 commit
 
-`.env`、API key、`backend/data/`、任何病患資料（含院方假資料）、`node_modules/`、`.venv/`
+`.env`、API key、`backend/data/`、任何病患資料（含院方假資料）、`node_modules/`、`.venv/`。根目錄 `data/` 的完全虛構範例資料可以 commit（見 security-privacy.md）
 
 ## AI 行為
 
