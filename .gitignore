@@ -44,6 +44,9 @@ npm-debug.log*
 *.log
 logs/
 
+# scripts/dev.sh 的 PID 與 log
+.run/
+
 # Claude Code 個人設定
 .claude/settings.local.json
 

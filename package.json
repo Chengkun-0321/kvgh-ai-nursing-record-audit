@@ -2,6 +2,11 @@
   "name": "kvgh-ai-nursing-record-audit",
   "private": true,
   "scripts": {
+    "start": "scripts/dev.sh start",
+    "start:main": "DEV_DB_NAME=main scripts/dev.sh start",
+    "stop": "scripts/dev.sh stop",
+    "restart": "scripts/dev.sh restart",
+    "status": "scripts/dev.sh status",
     "dev": "npm --prefix frontend run dev",
     "lint": "npm --prefix frontend run lint",
     "typecheck": "npm --prefix frontend run typecheck"

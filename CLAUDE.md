@@ -70,6 +70,18 @@
 
 ## 常用指令（初始化後適用）
 
+一鍵啟動／關閉前後端（於專案根目錄；背景執行，PID 與 log 在 `.run/`，實作見 `scripts/dev.sh`）：
+
+```bash
+npm start
+```
+
+```bash
+npm stop
+```
+
+`npm run status` 查看狀態、`npm run restart` 重啟。各分支的 migration 不同時，用 `DEV_DB_NAME=<名稱> npm start` 改用 `backend/data/<名稱>.db`（`npm run start:main` 即 `main.db`）。
+
 後端（於 `backend/`，先 `source .venv/bin/activate`）：
 
 ```bash
