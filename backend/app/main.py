@@ -1,6 +1,7 @@
 """建立 FastAPI app：middleware、exception handler、router。"""
 
 import logging
+import traceback
 from collections.abc import AsyncIterator, Sequence
 from contextlib import asynccontextmanager
 from typing import Any, Final
@@ -21,6 +22,8 @@ logger = logging.getLogger(__name__)
 
 _API_PREFIX: Final = "/api/v1"
 _ALLOWED_METHODS: Final = ["GET", "POST", "PATCH", "DELETE"]
+# 例外鏈（raise … from …）最多記錄幾層；避免異常的循環參照造成無限迴圈
+_MAX_LOGGED_EXCEPTION_CHAIN: Final = 5
 
 
 @asynccontextmanager
@@ -62,12 +65,28 @@ def _describe_validation_errors(errors: Sequence[Any]) -> str:
 
 
 async def _handle_unexpected_error(_: Request, exc: Exception) -> JSONResponse:
-    # 前端不顯示 stack trace；log 只記例外類型，避免帶出請求內容
-    logger.error("未預期的錯誤：%s", type(exc).__name__)
+    # 前端不顯示 stack trace。log 只記例外類型與各層位置（檔名、行號、函式名），
+    # 不記例外訊息、原始碼行文字與區域變數：它們可能帶有病患資料、API 金鑰或請求內容
+    logger.error("未預期的錯誤：%s", _describe_exception_chain(exc))
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         content={"detail": "伺服器發生錯誤，請稍後再試"},
     )
+
+
+def _describe_exception_chain(exc: BaseException) -> str:
+    descriptions: list[str] = []
+    current: BaseException | None = exc
+    while current is not None and len(descriptions) < _MAX_LOGGED_EXCEPTION_CHAIN:
+        descriptions.append(f"{type(current).__name__}（{_describe_frames(current)}）")
+        current = current.__cause__ or current.__context__
+    return " ← 起因 ".join(descriptions)
+
+
+def _describe_frames(exc: BaseException) -> str:
+    # extract_tb 只取 frame 摘要；這裡只用 filename／lineno／name，不輸出 line 與 locals
+    frames = traceback.extract_tb(exc.__traceback__)
+    return " → ".join(f"{frame.filename}:{frame.lineno} {frame.name}" for frame in frames)
 
 
 def create_app() -> FastAPI:
