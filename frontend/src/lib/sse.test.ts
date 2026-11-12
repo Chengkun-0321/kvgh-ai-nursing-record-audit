@@ -60,3 +60,44 @@ describe("readSseData", () => {
     expect(items).toEqual(["last"]);
   });
 });
+
+describe("readSseData 的換行切割與資源釋放", () => {
+  it("\\r 與 \\n 被切在兩個 chunk 之間時不產生假的事件分隔", async () => {
+    const encoder = new TextEncoder();
+
+    const items = await collect(
+      streamOf([
+        encoder.encode("data: a\r"),
+        encoder.encode("\ndata: b\r\n\r\n"),
+      ]),
+    );
+
+    expect(items).toEqual(["a\nb"]);
+  });
+
+  it("呼叫端提早 break 後釋放 reader 鎖定", async () => {
+    const stream = streamOf([
+      new TextEncoder().encode("data: 1\n\ndata: 2\n\n"),
+    ]);
+
+    for await (const data of readSseData(stream)) {
+      expect(data).toBe("1");
+      break;
+    }
+
+    expect(stream.locked).toBe(false);
+  });
+});
+
+describe("readSseData 的錯誤處理", () => {
+  it("串流出錯時照常拋出原始錯誤並釋放鎖定", async () => {
+    const stream = new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.error(new Error("中斷"));
+      },
+    });
+
+    await expect(collect(stream)).rejects.toThrow("中斷");
+    expect(stream.locked).toBe(false);
+  });
+});

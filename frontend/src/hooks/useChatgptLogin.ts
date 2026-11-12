@@ -8,10 +8,11 @@ import {
   startChatgptLogin,
 } from "@/lib/api/chatgptAuth";
 import { CHATGPT_LOGIN_POLL_MS } from "@/lib/constants";
+import { pollUntilAborted } from "@/lib/pollLoop";
 
 import { useAsyncAction } from "./useAsyncAction";
 
-/** 登入進行中時定期向後端確認是否已完成。 */
+/** 登入進行中時定期向後端確認是否已完成；停止輪詢後，進行中請求的結果一律忽略。 */
 function useLoginPolling(
   isPending: boolean,
   onStatus: (status: ChatgptAuthStatus) => void,
@@ -21,12 +22,22 @@ function useLoginPolling(
     if (!isPending) {
       return;
     }
-    const timer = window.setInterval(() => {
-      getChatgptAuthStatus()
-        .then(onStatus)
-        .catch((error: unknown) => onError(toErrorMessage(error)));
-    }, CHATGPT_LOGIN_POLL_MS);
-    return () => window.clearInterval(timer);
+    const controller = new AbortController();
+    const { signal } = controller;
+    async function pollOnce() {
+      try {
+        const status = await getChatgptAuthStatus(signal);
+        if (!signal.aborted) {
+          onStatus(status);
+        }
+      } catch (error) {
+        if (!signal.aborted) {
+          onError(toErrorMessage(error));
+        }
+      }
+    }
+    void pollUntilAborted(pollOnce, CHATGPT_LOGIN_POLL_MS, signal);
+    return () => controller.abort();
   }, [isPending, onStatus, onError]);
 }
 

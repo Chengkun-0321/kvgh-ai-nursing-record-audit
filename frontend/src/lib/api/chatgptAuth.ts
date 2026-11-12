@@ -6,9 +6,11 @@ export type ChatgptAuthStatus = components["schemas"]["ChatgptAuthStatusRead"];
 
 const BASE_PATH = "/api/v1/chatgpt-auth";
 
-/** 取得 ChatGPT 訂閱登入狀態。 */
-export function getChatgptAuthStatus(): Promise<ChatgptAuthStatus> {
-  return apiJson<ChatgptAuthStatus>(BASE_PATH);
+/** 取得 ChatGPT 訂閱登入狀態；可傳入 `signal` 以中止請求。 */
+export function getChatgptAuthStatus(
+  signal?: AbortSignal,
+): Promise<ChatgptAuthStatus> {
+  return apiJson<ChatgptAuthStatus>(BASE_PATH, { signal });
 }
 
 /** 開始裝置碼登入，回傳要在 OpenAI 頁面輸入的驗證碼。 */

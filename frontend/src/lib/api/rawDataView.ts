@@ -23,10 +23,9 @@ export type RawPatientViewResult =
   | { ok: false; message: string };
 
 async function loadViewData(
-  patient: RawPatientDetail,
+  key: string,
   search: RawDataSearch,
 ): Promise<RawViewData> {
-  const key = patient.patient_key;
   const query = {
     startDate: search.startDate ?? undefined,
     endDate: search.endDate ?? undefined,
@@ -48,8 +47,12 @@ export async function loadRawPatientView(
   search: RawDataSearch,
 ): Promise<RawPatientViewResult> {
   try {
-    const patient = await getRawPatientDetail(patientKey);
-    return { ok: true, patient, data: await loadViewData(patient, search) };
+    // 檢視資料只依賴 patientKey，與病人摘要互不相依，平行載入
+    const [patient, data] = await Promise.all([
+      getRawPatientDetail(patientKey),
+      loadViewData(patientKey, search),
+    ]);
+    return { ok: true, patient, data };
   } catch (error) {
     return { ok: false, message: toErrorMessage(error) };
   }

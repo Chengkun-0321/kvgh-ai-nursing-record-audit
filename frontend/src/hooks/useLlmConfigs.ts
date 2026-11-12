@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import { type LlmConfig, listLlmConfigs } from "@/lib/api/llmConfigs";
 
@@ -14,10 +14,16 @@ type LlmConfigsState = {
  */
 export function useLlmConfigs(initialConfigs: LlmConfig[]): LlmConfigsState {
   const [configs, setConfigs] = useState(initialConfigs);
+  // 請求世代：連續 reload 時，只有最後一次送出的回應可以更新列表
+  const generation = useRef(0);
 
   async function reload(): Promise<LlmConfig[]> {
+    generation.current += 1;
+    const mine = generation.current;
     const latest = await listLlmConfigs();
-    setConfigs(latest);
+    if (mine === generation.current) {
+      setConfigs(latest);
+    }
     return latest;
   }
 
