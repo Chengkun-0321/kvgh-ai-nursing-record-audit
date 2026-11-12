@@ -2,7 +2,7 @@
 
 LiteLLM 內建的登入會 `print` 驗證碼並以 `time.sleep` 阻塞整個請求，無法用在網頁。
 這裡重用 LiteLLM `Authenticator` 的各個步驟：取得驗證碼後立即回傳給網頁，
-輪詢與換發 token 在背景執行緒完成，token 寫入 LiteLLM 讀取的同一個檔案。
+輪詢與換發 token 在背景執行緒（`login_poll_thread`）完成，token 寫入 LiteLLM 讀取的同一個檔案。
 
 依賴 LiteLLM 的私有方法（版本以 == 鎖定）；升級時由
 `tests/services/llm/test_chatgpt_auth.py` 提早發現介面變動。
@@ -11,6 +11,7 @@ LiteLLM 內建的登入會 `print` 驗證碼並以 `time.sleep` 阻塞整個請�
 import asyncio
 import logging
 import os
+import threading
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
@@ -33,6 +34,7 @@ from litellm.llms.chatgpt.common_utils import (
 from app.core.enums import ChatgptAuthState
 from app.core.exceptions import ChatgptAuthRequiredError, ChatgptLoginError
 from app.schemas.chatgpt_auth import ChatgptAuthStatusRead
+from app.services.llm.login_poll_thread import create_login_thread_slots, start_login_thread
 
 logger = logging.getLogger(__name__)
 
@@ -67,6 +69,12 @@ class _LoginStore:
     auth_file_lock: asyncio.Lock = field(default_factory=asyncio.Lock)
     # 持鎖中的背景 task；保留參照，避免呼叫端取消後被回收
     exclusive_tasks: set[asyncio.Task[Any]] = field(default_factory=set)
+    # 檢查狀態到記錄進行中的登入之間有多個 await，需互斥才不會同時開始兩次
+    login_start_lock: asyncio.Lock = field(default_factory=asyncio.Lock)
+    # 輪詢執行緒名額（見 login_poll_thread）；放在這裡，測試重建 store 時一併重置
+    login_thread_slots: threading.BoundedSemaphore = field(
+        default_factory=create_login_thread_slots
+    )
 
 
 _store = _LoginStore()
@@ -106,12 +114,18 @@ async def start_device_login() -> ChatgptAuthStatusRead:
     """開始裝置碼登入；已登入或已在登入中時直接回傳目前狀態。
 
     Raises:
-        ChatgptLoginError: 無法向 OpenAI 取得驗證碼。
+        ChatgptLoginError: 無法向 OpenAI 取得驗證碼，或輪詢執行緒名額已滿。
     """
-    status = await get_status()
-    if status.state != ChatgptAuthState.SIGNED_OUT:
-        return status
+    async with _store.login_start_lock:
+        # 取得鎖後才檢查：等鎖期間另一個請求可能已開始登入
+        status = await get_status()
+        if status.state != ChatgptAuthState.SIGNED_OUT:
+            return status
+        await _begin_device_login()
+    return await get_status()
 
+
+async def _begin_device_login() -> None:
     authenticator = Authenticator()
     try:
         device_code = await asyncio.to_thread(authenticator._request_device_code)
@@ -124,10 +138,13 @@ async def start_device_login() -> ChatgptAuthStatusRead:
         user_code=device_code["user_code"],
         expires_at=datetime.now(UTC) + timedelta(seconds=DEVICE_CODE_TIMEOUT_SECONDS),
     )
+    # 在建立 task 前就啟動執行緒：task 若在開始執行前被取消，名額仍會由執行緒歸還
+    tokens = start_login_thread(
+        lambda: _poll_and_exchange(authenticator, device_code), _store.login_thread_slots
+    )
     _store.pending = login
     _store.last_error = None
-    login.task = asyncio.create_task(_complete_login(authenticator, device_code, login))
-    return await get_status()
+    login.task = asyncio.create_task(_complete_login(authenticator, tokens, login))
 
 
 async def sign_out() -> ChatgptAuthStatusRead:
@@ -207,14 +224,16 @@ def _refresh_access_token(authenticator: Authenticator, refresh_token: str) -> s
     return tokens["access_token"]
 
 
+def _poll_and_exchange(authenticator: Authenticator, device_code: dict[str, str]) -> dict[str, str]:
+    authorization = authenticator._poll_for_authorization_code(device_code)
+    return authenticator._exchange_code_for_tokens(authorization)
+
+
 async def _complete_login(
-    authenticator: Authenticator, device_code: dict[str, str], login: _DeviceLogin
+    authenticator: Authenticator, tokens_future: Awaitable[dict[str, str]], login: _DeviceLogin
 ) -> None:
     try:
-        authorization = await asyncio.to_thread(
-            authenticator._poll_for_authorization_code, device_code
-        )
-        tokens = await asyncio.to_thread(authenticator._exchange_code_for_tokens, authorization)
+        tokens = await tokens_future
     except GetAccessTokenError as exc:
         logger.warning("ChatGPT 裝置碼登入失敗：%s", type(exc).__name__)
         _finish_login(login, error_message=_LOGIN_FAILED_MESSAGE)

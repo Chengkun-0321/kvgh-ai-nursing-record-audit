@@ -2,13 +2,15 @@
 
 import logging
 import uuid
-from collections.abc import Iterable
+from collections.abc import AsyncIterator, Iterable
+from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from typing import Final
 
 from pydantic import SecretStr
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm.exc import StaleDataError
 
 from app.core.config import get_settings
 from app.core.enums import FieldRequirement, LlmProvider, SettingChangeAction
@@ -32,6 +34,7 @@ _UPDATABLE_FIELDS: Final = frozenset({"name", "provider", "model", "api_base", "
 _NULLABLE_FIELDS: Final = frozenset({"api_base"})
 _NAME_TAKEN_MESSAGE: Final = "已有同名的設定，請改用其他名稱"
 _ACTIVE_CHANGED_MESSAGE: Final = "使用中的設定剛被其他操作變更，請重新整理頁面後再試"
+_NOT_FOUND_MESSAGE: Final = "找不到這組模型設定，可能已被刪除，請重新整理頁面"
 
 
 @dataclass(frozen=True)
@@ -95,8 +98,9 @@ async def update_config(
     _check_config(config)
 
     if changed_fields:
-        await _log_change(session, config.id, SettingChangeAction.UPDATE, changed_fields)
-        await _commit(session)
+        async with _rollback_on_error(session, _NAME_TAKEN_MESSAGE):
+            await _log_change(session, config.id, SettingChangeAction.UPDATE, changed_fields)
+            await session.commit()
         logger.info("已更新模型設定：config_id=%s fields=%s", config.id, sorted(changed_fields))
     return to_config_read(config)
 
@@ -105,19 +109,17 @@ async def activate_config(session: AsyncSession, config_id: uuid.UUID) -> LlmCon
     """把指定設定設為使用中，其他設定改為非使用中（同一交易）。
 
     Raises:
-        NotFoundError: 查無設定。
+        NotFoundError: 查無設定（含切換途中被其他請求刪除）。
         ConflictError: 重試後仍與同時進行的切換衝突。
     """
     try:
         return await _activate(session, config_id)
-    except IntegrityError:
+    except (IntegrityError, StaleDataError):
         await session.rollback()
-    # 同時切換：另一個請求先完成，讀取最新狀態後再切換一次
-    try:
-        return await _activate(session, config_id)
-    except IntegrityError as exc:
-        await session.rollback()
-        raise ConflictError(_ACTIVE_CHANGED_MESSAGE) from exc
+    # 同時切換或刪除：另一個請求先完成，讀取最新狀態後再試一次（已被刪除時會回報查無設定）
+    async with _rollback_on_error(session, _ACTIVE_CHANGED_MESSAGE):
+        activated = await _activate(session, config_id)
+    return activated
 
 
 async def delete_config(session: AsyncSession, config_id: uuid.UUID) -> None:
@@ -127,13 +129,15 @@ async def delete_config(session: AsyncSession, config_id: uuid.UUID) -> None:
         NotFoundError: 查無設定。
         ConflictError: 該設定為使用中。
     """
-    config = await _get_or_raise(session, config_id)
-    if config.is_active:
-        raise ConflictError("使用中的設定無法刪除，請先將其他設定設為使用中")
-
-    await llm_config_crud.delete(session, config)
+    if not await llm_config_crud.delete_if_inactive(session, config_id):
+        # 條件刪除沒刪到：仍存在即為使用中，否則已被其他請求刪除
+        is_existing = await llm_config_crud.exists(session, config_id)
+        await session.rollback()
+        if is_existing:
+            raise ConflictError("使用中的設定無法刪除，請先將其他設定設為使用中")
+        raise NotFoundError(_NOT_FOUND_MESSAGE)
     await _log_change(session, config_id, SettingChangeAction.DELETE, set())
-    await _commit(session)
+    await session.commit()
     logger.info("已刪除模型設定：config_id=%s", config_id)
 
 
@@ -193,7 +197,7 @@ async def _activate(session: AsyncSession, config_id: uuid.UUID) -> LlmConfigRea
 async def _get_or_raise(session: AsyncSession, config_id: uuid.UUID) -> LlmConfig:
     config = await llm_config_crud.get(session, config_id)
     if config is None:
-        raise NotFoundError("找不到這組模型設定，可能已被刪除，請重新整理頁面")
+        raise NotFoundError(_NOT_FOUND_MESSAGE)
     return config
 
 
@@ -280,10 +284,16 @@ async def _log_change(
     await setting_change_log_crud.add(session, log)
 
 
-async def _commit(session: AsyncSession) -> None:
+@asynccontextmanager
+async def _rollback_on_error(session: AsyncSession, conflict_message: str) -> AsyncIterator[None]:
+    # 約束違反不只在 commit 發生：任何 flush（含新增變更紀錄時）都會先送出待寫入的 UPDATE，
+    # 因此 flush 與 commit 都要在這個區塊內，失敗時 rollback 並轉為使用者可理解的錯誤
     try:
-        await session.commit()
+        yield
     except IntegrityError as exc:
-        # 名稱唯一約束：兩個請求同時改用同一名稱時才會走到這裡
         await session.rollback()
-        raise ConflictError(_NAME_TAKEN_MESSAGE) from exc
+        raise ConflictError(conflict_message) from exc
+    except StaleDataError as exc:
+        # 讀取後、寫入前被其他請求刪除：UPDATE 影響 0 列
+        await session.rollback()
+        raise NotFoundError(_NOT_FOUND_MESSAGE) from exc

@@ -2,8 +2,9 @@
 
 import uuid
 from collections.abc import Sequence
+from typing import Any, cast
 
-from sqlalchemy import select, update
+from sqlalchemy import CursorResult, delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.llm_config import LlmConfig
@@ -49,7 +50,20 @@ async def deactivate_others(session: AsyncSession, config_id: uuid.UUID) -> None
     )
 
 
-async def delete(session: AsyncSession, config: LlmConfig) -> None:
-    """刪除設定。"""
-    await session.delete(config)
-    await session.flush()
+async def exists(session: AsyncSession, config_id: uuid.UUID) -> bool:
+    """設定是否存在；直接查 DB，不採用 session 內可能過時的物件。"""
+    stmt = select(LlmConfig.id).where(LlmConfig.id == config_id)
+    return await session.scalar(stmt) is not None
+
+
+async def delete_if_inactive(session: AsyncSession, config_id: uuid.UUID) -> bool:
+    """在同一個 DELETE 內確認非使用中再刪除，回傳是否有刪到。
+
+    先讀再刪會與同時進行的啟用交錯（讀到非使用中 → 對方啟用 → 刪掉使用中的設定）；
+    條件放在 DELETE 的 WHERE，由 DB 對該列加鎖後判斷，SQLite 與 PostgreSQL 皆為原子操作。
+    """
+    stmt = delete(LlmConfig).where(LlmConfig.id == config_id, LlmConfig.is_active.is_(False))
+    # DML 的結果實際為 CursorResult（才有 rowcount），但 execute 的型別只標 Result；
+    # 不取任何欄位，列型別以 Any 表示
+    result = cast(CursorResult[Any], await session.execute(stmt))
+    return result.rowcount > 0

@@ -70,6 +70,8 @@ services/
 ├── llm/
 │   ├── __init__.py        # 內網：改用 LiteLLM 內建的模型價格表
 │   ├── gateway.py         # 唯一 LLM 出口（目前提供測試對話串流）
+│   ├── chat_stream.py     # 測試對話串流：轉成 delta／done／error 事件、確定性關閉上游（不 import litellm）
+│   ├── error_messages.py  # 模型服務例外 → 繁中訊息（例外類別由 gateway 傳入，不 import litellm）
 │   ├── providers.py       # 服務類型 → LiteLLM 前綴、必填欄位（不 import litellm）
 │   ├── config_service.py  # 模型設定的讀寫、使用中切換、變更紀錄
 │   ├── system_prompt_service.py  # 共用 system prompt 的版本化儲存
@@ -81,6 +83,7 @@ services/
 │   ├── model_listing.py   # 查詢可用模型的流程：取得金鑰、過濾對話模型
 │   ├── redaction.py       # 服務錯誤說明的金鑰遮蔽
 │   ├── chatgpt_auth.py    # ChatGPT 訂閱的裝置碼登入（唯一可 import litellm 內部模組的例外）
+│   ├── login_poll_thread.py  # 裝置碼登入的輪詢執行緒：專屬 daemon 執行緒、名額上限（不 import litellm）
 │   └── prompt_loader.py   # 載入、渲染 Jinja2 prompt（待實作）
 ├── hospital_data/         # 院方每日資料（只讀、不入庫，見 ADR 0010）
 │   ├── source.py          # 唯一開啟院方資料檔的模組：路徑驗證、快取

@@ -178,3 +178,144 @@ async def test_wrapped_connection_error_names_the_server(
 
     with pytest.raises(LLMConnectionError, match=r"無法連線到 http://127\.0\.0\.1:9199/v1"):
         await gateway.open_chat_stream(session, config.id, MESSAGES)
+
+
+async def test_db_transaction_ends_before_calling_litellm(
+    session: AsyncSession, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """讀完設定就結束交易、歸還連線；串流期間不占用連線池。"""
+    config = await create_config(session)
+    transaction_open_during_call: list[bool] = []
+
+    async def fake_acompletion(**_: Any) -> AsyncIterator[Any]:
+        transaction_open_during_call.append(session.in_transaction())
+        return fake_stream(chunk("好"))
+
+    monkeypatch.setattr(gateway.litellm, "acompletion", fake_acompletion)
+
+    await collect(await gateway.open_chat_stream(session, config.id, MESSAGES))
+
+    assert transaction_open_during_call == [False]
+
+
+class _FakeUpstream:
+    """模擬 LiteLLM 的串流物件：記錄是否被關閉。"""
+
+    def __init__(self, *texts: str) -> None:
+        self._chunks = [chunk(text) for text in texts]
+        self.closed = False
+        self.close_count = 0
+
+    def __aiter__(self) -> "_FakeUpstream":
+        return self
+
+    async def __anext__(self) -> SimpleNamespace:
+        if not self._chunks:
+            raise StopAsyncIteration
+        return self._chunks.pop(0)
+
+    async def aclose(self) -> None:
+        self.closed = True
+        self.close_count += 1
+
+
+class _UpstreamWithoutClose:
+    """沒有 aclose 的上游，確認關閉時不會因此出錯。"""
+
+    def __init__(self) -> None:
+        self._chunks = [chunk("好")]
+
+    def __aiter__(self) -> "_UpstreamWithoutClose":
+        return self
+
+    async def __anext__(self) -> SimpleNamespace:
+        if not self._chunks:
+            raise StopAsyncIteration
+        return self._chunks.pop(0)
+
+
+async def test_client_disconnect_closes_upstream(
+    session: AsyncSession, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    config = await create_config(session)
+    upstream = _FakeUpstream("你", "好", "嗎")
+
+    async def fake_acompletion(**_: Any) -> _FakeUpstream:
+        return upstream
+
+    monkeypatch.setattr(gateway.litellm, "acompletion", fake_acompletion)
+    stream = await gateway.open_chat_stream(session, config.id, MESSAGES)
+
+    assert isinstance(await anext(stream), ChatDeltaEvent)
+    await stream.aclose()
+
+    assert upstream.closed is True
+
+
+async def test_finished_stream_closes_upstream(
+    session: AsyncSession, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    config = await create_config(session)
+    upstream = _FakeUpstream("好")
+
+    async def fake_acompletion(**_: Any) -> _FakeUpstream:
+        return upstream
+
+    monkeypatch.setattr(gateway.litellm, "acompletion", fake_acompletion)
+
+    events = await collect(await gateway.open_chat_stream(session, config.id, MESSAGES))
+
+    assert isinstance(events[-1], ChatDoneEvent)
+    assert upstream.closed is True
+
+
+async def test_upstream_without_aclose_still_completes(
+    session: AsyncSession, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    config = await create_config(session)
+
+    async def fake_acompletion(**_: Any) -> _UpstreamWithoutClose:
+        return _UpstreamWithoutClose()
+
+    monkeypatch.setattr(gateway.litellm, "acompletion", fake_acompletion)
+
+    events = await collect(await gateway.open_chat_stream(session, config.id, MESSAGES))
+
+    assert isinstance(events[-1], ChatDoneEvent)
+
+
+async def test_unstarted_stream_aclose_closes_upstream(
+    session: AsyncSession, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """回應開始前就取消：串流從未被迭代，aclose 仍要關閉已開啟的上游。"""
+    config = await create_config(session)
+    upstream = _FakeUpstream("好")
+
+    async def fake_acompletion(**_: Any) -> _FakeUpstream:
+        return upstream
+
+    monkeypatch.setattr(gateway.litellm, "acompletion", fake_acompletion)
+    stream = await gateway.open_chat_stream(session, config.id, MESSAGES)
+
+    await stream.aclose()
+
+    assert upstream.closed is True
+
+
+async def test_upstream_is_closed_only_once(
+    session: AsyncSession, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    config = await create_config(session)
+    upstream = _FakeUpstream("好")
+
+    async def fake_acompletion(**_: Any) -> _FakeUpstream:
+        return upstream
+
+    monkeypatch.setattr(gateway.litellm, "acompletion", fake_acompletion)
+    stream = await gateway.open_chat_stream(session, config.id, MESSAGES)
+
+    await collect(stream)
+    await stream.aclose()
+    await stream.aclose()
+
+    assert upstream.close_count == 1

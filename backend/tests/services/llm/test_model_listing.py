@@ -253,3 +253,29 @@ async def test_local_rejects_unrelated_server(
 
     with pytest.raises(LLMConnectionError, match="不是 Ollama 或 OpenAI 相容伺服器"):
         await _detect(session, api_base="http://127.0.0.1:8080")
+
+
+async def test_db_transaction_ends_before_querying_service(
+    session: AsyncSession, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """讀完已儲存的金鑰就結束交易，不在查詢外部服務期間占用連線。"""
+    config = await config_service.create_config(
+        session,
+        LlmConfigCreate(
+            name="Codex",
+            provider=LlmProvider.OPENAI,
+            model="gpt-5.3-codex",
+            api_key=SecretStr("sk-test-stored-key-7777"),
+        ),
+    )
+    transaction_open: list[bool] = []
+
+    def handler(_: httpx.Request) -> httpx.Response:
+        transaction_open.append(session.in_transaction())
+        return httpx.Response(200, json={"data": []})
+
+    _use_transport(monkeypatch, handler)
+
+    await _query(session, provider="openai", config_id=str(config.id))
+
+    assert transaction_open == [False]

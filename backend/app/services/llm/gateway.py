@@ -3,11 +3,12 @@
 API 金鑰只在呼叫當下解密，不寫入 log、例外訊息或任何快取。
 """
 
+import asyncio
 import logging
 import os
 import time
 import uuid
-from collections.abc import AsyncIterator, Callable, Sequence
+from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Any, Final
 
@@ -19,15 +20,17 @@ from app.core.config import get_settings
 from app.core.enums import LlmProvider
 from app.core.exceptions import LLMConnectionError
 from app.core.security import decrypt_secret
-from app.schemas.llm_chat import ChatDeltaEvent, ChatDoneEvent, ChatErrorEvent, ChatMessage
+from app.schemas.llm_chat import ChatMessage
 from app.services.llm import chatgpt_auth, config_service, system_prompt_service
+from app.services.llm import error_messages as messages
+from app.services.llm.chat_stream import ChatStream, StreamContext
 from app.services.llm.config_service import StoredLlmConfig
+from app.services.llm.error_messages import ErrorCatalog, ErrorRule
 from app.services.llm.providers import (
     LOCAL_SERVER_PLACEHOLDER_API_KEY,
     build_litellm_model,
     resolve_api_base,
 )
-from app.services.llm.redaction import redact_provider_detail
 from app.services.llm.system_prompt_service import SystemPromptForCall
 
 logger = logging.getLogger(__name__)
@@ -57,7 +60,16 @@ LITELLM_ERRORS: Final[tuple[type[Exception], ...]] = (
 # LiteLLM 每次呼叫 ChatGPT 訂閱時，從這個環境變數讀取要放在最前面的指示；未設定時用 Codex 內建指示
 _CHATGPT_BASE_INSTRUCTIONS_ENV_VAR: Final = "CHATGPT_DEFAULT_INSTRUCTIONS"
 
-ChatStreamItem = ChatDeltaEvent | ChatDoneEvent | ChatErrorEvent
+# 設定 ChatGPT 指示環境變數到 LiteLLM 讀取它之間，不可有其他 ChatGPT 呼叫插入（見 _acompletion）
+_CHATGPT_INSTRUCTIONS_LOCK: Final = asyncio.Lock()
+
+
+@dataclass(frozen=True)
+class _CallSnapshot:
+    """DB 讀完後的不可變快照；之後的外部呼叫不再需要 session。"""
+
+    config: StoredLlmConfig
+    system_prompt: SystemPromptForCall | None
 
 
 @dataclass(frozen=True)
@@ -68,93 +80,63 @@ class _PreparedCall:
     system_prompt_version: int | None
 
 
-@dataclass(frozen=True)
-class _ErrorRule:
-    error_type: type[Exception]
-    describe: Callable[[StoredLlmConfig], str]
-    matches: Callable[[Exception], bool] = lambda _: True
-
-
-def _describe_connection_failure(config: StoredLlmConfig) -> str:
-    target = resolve_api_base(config.provider, config.api_base) or "模型服務"
-    return f"無法連線到 {target}，請確認伺服器已啟動且位址正確"
-
-
-def _is_wrapped_connection_error(exc: Exception) -> bool:
-    # LiteLLM 的 openai 路徑把連線失敗包成 InternalServerError（訊息為 "Connection error."）
-    return "connection error" in str(getattr(exc, "message", "")).lower()
-
-
+# LiteLLM 例外 → 訊息的對照；訊息與比對邏輯在 error_messages（該模組不 import litellm）。
 # 順序有意義：子類別（Timeout、ContextWindowExceededError）必須排在父類別前面
-_ERROR_RULES: Final = (
-    _ErrorRule(litellm_errors.AuthenticationError, lambda _: "API 金鑰無效或已過期，請確認金鑰"),
-    _ErrorRule(
-        litellm_errors.PermissionDeniedError,
-        lambda _: "此金鑰沒有使用該模型的權限，請確認帳戶或專案設定",
+_ERROR_CATALOG: Final = ErrorCatalog(
+    rules=(
+        ErrorRule(litellm_errors.AuthenticationError, messages.describe_invalid_api_key),
+        ErrorRule(litellm_errors.PermissionDeniedError, messages.describe_permission_denied),
+        ErrorRule(litellm_errors.NotFoundError, messages.describe_model_not_found),
+        ErrorRule(litellm_errors.RateLimitError, messages.describe_rate_limited),
+        ErrorRule(litellm_errors.Timeout, messages.describe_timeout),
+        ErrorRule(litellm_errors.APIConnectionError, messages.describe_connection_failure),
+        ErrorRule(
+            litellm_errors.InternalServerError,
+            messages.describe_connection_failure,
+            matches=messages.is_wrapped_connection_error,
+        ),
+        ErrorRule(
+            litellm_errors.ContextWindowExceededError, messages.describe_context_window_exceeded
+        ),
+        ErrorRule(litellm_errors.ServiceUnavailableError, messages.describe_service_unavailable),
     ),
-    _ErrorRule(
-        litellm_errors.NotFoundError, lambda config: f"找不到模型「{config.model}」，請確認模型名稱"
-    ),
-    _ErrorRule(
-        litellm_errors.RateLimitError,
-        lambda _: "已達服務的速率或額度上限，請稍後再試或確認帳戶額度",
-    ),
-    _ErrorRule(
-        litellm_errors.Timeout,
-        lambda config: f"超過 {config.timeout_seconds} 秒沒有回應，請確認服務狀態或調高逾時秒數",
-    ),
-    _ErrorRule(litellm_errors.APIConnectionError, _describe_connection_failure),
-    _ErrorRule(
-        litellm_errors.InternalServerError,
-        _describe_connection_failure,
-        matches=_is_wrapped_connection_error,
-    ),
-    _ErrorRule(
-        litellm_errors.ContextWindowExceededError,
-        lambda _: "對話內容超過模型可處理的長度，請清除對話後再試",
-    ),
-    _ErrorRule(
-        litellm_errors.ServiceUnavailableError, lambda _: "模型服務暫時無法使用，請稍後再試"
-    ),
+    bad_request_type=litellm_errors.BadRequestError,
 )
 
 
 async def open_chat_stream(
     session: AsyncSession, config_id: uuid.UUID, messages: Sequence[ChatMessage]
-) -> AsyncIterator[ChatStreamItem]:
+) -> ChatStream:
     """以指定設定開啟測試對話串流。
 
     先建立連線再回傳串流：金鑰無效、找不到模型等錯誤會在回應開始前以 HTTP 錯誤回報；
     串流途中的錯誤則轉成 `error` 事件。
 
+    DB 只用來讀取快照，讀完即結束交易、歸還連線；之後的 ChatGPT 換發與模型串流都不占用連線池。
+
     Args:
-        session: DB session。
+        session: DB session；本函式讀完後會結束其交易，呼叫端之後不應再用它查詢。
         config_id: 要測試的模型設定。
         messages: 完整對話歷史，最後一則為使用者訊息。
 
     Returns:
-        依序產生 `delta`、最後 `done`（或 `error`）事件的串流。
+        依序產生 `delta`、最後 `done`（或 `error`）事件的串流。上游此時已開啟，
+        呼叫端必須在結束時 `aclose()`（即使從未迭代），否則上游要等垃圾回收才關閉。
 
     Raises:
         NotFoundError: 查無設定。
         ChatgptAuthRequiredError: ChatGPT 訂閱尚未登入。
         LLMConnectionError: 無法開啟串流。
     """
-    config = await config_service.get_stored_config(session, config_id)
-    system_prompt = await system_prompt_service.get_for_call(session)
+    snapshot = await _read_call_snapshot(session, config_id)
+    config = snapshot.config
     if config.provider == LlmProvider.CHATGPT:
         await chatgpt_auth.ensure_access_token()
-        _apply_chatgpt_instructions(system_prompt)
 
-    call = _prepare_call(config, system_prompt)
+    call = _prepare_call(config, snapshot.system_prompt)
     started = time.perf_counter()
     try:
-        stream = await litellm.acompletion(
-            messages=_build_messages(messages, system_prompt),
-            stream=True,
-            stream_options={"include_usage": True},
-            **call.kwargs,
-        )
+        stream = await _acompletion(call, messages, snapshot.system_prompt)
     except LITELLM_ERRORS as exc:
         logger.warning("測試對話無法開始：config_id=%s error=%s", config.id, type(exc).__name__)
         raise LLMConnectionError(_describe_error(exc, call)) from exc
@@ -165,7 +147,42 @@ async def open_chat_stream(
         config.id,
         call.system_prompt_version,
     )
-    return _relay_stream(stream, call, started)
+    return ChatStream(stream, _stream_context(call, started))
+
+
+async def _read_call_snapshot(session: AsyncSession, config_id: uuid.UUID) -> _CallSnapshot:
+    """讀取設定與共用 system prompt，再結束交易釋放連線。
+
+    必須在任何對外網路呼叫之前完成；本函式只讀取，`close()` 會回滾並歸還連線，
+    session 之後若再被使用會重新取得連線。
+    """
+    config = await config_service.get_stored_config(session, config_id)
+    system_prompt = await system_prompt_service.get_for_call(session)
+    await session.close()
+    return _CallSnapshot(config=config, system_prompt=system_prompt)
+
+
+async def _acompletion(
+    call: _PreparedCall, messages: Sequence[ChatMessage], system_prompt: SystemPromptForCall | None
+) -> Any:
+    """呼叫 LiteLLM 並回傳上游串流；ChatGPT 指示的互斥範圍只在這裡。
+
+    LiteLLM 在 `litellm.acompletion` 完成之前（送出 HTTP 請求前）就會讀取
+    `CHATGPT_DEFAULT_INSTRUCTIONS`（`litellm/llms/chatgpt/responses/transformation.py:79`，
+    經 `common_utils.get_chatgpt_default_instructions` 以 `os.getenv` 讀取），而 `acompletion`
+    在串流 HTTP 回應標頭到達後才回傳。因此鎖只需涵蓋到 `acompletion` 回傳為止，不會鎖住串流本身。
+    """
+    request: dict[str, Any] = {
+        "messages": _build_messages(messages, system_prompt),
+        "stream": True,
+        "stream_options": {"include_usage": True},
+        **call.kwargs,
+    }
+    if call.config.provider != LlmProvider.CHATGPT:
+        return await litellm.acompletion(**request)
+    async with _CHATGPT_INSTRUCTIONS_LOCK:
+        _apply_chatgpt_instructions(system_prompt)
+        return await litellm.acompletion(**request)
 
 
 def _build_messages(
@@ -185,7 +202,9 @@ def _apply_chatgpt_instructions(system_prompt: SystemPromptForCall | None) -> No
     LiteLLM 會把環境變數的內容放在 instructions 最前面，但已包含在 instructions 內時不重複加入；
     因此設為與 system 訊息相同的內容，送出的 instructions 就只有共用 system prompt。
     共用 system prompt 為空時移除環境變數，改回 Codex 內建指示（Codex 後端需要 instructions）。
-    這是整個程序共用的狀態，只在這裡設定；由 test_gateway 確認 LiteLLM 升級後行為不變。
+    這是整個程序共用的狀態，只能由 `_acompletion` 在 `_CHATGPT_INSTRUCTIONS_LOCK` 內設定；
+    併發的兩個請求若各自設定，會讓 LiteLLM 讀到別人的指示。
+    由 test_gateway_concurrency 與 test_gateway_system_prompt 確認 LiteLLM 升級後行為不變。
     """
     content = _system_prompt_content(system_prompt)
     if content is None:
@@ -234,60 +253,19 @@ def _resolve_api_key(config: StoredLlmConfig) -> str | None:
     return None
 
 
-async def _relay_stream(
-    stream: Any, call: _PreparedCall, started: float
-) -> AsyncIterator[ChatStreamItem]:
-    first_token_at: float | None = None
-    usage: Any = None
-    try:
-        async for chunk in stream:
-            text = _chunk_text(chunk)
-            if text:
-                first_token_at = first_token_at or time.perf_counter()
-                yield ChatDeltaEvent(type="delta", text=text)
-            usage = getattr(chunk, "usage", None) or usage
-    except LITELLM_ERRORS as exc:
-        logger.warning(
-            "測試對話串流中斷：config_id=%s error=%s", call.config.id, type(exc).__name__
-        )
-        yield ChatErrorEvent(type="error", message=_describe_error(exc, call))
-        return
-
-    yield ChatDoneEvent(
-        type="done",
-        model=call.litellm_model,
-        latency_ms=_elapsed_ms(started, time.perf_counter()),
-        first_token_ms=_elapsed_ms(started, first_token_at) if first_token_at else None,
-        prompt_tokens=getattr(usage, "prompt_tokens", None),
-        completion_tokens=getattr(usage, "completion_tokens", None),
+def _stream_context(call: _PreparedCall, started: float) -> StreamContext:
+    return StreamContext(
+        config_id=call.config.id,
+        litellm_model=call.litellm_model,
         system_prompt_version=call.system_prompt_version,
+        started=started,
+        errors=LITELLM_ERRORS,
+        describe_error=lambda exc: _describe_error(exc, call),
     )
-
-
-def _chunk_text(chunk: Any) -> str | None:
-    choices = getattr(chunk, "choices", None)
-    if not choices:
-        return None
-    content = getattr(choices[0].delta, "content", None)
-    return content if isinstance(content, str) else None
-
-
-def _elapsed_ms(started: float, ended: float) -> int:
-    return round((ended - started) * 1000)
 
 
 def _describe_error(exc: Exception, call: _PreparedCall) -> str:
-    """把 LiteLLM 例外轉成可操作的繁中訊息；不回傳原始例外字串，只附遮蔽後的服務說明。"""
-    for rule in _ERROR_RULES:
-        if isinstance(exc, rule.error_type) and rule.matches(exc):
-            return rule.describe(call.config)
-    detail = redact_provider_detail(
-        str(getattr(exc, "message", "") or ""), call.kwargs.get("api_key")
-    )
-    base = "服務拒絕此請求，請確認模型名稱與設定"
-    if not isinstance(exc, litellm_errors.BadRequestError):
-        base = "模型服務回應錯誤，請稍後再試"
-    return f"{base}（{detail}）" if detail else base
+    return messages.describe_error(exc, _ERROR_CATALOG, call.config, call.kwargs.get("api_key"))
 
 
 def lookup_model_mode(provider: LlmProvider, model_id: str) -> str | None:

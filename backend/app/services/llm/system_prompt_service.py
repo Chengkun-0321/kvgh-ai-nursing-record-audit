@@ -69,8 +69,23 @@ async def save(session: AsyncSession, payload: LlmSystemPromptCreate) -> LlmSyst
         version=latest.version + 1 if latest is not None else _FIRST_VERSION,
         content=payload.content,
     )
-    await llm_system_prompt_crud.add(session, prompt)
     action = SettingChangeAction.UPDATE if latest is not None else SettingChangeAction.CREATE
+    try:
+        await _insert_version(session, prompt, action)
+        await session.commit()
+    except IntegrityError as exc:
+        # 兩個請求以同一個 base_version 同時儲存：版本號唯一約束擋下後到者。
+        # 新增版本時的 flush 就會送出 INSERT，違反約束可能在 flush 而非 commit 發生
+        await session.rollback()
+        raise ConflictError(_outdated_message(None)) from exc
+    logger.info("已儲存共用 system prompt：version=%s", prompt.version)
+    return _to_read(prompt)
+
+
+async def _insert_version(
+    session: AsyncSession, prompt: LlmSystemPrompt, action: SettingChangeAction
+) -> None:
+    await llm_system_prompt_crud.add(session, prompt)
     # 只記欄位名稱，不記 prompt 內容
     await setting_change_log_crud.add(
         session,
@@ -78,14 +93,6 @@ async def save(session: AsyncSession, payload: LlmSystemPromptCreate) -> LlmSyst
             target_type=_TARGET_TYPE, target_id=prompt.id, action=action, changed_fields=["content"]
         ),
     )
-    try:
-        await session.commit()
-    except IntegrityError as exc:
-        # 兩個請求以同一個 base_version 同時儲存：版本號唯一約束擋下後到者
-        await session.rollback()
-        raise ConflictError(_outdated_message(None)) from exc
-    logger.info("已儲存共用 system prompt：version=%s", prompt.version)
-    return _to_read(prompt)
 
 
 def _outdated_message(latest_version: int | None) -> str:

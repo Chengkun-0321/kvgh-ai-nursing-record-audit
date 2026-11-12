@@ -1,13 +1,16 @@
 import uuid
+from collections.abc import Iterator
+from contextlib import contextmanager
 
 import pytest
 from pydantic import SecretStr
-from sqlalchemy import select
+from sqlalchemy import delete, event, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import ORMExecuteState, Session
 
 from app.core.enums import LlmProvider, SettingChangeAction
-from app.core.exceptions import ConflictError, InvalidInputError
+from app.core.exceptions import ConflictError, InvalidInputError, NotFoundError
 from app.core.security import decrypt_secret
 from app.crud import llm_config as llm_config_crud
 from app.models.llm_config import LlmConfig
@@ -211,3 +214,115 @@ async def test_switching_to_another_keyed_provider_requires_new_key(session: Asy
     )
 
     assert updated.api_key_hint == "AIz…0000"
+
+
+async def test_concurrent_rename_to_taken_name_is_reported_as_conflict(
+    session: AsyncSession, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    await _create(session, "本地一")
+    second = await _create(session, "本地二")
+
+    # 兩個請求同時通過名稱檢查；改名的 UPDATE 在寫入變更紀錄的 flush 時就被唯一約束擋下
+    async def name_not_found(_: AsyncSession, __: str) -> None:
+        return None
+
+    monkeypatch.setattr(llm_config_crud, "get_by_name", name_not_found)
+
+    with pytest.raises(ConflictError, match="同名"):
+        await config_service.update_config(session, second.id, LlmConfigUpdate(name="本地一"))
+    names = sorted(config.name for config in await config_service.list_configs(session))
+    assert names == ["本地一", "本地二"]
+
+
+def _delete_row_when_loaded(monkeypatch: pytest.MonkeyPatch) -> None:
+    """讓 service 讀到設定後，該列立即被「另一個交易」刪除（session 內的物件不知情）。"""
+    real_get = llm_config_crud.get
+
+    async def get_then_deleted(db: AsyncSession, config_id: uuid.UUID) -> LlmConfig | None:
+        config = await real_get(db, config_id)
+        if config is not None:
+            await db.execute(
+                delete(LlmConfig.__table__).where(LlmConfig.__table__.c.id == config_id)
+            )
+        return config
+
+    monkeypatch.setattr(llm_config_crud, "get", get_then_deleted)
+
+
+async def test_activate_config_deleted_meanwhile_is_not_found(
+    session: AsyncSession, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    await _create(session, "本地一")
+    second = await _create(session, "本地二")
+    _delete_row_when_loaded(monkeypatch)
+
+    with pytest.raises(NotFoundError):
+        await config_service.activate_config(session, second.id)
+
+
+async def test_update_config_deleted_meanwhile_is_not_found(
+    session: AsyncSession, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    created = await _create(session, "本地一")
+    _delete_row_when_loaded(monkeypatch)
+
+    with pytest.raises(NotFoundError):
+        await config_service.update_config(session, created.id, LlmConfigUpdate(model="qwen3"))
+
+
+@contextmanager
+def _activate_before_delete(session: AsyncSession, config_id: uuid.UUID) -> Iterator[None]:
+    """在送出 DELETE 的前一刻，模擬另一個交易把設定設為使用中。
+
+    以核心 SQL 執行，session 內的 ORM 物件不知情。舊寫法以 flush 送出 DELETE、
+    新寫法以 session.execute 送出，兩個時間點都掛上同一個動作。
+    """
+    table = LlmConfig.__table__
+    state = {"is_done": False}
+
+    def activate(sync_session: Session) -> None:
+        if state["is_done"]:
+            return
+        state["is_done"] = True
+        connection = sync_session.connection()
+        connection.execute(update(table).where(table.c.id != config_id).values(is_active=False))
+        connection.execute(update(table).where(table.c.id == config_id).values(is_active=True))
+
+    def on_flush(sync_session: Session, *_: object) -> None:
+        if any(isinstance(obj, LlmConfig) for obj in sync_session.deleted):
+            activate(sync_session)
+
+    def on_execute(orm_state: ORMExecuteState) -> None:
+        if orm_state.is_delete:
+            activate(orm_state.session)
+
+    sync_session = session.sync_session
+    event.listen(sync_session, "before_flush", on_flush)
+    event.listen(sync_session, "do_orm_execute", on_execute)
+    try:
+        yield
+    finally:
+        event.remove(sync_session, "before_flush", on_flush)
+        event.remove(sync_session, "do_orm_execute", on_execute)
+
+
+async def test_config_activated_before_delete_is_kept(session: AsyncSession) -> None:
+    await _create(session, "本地一")
+    target = await _create(session, "本地二")
+    # 刪除請求開始時目標仍非使用中，與先讀再判斷的寫法讀到的狀態相同
+    assert await session.get(LlmConfig, target.id) is not None
+
+    with (
+        _activate_before_delete(session, target.id),
+        pytest.raises(ConflictError, match="使用中"),
+    ):
+        await config_service.delete_config(session, target.id)
+
+    # 模擬的啟用與刪除在同一個交易，衝突後一起 rollback；重點是目標設定沒有被刪掉
+    remaining = [config.id for config in await config_service.list_configs(session)]
+    assert target.id in remaining
+
+
+async def test_delete_missing_config_is_not_found(session: AsyncSession) -> None:
+    with pytest.raises(NotFoundError):
+        await config_service.delete_config(session, uuid.uuid4())

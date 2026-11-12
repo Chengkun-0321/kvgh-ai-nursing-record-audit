@@ -37,7 +37,8 @@
 - 「測試對話」API：`POST /api/v1/llm-configs/{id}/chat`，SSE 串流 `delta`／`done`／`error` 事件
   - 對話歷史只存在前端；後端不保存、不寫 log
   - 不帶 `temperature`（部分 Codex 模型只接受預設值）；`drop_params=True`；重試次數取 `LLM_CHAT_NUM_RETRIES`（預設 0，錯誤立即顯示）
-  - 錯誤轉成繁中可操作訊息（金鑰無效、找不到模型、無法連線、逾時、額度上限），不回傳原始例外字串
+  - 錯誤轉成繁中可操作訊息（金鑰無效、找不到模型、無法連線、逾時、額度上限），不回傳原始例外字串；訊息與比對邏輯在 `services/llm/error_messages.py`，LiteLLM 例外類別的對照表留在 gateway 傳入（該模組不 import litellm）
+  - 串流轉送在 `services/llm/chat_stream.py`（不 import litellm）；請求結束時（含用戶端斷線、回應開始前取消）由 endpoint 的 dependency 呼叫 `ChatStream.aclose()` 關閉上游，不依賴垃圾回收
 - 設定變更寫入 `setting_change_logs`（只記欄位名稱，不含 key 值）
 
 ## 共用 System Prompt（網頁 `/settings/llm`）

@@ -3,6 +3,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import ConflictError
+from app.crud import llm_system_prompt as llm_system_prompt_crud
 from app.models.llm_system_prompt import LlmSystemPrompt
 from app.models.setting_change_log import SettingChangeLog
 from app.schemas.llm_system_prompt import LlmSystemPromptCreate
@@ -100,3 +101,23 @@ async def test_outdated_page_with_same_content_is_not_a_conflict(session: AsyncS
     )
 
     assert saved.version == 2
+
+
+async def test_concurrent_save_from_same_base_version_is_a_conflict(
+    session: AsyncSession, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    await _save(session, "另一個請求剛存好的內容")
+
+    # 模擬兩個請求都在對方存檔前讀到「尚無版本」：新增 v1 的 flush 被版本號唯一約束擋下
+    async def no_version_yet(_: AsyncSession) -> None:
+        return None
+
+    monkeypatch.setattr(llm_system_prompt_crud, "get_latest", no_version_yet)
+
+    with pytest.raises(ConflictError, match="已在其他地方更新"):
+        await system_prompt_service.save(
+            session, LlmSystemPromptCreate(content="同時儲存的內容", base_version=None)
+        )
+    monkeypatch.undo()
+    current = await system_prompt_service.get_current(session)
+    assert (current.version, current.content) == (1, "另一個請求剛存好的內容")

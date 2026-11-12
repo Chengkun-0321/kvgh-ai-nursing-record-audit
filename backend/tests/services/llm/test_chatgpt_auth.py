@@ -10,8 +10,8 @@ import pytest
 from litellm.llms.chatgpt.authenticator import Authenticator
 
 from app.core.enums import ChatgptAuthState
-from app.core.exceptions import ChatgptAuthRequiredError
-from app.services.llm import chatgpt_auth
+from app.core.exceptions import ChatgptAuthRequiredError, ChatgptLoginError
+from app.services.llm import chatgpt_auth, login_poll_thread
 
 # chatgpt_auth 依賴的 LiteLLM 私有方法；升級 LiteLLM 後這裡失敗代表需要調整包裝
 _REQUIRED_PRIVATE_METHODS = (
@@ -189,3 +189,90 @@ async def test_cancelled_refresh_keeps_lock_until_token_is_written(
     assert signed_out_before_refresh_finished is False
     assert status.state == ChatgptAuthState.SIGNED_OUT
     assert not (chatgpt_token_dir / "auth.json").exists()
+
+
+class _BlockedPoll:
+    """讓裝置碼輪詢卡住直到放行，並記錄執行輪詢的執行緒。"""
+
+    def __init__(self) -> None:
+        self.release = threading.Event()
+        self.threads: list[threading.Thread] = []
+
+    def wait(self) -> dict[str, str]:
+        self.threads.append(threading.current_thread())
+        self.release.wait(timeout=5)
+        return {}
+
+
+def _install_device_login(monkeypatch: pytest.MonkeyPatch) -> tuple[list[int], _BlockedPoll]:
+    """回傳（取得驗證碼的次數紀錄、卡住的輪詢）。"""
+    requests: list[int] = []
+
+    def request_device_code(_: Authenticator) -> dict[str, str]:
+        requests.append(1)
+        # 拉長取得驗證碼的時間，讓兩個請求在這段期間交錯
+        time.sleep(0.05)
+        return {"user_code": f"CODE{len(requests)}"}
+
+    poll = _BlockedPoll()
+    monkeypatch.setattr(Authenticator, "_request_device_code", request_device_code)
+    monkeypatch.setattr(Authenticator, "_poll_for_authorization_code", lambda _, __: poll.wait())
+    monkeypatch.setattr(Authenticator, "_exchange_code_for_tokens", lambda _, __: {})
+    return requests, poll
+
+
+async def _wait_for_threads(poll: _BlockedPoll) -> None:
+    poll.release.set()
+    for thread in poll.threads:
+        await asyncio.to_thread(thread.join, 5)
+
+
+async def test_concurrent_start_creates_only_one_login(monkeypatch: pytest.MonkeyPatch) -> None:
+    requests, poll = _install_device_login(monkeypatch)
+
+    try:
+        first, second = await asyncio.gather(
+            chatgpt_auth.start_device_login(), chatgpt_auth.start_device_login()
+        )
+        await asyncio.sleep(0.05)
+        assert len(requests) == 1
+        assert first.state == second.state == ChatgptAuthState.PENDING
+        assert first.user_code == second.user_code == "CODE1"
+        assert len(poll.threads) == 1
+    finally:
+        await chatgpt_auth.sign_out()
+        await _wait_for_threads(poll)
+
+
+async def test_poll_runs_on_dedicated_daemon_thread(monkeypatch: pytest.MonkeyPatch) -> None:
+    _, poll = _install_device_login(monkeypatch)
+
+    try:
+        await chatgpt_auth.start_device_login()
+        await asyncio.sleep(0.05)
+        assert [thread.name for thread in poll.threads] == [login_poll_thread.LOGIN_THREAD_NAME]
+        assert poll.threads[0].daemon is True
+    finally:
+        await chatgpt_auth.sign_out()
+        await _wait_for_threads(poll)
+
+
+async def test_abandoned_polls_are_capped_until_they_finish(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _, poll = _install_device_login(monkeypatch)
+
+    try:
+        # 每次登出都留下一個無法中止的輪詢執行緒，直到名額用完
+        for _ in range(login_poll_thread.LOGIN_THREAD_LIMIT):
+            await chatgpt_auth.start_device_login()
+            await chatgpt_auth.sign_out()
+        with pytest.raises(ChatgptLoginError, match="過於頻繁"):
+            await chatgpt_auth.start_device_login()
+        await _wait_for_threads(poll)
+
+        status = await chatgpt_auth.start_device_login()
+        assert status.state == ChatgptAuthState.PENDING
+    finally:
+        await chatgpt_auth.sign_out()
+        await _wait_for_threads(poll)

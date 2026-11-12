@@ -105,6 +105,8 @@ async def _resolve_listing_key(
     if config_id is None:
         return None
     stored = await config_service.get_stored_config(session, config_id)
+    # 之後會以 httpx 查詢外部服務，先結束交易歸還連線（呼叫端之後不再使用 session）
+    await session.close()
     # 換了服務類型時，已儲存的金鑰屬於另一個服務，不可拿去查詢
     if stored.provider not in accepted_providers or stored.api_key_encrypted is None:
         return None
