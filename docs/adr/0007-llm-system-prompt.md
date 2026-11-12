@@ -47,6 +47,6 @@
   - ChatGPT 訂閱每次呼叫省下約 1,600 個 tokens。
 - **代價與風險**：
   - 修改共用 system prompt 會改變之後所有稽核的輸出，所以稽核結果必須記錄版本號，並在設定頁提示這一點。
-  - ChatGPT 的做法依賴 LiteLLM 的內部行為（環境變數名稱、不重複加入的判斷）。`tests/services/llm/test_gateway.py` 會攔下 LiteLLM 實際組出的請求，確認 `instructions` 只有共用 system prompt；升級 LiteLLM 時，這支測試能提早發現行為變了。
+  - ChatGPT 的做法依賴 LiteLLM 的內部行為（環境變數名稱、不重複加入的判斷）。`tests/services/llm/test_gateway_system_prompt.py` 會攔下 LiteLLM 實際組出的請求，確認 `instructions` 只有共用 system prompt；升級 LiteLLM 時，這支測試能提早發現行為變了。
   - 這個環境變數是整個程序共用的狀態，只由 gateway 設定。如果兩個呼叫之間剛好儲存了新版本，可能用到較新的內容；影響僅限該次回覆。
 - **後續**：實作 `complete_structured` 時，要讓共用 system prompt 接在規則 prompt 之前，並記錄 `system_prompt_version`。

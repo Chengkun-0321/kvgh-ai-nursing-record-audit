@@ -28,6 +28,7 @@ from app.core.constants import (
     LLM_TIMEOUT_MIN_SECONDS,
 )
 from app.core.enums import LlmProvider
+from app.schemas.llm_provider import SummaryRowRead
 
 _ALLOWED_URL_SCHEMES = ("http", "https")
 
@@ -39,7 +40,7 @@ def _blank_to_none(value: object) -> object:
     return value
 
 
-def _normalize_api_base(value: str) -> str:
+def normalize_api_base(value: str) -> str:
     parsed = urlparse(value)
     if parsed.scheme not in _ALLOWED_URL_SCHEMES or not parsed.netloc:
         raise ValueError("API 位址必須以 http:// 或 https:// 開頭")
@@ -57,7 +58,7 @@ ModelName = Annotated[
 ApiBase = Annotated[
     str,
     StringConstraints(strip_whitespace=True, max_length=LLM_API_BASE_MAX_LENGTH),
-    AfterValidator(_normalize_api_base),
+    AfterValidator(normalize_api_base),
 ]
 ApiKey = Annotated[SecretStr, Field(max_length=LLM_API_KEY_MAX_LENGTH)]
 TimeoutSeconds = Annotated[int, Field(ge=LLM_TIMEOUT_MIN_SECONDS, le=LLM_TIMEOUT_MAX_SECONDS)]
@@ -90,8 +91,8 @@ class LlmConfigUpdate(BaseModel):
     timeout_seconds: TimeoutSeconds | None = None
 
 
-class LlmConfigRead(BaseModel):
-    """回傳前端的模型設定；API 金鑰只給遮罩值。"""
+class LlmConfigFields(BaseModel):
+    """由 ORM 讀出的模型設定欄位；API 金鑰只給遮罩值。"""
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -111,3 +112,10 @@ class LlmConfigRead(BaseModel):
     def has_api_key(self) -> bool:
         """是否已儲存 API 金鑰。"""
         return self.api_key_hint is not None
+
+
+class LlmConfigRead(LlmConfigFields):
+    """回傳前端的模型設定，附畫面直接顯示的服務名稱與摘要。"""
+
+    provider_label: str
+    summary_rows: list[SummaryRowRead]

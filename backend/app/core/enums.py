@@ -13,6 +13,50 @@ class LlmProvider(StrEnum):
     OPENAI_COMPATIBLE = "openai_compatible"
 
 
+class FieldRequirement(StrEnum):
+    """設定欄位在該服務類型是否需要。"""
+
+    REQUIRED = "required"
+    OPTIONAL = "optional"
+    UNUSED = "unused"
+
+
+class ProviderChoice(StrEnum):
+    """畫面上的服務類型選項；Ollama 與 OpenAI 相容伺服器合併為「本地模型」。"""
+
+    OPENAI = "openai"
+    CHATGPT = "chatgpt"
+    GEMINI = "gemini"
+    LOCAL = "local"
+
+
+class WizardStepId(StrEnum):
+    """設定精靈的步驟。"""
+
+    PROVIDER = "provider"
+    CONNECTION = "connection"
+    MODEL = "model"
+    DETAILS = "details"
+
+
+class DraftField(StrEnum):
+    """設定精靈中會被檢查的欄位。"""
+
+    API_BASE = "api_base"
+    API_KEY = "api_key"
+    MODEL = "model"
+    NAME = "name"
+    TIMEOUT_SECONDS = "timeout_seconds"
+
+
+class ModelListPlanKind(StrEnum):
+    """查詢可用模型的方式；`blocked` 表示缺少必要資訊，前端不發出請求。"""
+
+    LOCAL = "local"
+    REMOTE = "remote"
+    BLOCKED = "blocked"
+
+
 class SettingChangeAction(StrEnum):
     """設定變更紀錄的操作類型。"""
 

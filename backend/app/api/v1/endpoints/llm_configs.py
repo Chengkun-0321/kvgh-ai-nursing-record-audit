@@ -10,7 +10,8 @@ from fastapi.sse import EventSourceResponse
 from app.api.deps import DbSession
 from app.schemas.llm_chat import ChatRequest, ChatStreamEvent
 from app.schemas.llm_config import LlmConfigCreate, LlmConfigRead, LlmConfigUpdate
-from app.services.llm import config_service, gateway
+from app.schemas.llm_provider import LlmConfigDraftCheck, LlmConfigDraftCheckRead
+from app.services.llm import config_service, draft_check, gateway
 
 router = APIRouter(prefix="/llm-configs", tags=["LLM 模型設定"])
 
@@ -28,6 +29,18 @@ async def list_llm_configs(db: DbSession) -> list[LlmConfigRead]:
 )
 async def create_llm_config(payload: LlmConfigCreate, db: DbSession) -> LlmConfigRead:
     return await config_service.create_config(db, payload)
+
+
+# 用 POST：表單內容含 API 金鑰，不可放在 URL；只檢查，不儲存
+@router.post(
+    "/draft-checks",
+    response_model=LlmConfigDraftCheckRead,
+    summary="檢查設定精靈的表單內容（逐欄錯誤、建議名稱、模型查詢方式、確認摘要）",
+)
+async def check_llm_config_draft(
+    payload: LlmConfigDraftCheck, db: DbSession
+) -> LlmConfigDraftCheckRead:
+    return await draft_check.check_draft(db, payload)
 
 
 @router.patch("/{config_id}", response_model=LlmConfigRead, summary="更新模型設定")

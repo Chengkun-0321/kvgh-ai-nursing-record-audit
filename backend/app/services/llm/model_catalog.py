@@ -12,20 +12,22 @@ from typing import Final
 from urllib.parse import urlparse
 
 import httpx
-from pydantic import BaseModel, Field, ValidationError
+from pydantic import ValidationError
 
 from app.core.enums import LlmProvider
 from app.core.exceptions import LLMConnectionError
 from app.schemas.available_model import AvailableModel
+from app.services.llm.model_list_parsers import (
+    parse_codex,
+    parse_gemini,
+    parse_ollama,
+    parse_openai,
+)
 
 _TIMEOUT_SECONDS: Final = 10
 OPENAI_API_BASE: Final = "https://api.openai.com/v1"
 GEMINI_API_BASE: Final = "https://generativelanguage.googleapis.com/v1beta"
 _GEMINI_PAGE_SIZE: Final = 1000
-# Gemini 以支援的方法區分：能 generateContent 的才是對話模型
-_GEMINI_CHAT_METHOD: Final = "generateContent"
-_GEMINI_NAME_PREFIX: Final = "models/"
-_CODEX_VISIBLE: Final = "list"
 
 _STATUS_MESSAGES: Final[Mapping[int, str]] = MappingProxyType(
     {
@@ -97,44 +99,6 @@ class ListingTarget:
     params: Mapping[str, str] = field(default_factory=dict)
 
 
-class _OllamaModel(BaseModel):
-    name: str
-
-
-class _OllamaTags(BaseModel):
-    models: list[_OllamaModel]
-
-
-class _OpenAIModel(BaseModel):
-    id: str
-
-
-class _OpenAIModelList(BaseModel):
-    data: list[_OpenAIModel]
-
-
-class _GeminiModel(BaseModel):
-    name: str
-    display_name: str | None = Field(default=None, alias="displayName")
-    methods: list[str] = Field(default_factory=list, alias="supportedGenerationMethods")
-
-
-class _GeminiModelList(BaseModel):
-    models: list[_GeminiModel]
-
-
-class _CodexModel(BaseModel):
-    slug: str
-    display_name: str | None = None
-    # list＝顯示在模型選單；hide／none 為帳號不可選或內部用
-    visibility: str = _CODEX_VISIBLE
-    priority: int = 0
-
-
-class _CodexModelList(BaseModel):
-    models: list[_CodexModel]
-
-
 @dataclass(frozen=True)
 class _ListRequest:
     url: str
@@ -143,52 +107,23 @@ class _ListRequest:
     params: Mapping[str, str | int] = field(default_factory=dict)
 
 
-def _parse_ollama(payload: object) -> list[AvailableModel]:
-    tags = _OllamaTags.model_validate(payload)
-    return [AvailableModel(id=model.name) for model in tags.models]
-
-
-def _parse_openai(payload: object) -> list[AvailableModel]:
-    listing = _OpenAIModelList.model_validate(payload)
-    return [AvailableModel(id=model.id) for model in listing.data]
-
-
-def _parse_gemini(payload: object) -> list[AvailableModel]:
-    listing = _GeminiModelList.model_validate(payload)
-    return [
-        AvailableModel(id=model.name.removeprefix(_GEMINI_NAME_PREFIX), label=model.display_name)
-        for model in listing.models
-        if _GEMINI_CHAT_METHOD in model.methods
-    ]
-
-
-def _parse_codex(payload: object) -> list[AvailableModel]:
-    listing = _CodexModelList.model_validate(payload)
-    # 依 Codex 模型選單的排序（priority 小的在前），只保留帳號可選的模型
-    visible = sorted(
-        (model for model in listing.models if model.visibility == _CODEX_VISIBLE),
-        key=lambda model: model.priority,
-    )
-    return [AvailableModel(id=model.slug, label=model.display_name) for model in visible]
-
-
 def _bearer(api_key: str | None) -> dict[str, str]:
     return {"Authorization": f"Bearer {api_key}"} if api_key else {}
 
 
 def _ollama_request(target: ListingTarget) -> _ListRequest:
-    return _ListRequest(url=f"{target.api_base}/api/tags", parse=_parse_ollama)
+    return _ListRequest(url=f"{target.api_base}/api/tags", parse=parse_ollama)
 
 
 def _openai_compatible_request(target: ListingTarget) -> _ListRequest:
     return _ListRequest(
-        url=f"{target.api_base}/models", parse=_parse_openai, headers=_bearer(target.api_key)
+        url=f"{target.api_base}/models", parse=parse_openai, headers=_bearer(target.api_key)
     )
 
 
 def _openai_request(target: ListingTarget) -> _ListRequest:
     return _ListRequest(
-        url=f"{OPENAI_API_BASE}/models", parse=_parse_openai, headers=_bearer(target.api_key)
+        url=f"{OPENAI_API_BASE}/models", parse=parse_openai, headers=_bearer(target.api_key)
     )
 
 
@@ -196,7 +131,7 @@ def _gemini_request(target: ListingTarget) -> _ListRequest:
     # 金鑰放 header 而非 query string，避免出現在 proxy 或伺服器的 URL log
     return _ListRequest(
         url=f"{GEMINI_API_BASE}/models",
-        parse=_parse_gemini,
+        parse=parse_gemini,
         headers={"x-goog-api-key": target.api_key or ""},
         params={"pageSize": _GEMINI_PAGE_SIZE},
     )
@@ -206,7 +141,7 @@ def _chatgpt_request(target: ListingTarget) -> _ListRequest:
     # 與 Codex CLI 相同：GET {Codex 後端}/models?client_version=…，回傳此帳號可用的模型
     return _ListRequest(
         url=f"{target.api_base}/models",
-        parse=_parse_codex,
+        parse=parse_codex,
         headers=target.headers,
         params=target.params,
     )

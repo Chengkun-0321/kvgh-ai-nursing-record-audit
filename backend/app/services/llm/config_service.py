@@ -11,7 +11,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import get_settings
-from app.core.enums import LlmProvider, SettingChangeAction
+from app.core.enums import FieldRequirement, LlmProvider, SettingChangeAction
 from app.core.exceptions import ConflictError, NotFoundError
 from app.core.security import encrypt_secret, mask_secret
 from app.crud import llm_config as llm_config_crud
@@ -19,7 +19,8 @@ from app.crud import setting_change_log as setting_change_log_crud
 from app.models.llm_config import LlmConfig
 from app.models.setting_change_log import SettingChangeLog
 from app.schemas.llm_config import LlmConfigCreate, LlmConfigRead, LlmConfigUpdate
-from app.services.llm.providers import FieldRequirement, check_required_fields, get_provider_spec
+from app.services.llm.config_summary import to_config_read
+from app.services.llm.providers import check_required_fields, get_provider_spec
 
 logger = logging.getLogger(__name__)
 
@@ -47,9 +48,7 @@ class StoredLlmConfig:
 
 async def list_configs(session: AsyncSession) -> list[LlmConfigRead]:
     """列出所有模型設定。"""
-    return [
-        LlmConfigRead.model_validate(config) for config in await llm_config_crud.list_all(session)
-    ]
+    return [to_config_read(config) for config in await llm_config_crud.list_all(session)]
 
 
 async def create_config(session: AsyncSession, payload: LlmConfigCreate) -> LlmConfigRead:
@@ -99,7 +98,7 @@ async def update_config(
         await _log_change(session, config.id, SettingChangeAction.UPDATE, changed_fields)
         await _commit(session)
         logger.info("已更新模型設定：config_id=%s fields=%s", config.id, sorted(changed_fields))
-    return LlmConfigRead.model_validate(config)
+    return to_config_read(config)
 
 
 async def activate_config(session: AsyncSession, config_id: uuid.UUID) -> LlmConfigRead:
@@ -174,13 +173,13 @@ async def _insert_config(
     await _log_change(session, config.id, SettingChangeAction.CREATE, payload.model_fields_set)
     await session.commit()
     logger.info("已新增模型設定：config_id=%s", config.id)
-    return LlmConfigRead.model_validate(config)
+    return to_config_read(config)
 
 
 async def _activate(session: AsyncSession, config_id: uuid.UUID) -> LlmConfigRead:
     config = await _get_or_raise(session, config_id)
     if config.is_active:
-        return LlmConfigRead.model_validate(config)
+        return to_config_read(config)
 
     # 先停用其他設定再啟用目標；同時切換時後到者違反部分唯一索引，由呼叫端重試
     await llm_config_crud.deactivate_others(session, config.id)
@@ -188,7 +187,7 @@ async def _activate(session: AsyncSession, config_id: uuid.UUID) -> LlmConfigRea
     await _log_change(session, config.id, SettingChangeAction.ACTIVATE, {"is_active"})
     await session.commit()
     logger.info("已切換使用中的模型設定：config_id=%s", config.id)
-    return LlmConfigRead.model_validate(config)
+    return to_config_read(config)
 
 
 async def _get_or_raise(session: AsyncSession, config_id: uuid.UUID) -> LlmConfig:

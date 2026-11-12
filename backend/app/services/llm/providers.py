@@ -1,23 +1,14 @@
 """各服務類型對應的 LiteLLM 前綴與必填欄位（純資料與純函式，不 import litellm）。
 
-前端 `frontend/src/lib/llmProviders.ts` 的欄位規則須與此處一致。
+前端不另存一份規則，經 `GET /api/v1/llm-providers` 取得（見 `provider_catalog.py`）。
 """
 
 from dataclasses import dataclass
-from enum import StrEnum
 from types import MappingProxyType
 from typing import Final
 
-from app.core.enums import LlmProvider
+from app.core.enums import FieldRequirement, LlmProvider
 from app.core.exceptions import InvalidInputError
-
-
-class FieldRequirement(StrEnum):
-    """設定欄位在該服務類型是否需要。"""
-
-    REQUIRED = "required"
-    OPTIONAL = "optional"
-    UNUSED = "unused"
 
 
 @dataclass(frozen=True)
