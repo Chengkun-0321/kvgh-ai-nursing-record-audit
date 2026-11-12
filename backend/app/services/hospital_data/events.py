@@ -79,26 +79,31 @@ class EventContent:
     lab_results: tuple[LabResultRead, ...] = ()
 
 
-def build_section_events(
-    patient_file: RawPatientFile, business_date: date
-) -> list[TimelineEventRead]:
-    """把病人檔中檢驗報告以外的所有區塊轉成時間軸紀錄。"""
-    events = [
-        build_event(_content_from_record(spec, record), business_date)
+def build_section_contents(patient_file: RawPatientFile) -> list[EventContent]:
+    """把病人檔中檢驗報告以外的所有區塊轉成時間軸紀錄的內容（與資料日期無關）。"""
+    contents = [
+        _content_from_record(spec, record)
         for spec in SECTION_SPECS
         for record in patient_file.records(spec.section_name)
     ]
     admission_course = _admission_course_content(patient_file)
     if admission_course is not None:
-        events.append(build_event(admission_course, business_date))
-    return events
+        contents.append(admission_course)
+    return contents
 
 
 def build_event(content: EventContent, business_date: date) -> TimelineEventRead:
     """由內容組出時間軸紀錄；`event_id` 只由內容決定，跨日重複的紀錄會得到相同 ID。"""
+    return build_identified_event(content_event_id(content), content, business_date)
+
+
+def build_identified_event(
+    event_id: str, content: EventContent, business_date: date
+) -> TimelineEventRead:
+    """以已算好的 `event_id`（見 `content_event_id`）組出時間軸紀錄。"""
     flags = [result.abnormal_flag for result in content.lab_results]
     return TimelineEventRead(
-        event_id=_event_id(content),
+        event_id=event_id,
         category=content.category,
         category_label=CATEGORY_LABELS[content.category],
         business_date=business_date,
@@ -108,11 +113,18 @@ def build_event(content: EventContent, business_date: date) -> TimelineEventRead
         tag=content.tag,
         title=content.title,
         text=content.text,
-        fields=list(content.fields),
-        lab_results=list(content.lab_results),
+        # 內容可能來自快取，而 Pydantic 不會複製傳入的 model；各複製一份，修改回應才不會改到快取
+        fields=[field.model_copy() for field in content.fields],
+        lab_results=[result.model_copy() for result in content.lab_results],
         abnormal_high_count=flags.count(AbnormalFlag.HIGH),
         abnormal_low_count=flags.count(AbnormalFlag.LOW),
     )
+
+
+def content_event_id(content: EventContent) -> str:
+    """由內容（不含資料日期）算出的紀錄 ID；內容相同即 ID 相同。"""
+    payload = json.dumps(_content_payload(content), ensure_ascii=False, sort_keys=True)
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()[:_EVENT_ID_LENGTH]
 
 
 def admitted_at_text(patient_file: RawPatientFile) -> str | None:
@@ -156,11 +168,6 @@ def _labeled_values(record: RawRecord, exclude: set[str | None]) -> tuple[Labele
         for label, value in record.items()
         if label not in exclude
     )
-
-
-def _event_id(content: EventContent) -> str:
-    payload = json.dumps(_content_payload(content), ensure_ascii=False, sort_keys=True)
-    return hashlib.sha256(payload.encode("utf-8")).hexdigest()[:_EVENT_ID_LENGTH]
 
 
 def _content_payload(content: EventContent) -> dict[str, object]:

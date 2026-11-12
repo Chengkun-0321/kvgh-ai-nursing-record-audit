@@ -18,8 +18,8 @@ from app.schemas.ward_board import (
 from app.services.hospital_data.events import admitted_at_text
 from app.services.hospital_data.index import (
     PatientAppearance,
+    list_day_appearances,
     list_ward_dates,
-    list_ward_histories,
 )
 from app.services.hospital_data.patients import ward_display_name
 from app.services.hospital_data.source import DATE_NOT_FOUND_MESSAGE, HospitalDataSource
@@ -55,11 +55,10 @@ def build_ward_bed_board(
 ) -> WardBedBoardRead:
     """同步版本，供 thread 執行與測試。"""
     target_date = _resolve_business_date(source, ward_code, business_date)
+    # 只需要這一天的病床，直接讀當天的病人清單，不必組出所有日期的歷史
     beds = [
-        _bed_status(source, ward_code, history.patient_key, appearance)
-        for history in list_ward_histories(source, ward_code)
-        for appearance in history.appearances
-        if appearance.business_date == target_date
+        _bed_status(source, ward_code, patient_key, appearance)
+        for patient_key, appearance in list_day_appearances(source, ward_code, target_date)
     ]
     beds.sort(key=lambda bed: bed.bed_code)
     return WardBedBoardRead(

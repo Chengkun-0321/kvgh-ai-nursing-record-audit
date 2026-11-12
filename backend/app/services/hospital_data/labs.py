@@ -79,6 +79,11 @@ def build_lab_events(rows: list[LabRow]) -> list[TimelineEventRead]:
     return [_lab_event(group) for group in _group_by_time(rows).values()]
 
 
+def count_lab_events(rows: list[LabRow]) -> int:
+    """`build_lab_events` 會組出的紀錄筆數（不實際組出紀錄）。"""
+    return len(_group_by_time(rows))
+
+
 def build_lab_matrix(
     rows: list[LabRow],
 ) -> tuple[list[LabMatrixColumnRead], list[LabMatrixRowRead]]:
@@ -91,7 +96,10 @@ def build_lab_matrix(
     column_index = {time_text: index for index, time_text in enumerate(groups)}
     matrix: dict[str, LabMatrixRowRead] = {}
     for row in rows:
-        matrix_row = matrix.setdefault(row.result.item, _empty_matrix_row(row, len(columns)))
+        # 不用 setdefault：它會在列已存在時仍先配置一整列空儲存格
+        matrix_row = matrix.get(row.result.item)
+        if matrix_row is None:
+            matrix_row = matrix[row.result.item] = _empty_matrix_row(row, len(columns))
         _add_to_row(matrix_row, row, column_index[row.time.text])
     return columns, list(matrix.values())
 

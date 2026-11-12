@@ -1,11 +1,15 @@
 """合併一位病人各日期的資料檔，組出時間軸與檢驗矩陣（同步函式，由 service 放到 thread 執行）。
 
 院方每天的檔案只含當天紀錄，但「檢查」會帶歷史紀錄，所以合併時以內容去重。
+每個病人檔轉出的內容會快取（見 `_file_records`），合併、排序與組成回應物件則每次重做。
 """
 
+from collections import Counter
 from collections.abc import Iterator
 from dataclasses import dataclass
 from datetime import date, datetime
+from functools import lru_cache
+from typing import Final
 
 from app.core.enums import RawRecordCategory
 from app.core.exceptions import InvalidInputError
@@ -16,12 +20,19 @@ from app.schemas.hospital_data.timeline import (
     TimelineDayRead,
     TimelineEventRead,
 )
-from app.services.hospital_data.events import CATEGORY_LABELS, build_section_events
+from app.services.hospital_data.events import (
+    CATEGORY_LABELS,
+    EventContent,
+    build_identified_event,
+    build_section_contents,
+    content_event_id,
+)
 from app.services.hospital_data.index import PatientHistory
 from app.services.hospital_data.labs import (
     LabRow,
     build_lab_events,
     build_lab_matrix,
+    count_lab_events,
     extract_lab_rows,
     merge_lab_rows,
 )
@@ -29,6 +40,8 @@ from app.services.hospital_data.source import HospitalDataSource
 from app.services.hospital_data.times import TAIPEI
 
 _CATEGORY_ORDER = {category: index for index, category in enumerate(CATEGORY_LABELS)}
+# 與 source.py 的檔案快取上限相同：快取的是同一批檔案轉出的內容
+_FILE_RECORDS_CACHE_MAX_FILES: Final = 4096
 
 
 @dataclass(frozen=True)
@@ -55,24 +68,30 @@ class TimelineFilter:
 
 def collect_events(source: HospitalDataSource, history: PatientHistory) -> list[TimelineEventRead]:
     """合併所有日期的紀錄並去重，依時間由早到晚排序。"""
-    merged: dict[str, TimelineEventRead] = {}
-    # 由舊到新讀取，重複的紀錄保留最早出現的資料日期
-    for business_date, patient_file in iter_patient_files(source, history):
-        for event in build_section_events(patient_file, business_date):
-            merged.setdefault(event.event_id, event)
-    lab_events = build_lab_events(collect_lab_rows(source, history))
-    events = [*merged.values(), *lab_events]
-    return sorted(events, key=_event_sort_key)
+    file_records = _read_file_records(source, history)
+    section_events = [
+        build_identified_event(event_id, content, business_date)
+        for event_id, (content, business_date) in _merge_section_contents(file_records).items()
+    ]
+    lab_events = build_lab_events(_merge_file_lab_rows(file_records))
+    return sorted([*section_events, *lab_events], key=_event_sort_key)
+
+
+def count_events_by_category(
+    source: HospitalDataSource, history: PatientHistory
+) -> Counter[RawRecordCategory]:
+    """各類別的紀錄筆數，與 `collect_events` 的結果一致，但不組出紀錄。"""
+    file_records = _read_file_records(source, history)
+    counts = Counter(
+        content.category for content, _ in _merge_section_contents(file_records).values()
+    )
+    counts[RawRecordCategory.LAB_RESULT] += count_lab_events(_merge_file_lab_rows(file_records))
+    return counts
 
 
 def collect_lab_rows(source: HospitalDataSource, history: PatientHistory) -> list[LabRow]:
     """合併所有日期的檢驗結果並去重。"""
-    rows = [
-        row
-        for business_date, patient_file in iter_patient_files(source, history)
-        for row in extract_lab_rows(patient_file, business_date)
-    ]
-    return merge_lab_rows(rows)
+    return _merge_file_lab_rows(_read_file_records(source, history))
 
 
 def build_timeline(
@@ -132,6 +151,66 @@ def event_day(event: TimelineEventRead) -> date:
     if event.occurred_at is None:
         return event.business_date
     return event.occurred_at.astimezone(TAIPEI).date()
+
+
+@dataclass(frozen=True)
+class _FileRecords:
+    """一個病人檔轉出的內容；只含不可變物件，多個 thread 共用快取也不會互相影響。"""
+
+    # (event_id, 內容)，順序同 `build_section_contents`
+    section_contents: tuple[tuple[str, EventContent], ...]
+    lab_rows: tuple[LabRow, ...]
+
+
+@dataclass(frozen=True, eq=False)
+class _SameFile:
+    """以「同一個物件」比對病人檔的快取鍵。
+
+    source.py 以「路徑＋修改時間」快取解析結果：檔案未更新時回傳同一個物件，更新後回傳新物件，
+    所以以物件身分為鍵即可跟著自動失效。鍵持有物件本身，物件仍在快取中時 `id` 不會被重複使用。
+    """
+
+    patient_file: RawPatientFile
+
+    def __hash__(self) -> int:
+        return id(self.patient_file)
+
+    def __eq__(self, other: object) -> bool:
+        return isinstance(other, _SameFile) and other.patient_file is self.patient_file
+
+
+@lru_cache(maxsize=_FILE_RECORDS_CACHE_MAX_FILES)
+def _file_records(file_ref: _SameFile, business_date: date) -> _FileRecords:
+    contents = build_section_contents(file_ref.patient_file)
+    return _FileRecords(
+        section_contents=tuple((content_event_id(content), content) for content in contents),
+        lab_rows=tuple(extract_lab_rows(file_ref.patient_file, business_date)),
+    )
+
+
+def _read_file_records(
+    source: HospitalDataSource, history: PatientHistory
+) -> list[tuple[date, _FileRecords]]:
+    # 每個檔案只走訪一次，一般紀錄與檢驗結果都從這裡取
+    return [
+        (business_date, _file_records(_SameFile(patient_file), business_date))
+        for business_date, patient_file in iter_patient_files(source, history)
+    ]
+
+
+def _merge_section_contents(
+    file_records: list[tuple[date, _FileRecords]],
+) -> dict[str, tuple[EventContent, date]]:
+    merged: dict[str, tuple[EventContent, date]] = {}
+    # 由舊到新合併，重複的紀錄保留最早出現的資料日期
+    for business_date, records in file_records:
+        for event_id, content in records.section_contents:
+            merged.setdefault(event_id, (content, business_date))
+    return merged
+
+
+def _merge_file_lab_rows(file_records: list[tuple[date, _FileRecords]]) -> list[LabRow]:
+    return merge_lab_rows(row for _, records in file_records for row in records.lab_rows)
 
 
 def _row_day(row: LabRow) -> date:

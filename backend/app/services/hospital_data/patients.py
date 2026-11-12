@@ -1,6 +1,5 @@
 """病房清單、病人清單、病人摘要與原文（同步函式，由 service 放到 thread 執行）。"""
 
-from collections import Counter
 from datetime import date
 from typing import Final
 
@@ -19,12 +18,12 @@ from app.schemas.hospital_data.raw import RawPatientFile
 from app.services.hospital_data.events import CATEGORY_LABELS, admitted_at_text
 from app.services.hospital_data.index import (
     PatientHistory,
-    list_all_ward_codes,
     list_ward_dates,
     list_ward_histories,
+    scan_ward_dates,
 )
 from app.services.hospital_data.source import HospitalDataSource
-from app.services.hospital_data.timeline import collect_events
+from app.services.hospital_data.timeline import count_events_by_category
 from app.services.hospital_data.times import parse_record_time
 
 _WORK_CHECKLIST_SECTION: Final = "工作清單"
@@ -40,16 +39,17 @@ def ward_display_name(ward_code: str) -> str:
 
 def list_wards(source: HospitalDataSource, default_ward_code: str) -> WardListRead:
     """所有有院方資料的病房。"""
-    wards = [_ward_read(source, code) for code in list_all_ward_codes(source)]
+    wards = [_ward_read(source, code, dates) for code, dates in scan_ward_dates(source).items()]
     return WardListRead(default_ward_code=default_ward_code, wards=wards)
 
 
 def list_raw_patients(source: HospitalDataSource, ward_code: str) -> RawPatientListRead:
     """某病房所有日期出現過的病人。"""
-    latest_date = list_ward_dates(source, ward_code)[-1]
+    ward_dates = list_ward_dates(source, ward_code)
+    latest_date = ward_dates[-1]
     patients = [
         _patient_summary(source, history, latest_date)
-        for history in list_ward_histories(source, ward_code)
+        for history in list_ward_histories(source, ward_code, ward_dates)
     ]
     return RawPatientListRead(
         ward_code=ward_code,
@@ -65,7 +65,7 @@ def build_patient_detail(
     """原始資料頁上方的病人摘要。"""
     latest_file = _latest_file(source, history)
     admitted_at = admitted_at_text(latest_file)
-    counts = Counter(event.category for event in collect_events(source, history))
+    counts = count_events_by_category(source, history)
     latest_ward_date = list_ward_dates(source, history.ward_code)[-1]
     return RawPatientDetailRead(
         patient_key=history.patient_key,
@@ -109,8 +109,7 @@ def build_work_checklist(patient_file: RawPatientFile) -> WorkChecklistRead:
     )
 
 
-def _ward_read(source: HospitalDataSource, ward_code: str) -> WardRead:
-    dates = list_ward_dates(source, ward_code)
+def _ward_read(source: HospitalDataSource, ward_code: str, dates: list[date]) -> WardRead:
     latest_list = source.read_patient_list(dates[-1], ward_code)
     return WardRead(
         ward_code=ward_code,
