@@ -1,4 +1,4 @@
-"""models 與 schemas 共用的欄位長度與數量上限。"""
+"""models、schemas 與 services 共用的常數（欄位長度、數量上限、時區）。"""
 
 LLM_CONFIG_NAME_MAX_LENGTH = 100
 LLM_MODEL_MAX_LENGTH = 200
@@ -17,3 +17,9 @@ LLM_SYSTEM_PROMPT_MAX_CHARS = 8000
 
 SETTING_TARGET_MAX_LENGTH = 64
 SETTING_ACTOR_MAX_LENGTH = 100
+
+# 病房代碼（如 W63）：API 路徑參數與讀取院方資料夾共用同一規則
+WARD_CODE_PATTERN = r"^[A-Z]{1,3}\d{1,4}$"
+
+# 院方資料的時間沒有時區，一律視為台北時間
+BUSINESS_TIMEZONE = "Asia/Taipei"

@@ -20,10 +20,12 @@ from sqlalchemy.ext.asyncio import (
 from sqlalchemy.pool import StaticPool
 
 import app.models  # 註冊資料表
-from app.api.deps import get_db
+from app.api.deps import get_db, get_hospital_data_source
 from app.db.base import Base
 from app.main import app
+from app.services.hospital_data.source import HospitalDataSource
 from app.services.llm import chatgpt_auth
+from tests.hospital_data_samples import write_sample_hospital_data
 
 
 @pytest.fixture(autouse=True)
@@ -35,6 +37,12 @@ def chatgpt_token_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     # 進行中的登入與檔案鎖為模組層級狀態，每個測試重新建立
     monkeypatch.setattr(chatgpt_auth, "_store", chatgpt_auth._LoginStore())
     return token_dir
+
+
+@pytest.fixture
+def hospital_data_source(tmp_path: Path) -> HospitalDataSource:
+    """指向虛構院方資料的資料來源，不讀取專案的 data/。"""
+    return HospitalDataSource(write_sample_hospital_data(tmp_path / "hospital_data"))
 
 
 @pytest.fixture
@@ -58,12 +66,14 @@ async def session(
 @pytest.fixture
 async def client(
     session_factory: async_sessionmaker[AsyncSession],
+    hospital_data_source: HospitalDataSource,
 ) -> AsyncIterator[AsyncClient]:
     async def _override_get_db() -> AsyncIterator[AsyncSession]:
         async with session_factory() as db_session:
             yield db_session
 
     app.dependency_overrides[get_db] = _override_get_db
+    app.dependency_overrides[get_hospital_data_source] = lambda: hospital_data_source
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as http:
         yield http
     app.dependency_overrides.clear()

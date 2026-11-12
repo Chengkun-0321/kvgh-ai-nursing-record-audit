@@ -10,7 +10,13 @@
     {
       "name": "backend",
       "runtimeExecutable": "sh",
-      "runtimeArgs": ["-c", "cd backend && .venv/bin/alembic upgrade head && .venv/bin/uvicorn app.main:app --reload --port 8000"],
+      "runtimeArgs": ["-c", "cd backend && .venv/bin/python -m alembic upgrade head && .venv/bin/python -m uvicorn app.main:app --reload --port 8000"],
+      "port": 8000
+    },
+    {
+      "name": "backend-main",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": ["-c", "cd backend && export DATABASE_URL=\"sqlite+aiosqlite:///$PWD/data/main.db\" && .venv/bin/python -m alembic upgrade head && .venv/bin/python -m uvicorn app.main:app --reload --port 8000"],
       "port": 8000
     }
   ]

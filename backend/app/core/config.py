@@ -7,6 +7,7 @@ from pydantic import SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 BACKEND_ROOT = Path(__file__).resolve().parents[2]
+PROJECT_ROOT = BACKEND_ROOT.parent
 DATA_DIR = BACKEND_ROOT / "data"
 
 
@@ -38,6 +39,11 @@ class Settings(BaseSettings):
     CHATGPT_CLIENT_VERSION_FALLBACK: str = "0.159.2"
     CODEX_LATEST_VERSION_URL: str = "https://registry.npmjs.org/@openai/codex/latest"
     CODEX_VERSION_CACHE_SECONDS: int = 86400
+
+    # 院方提供的每日資料（`<YYYYMMDD>/<病房>/patientlist.json` 與病人檔）；後端只讀不寫
+    HOSPITAL_DATA_DIR: Path = PROJECT_ROOT / "data"
+    # 首頁與原始資料頁預設顯示的病房
+    DEFAULT_WARD_CODE: str = "W63"
 
 
 @lru_cache

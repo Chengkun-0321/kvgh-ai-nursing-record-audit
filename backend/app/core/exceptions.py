@@ -52,3 +52,9 @@ class ChatgptLoginError(AppError):
     """無法向 OpenAI 取得登入裝置碼。"""
 
     status_code = 502
+
+
+class HospitalDataError(AppError):
+    """院方資料檔無法讀取或格式不符，需檢查資料來源。"""
+
+    status_code = 500

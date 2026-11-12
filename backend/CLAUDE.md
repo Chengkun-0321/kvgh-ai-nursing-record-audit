@@ -17,7 +17,7 @@ source .venv/bin/activate && pip install -r requirements-dev.txt
 - `.venv/pip.conf` 讓 pip 快取也留在專案內（`backend/.pip-cache/`）
 - `pip`、`python`、`ruff`、`mypy`、`alembic`、`pytest` 一律在 `.venv` 啟用狀態下執行
 - 新增套件：寫入 `requirements.txt`（正式）或 `requirements-dev.txt`（開發，首行 `-r requirements.txt`），**以 `==` 鎖定版本**，再 `pip install -r requirements-dev.txt`
-- Python：程式碼以 3.12 語法為下限（本機 venv 為 3.14）
+- Python：程式碼以 3.12 語法為下限（本機 venv 為 3.12；Homebrew 移除 3.14 後重建）
 - `pyproject.toml` 只放工具設定（ruff、mypy、pytest），不作為套件定義
 
 ## 核准依賴（其餘需先詢問）
@@ -107,7 +107,7 @@ backend/
 source .venv/bin/activate && alembic upgrade head && uvicorn app.main:app --reload --port 8000
 ```
 
-也可用 `.claude/launch.json` 的 `backend` 設定啟動。
+也可用 `.claude/launch.json` 的 `backend` 設定啟動。Homebrew 升級若移除 venv 所用的 Python 版本，venv 會整個失效，需依上方步驟重建。
 
 ## 檢查
 

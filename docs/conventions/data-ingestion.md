@@ -4,7 +4,7 @@
 
 | 階段 | 來源 | 設定 |
 |---|---|---|
-| 現在 | 院方提供的假資料 JSON | `DATA_SOURCE=local` |
+| 現在 | 院方提供的去識別化 JSON（根目錄 `data/`，目前只由原始資料頁直接讀取，尚未入庫） | `HOSPITAL_DATA_DIR` |
 | 未來 | 院方每日打包上傳中繼站，本系統下載當日資料 | `DATA_SOURCE=relay` |
 
 兩者實作同一介面，切換只改設定，不改匯入流程。
@@ -16,7 +16,7 @@ class DataSource(Protocol):
     async def fetch(self, business_date: date) -> list[RawDocument]: ...
 ```
 
-- `LocalFixtureSource`：讀取 `backend/data/fixtures/<YYYY-MM-DD>/*.json`
+- `LocalFixtureSource`：讀取 `<資料目錄>/<YYYYMMDD>/<病房>/`（每日一個 `patientlist.json`＋每位病人一個 JSON）；原始資料頁目前由 `services/hospital_data/source.py` 直接讀取（見 [ADR 0010](../adr/0010-hospital-raw-data-viewer.md)）
 - `RelaySource`：傳輸協定、認證方式**待決**；連線資訊只放 `Settings`／`.env`
 
 ## 匯入流程
@@ -41,10 +41,7 @@ class DataSource(Protocol):
 
 ## 格式對照
 
-院方 JSON 格式**待提供**。取得範例後：
-
-1. 先寫 ADR：欄位對照表（院方欄位 → 內部欄位）、必填／選填、特殊值處理
-2. 再建立 `schemas/ingestion/` 與對應 models、migration
+院方 JSON 格式已取得（W63，2026-11-04、11-05），欄位對照與特殊值處理見 [ADR 0010](../adr/0010-hospital-raw-data-viewer.md)。建立匯入用的 `schemas/ingestion/`、models、migration 前，先依該 ADR 補上必填／選填與入庫用的自然鍵。
 
 ## 假資料放置
 
@@ -52,4 +49,4 @@ class DataSource(Protocol):
 |---|---|---|
 | 院方提供的假資料 | `backend/data/fixtures/` | ❌（`backend/data/` 整個被 gitignore） |
 | 測試用自製最小資料 | `backend/tests/fixtures/` | ✅（必須完全虛構） |
-| 依院方格式自編的虛構範例資料 | `data/<YYYYMMDD>/<病房>/` | ✅（必須完全虛構，不得混入院方資料） |
+| 院方提供的去識別化資料 | `data/<YYYYMMDD>/<病房>/` | ✅（使用者 2026-11-10 確認已移除個人資料；未去識別化的資料不得放此處） |
