@@ -1,5 +1,3 @@
-import type { BedStatus } from "@/types/ward";
-
 import type { KitModuleId, WardKit } from "./wardKit";
 
 /**
@@ -125,7 +123,7 @@ function placeBeds(
 }
 
 export function buildWardLayout(
-  beds: readonly Pick<BedStatus, "bedCode">[],
+  beds: readonly { bed_code: string }[],
   kit: WardKit,
 ): WardLayout {
   const { bay, edges } = kit;
@@ -138,7 +136,7 @@ export function buildWardLayout(
   return {
     ...wardGrid,
     beds: placeBeds(
-      beds.map((bed) => bed.bedCode),
+      beds.map((bed) => bed.bed_code),
       wardGrid,
       kit,
     ),

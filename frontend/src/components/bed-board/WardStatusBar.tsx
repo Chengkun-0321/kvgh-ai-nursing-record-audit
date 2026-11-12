@@ -5,17 +5,14 @@ import { useId } from "react";
 import { SelectionIndicator } from "@/components/ui/SelectionIndicator";
 import { VerdictIcon } from "@/components/VerdictIcon";
 import { cn } from "@/lib/utils";
-import {
-  VERDICT_LABELS,
-  VERDICTS_BY_SEVERITY,
-  type VerdictFilterValue,
-} from "@/lib/verdict";
-import type { Verdict } from "@/types/ward";
+import type { StatusCount } from "@/lib/api/wards";
+import type { BedFilterValue } from "@/lib/verdict";
 
 type WardStatusBarProps = {
-  bedCounts: Record<Verdict, number>;
-  value: VerdictFilterValue;
-  onChange: (value: VerdictFilterValue) => void;
+  /** 各狀態床數，順序與名稱由後端決定 */
+  statusCounts: readonly StatusCount[];
+  value: BedFilterValue;
+  onChange: (value: BedFilterValue) => void;
   className?: string;
 };
 
@@ -24,7 +21,7 @@ type WardStatusBarProps = {
  * 選取底色以 spring 在項目間滑動。
  */
 export function WardStatusBar({
-  bedCounts,
+  statusCounts,
   value,
   onChange,
   className,
@@ -36,21 +33,20 @@ export function WardStatusBar({
       role="group"
       aria-label="依稽核狀態篩選病床"
       className={cn(
-        "glass relative grid grid-cols-4 gap-1 rounded-card p-1.5 shadow-float",
+        "glass relative grid grid-cols-5 gap-1 rounded-card p-1.5 shadow-float",
         className,
       )}
     >
-      {VERDICTS_BY_SEVERITY.map((verdict) => {
-        const isActive = verdict === value;
-        const count = bedCounts[verdict];
+      {statusCounts.map(({ status, label, count }) => {
+        const isActive = status === value;
         return (
           <button
-            key={verdict}
+            key={status}
             type="button"
             aria-pressed={isActive}
-            aria-label={`${VERDICT_LABELS[verdict]} ${count} 床`}
+            aria-label={`${label} ${count} 床`}
             disabled={count === 0 && !isActive}
-            onClick={() => onChange(isActive ? "ALL" : verdict)}
+            onClick={() => onChange(isActive ? "ALL" : status)}
             className={cn(
               "relative flex min-h-11 pressable items-center gap-2 rounded-xl px-2 py-2 focus-ring disabled:opacity-40 sm:gap-3 sm:px-3",
               !isActive && "hover:bg-fill",
@@ -62,7 +58,7 @@ export function WardStatusBar({
                 className="rounded-xl bg-fill-strong"
               />
             )}
-            <VerdictIcon verdict={verdict} className="relative size-7" />
+            <VerdictIcon verdict={status} className="relative size-7" />
             <span className="relative flex flex-col items-start">
               <span className="text-title tabular-nums">{count}</span>
               <span
@@ -71,7 +67,7 @@ export function WardStatusBar({
                   isActive ? "text-ink" : "text-ink-secondary",
                 )}
               >
-                {VERDICT_LABELS[verdict]}
+                {label}
               </span>
             </span>
           </button>

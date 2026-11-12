@@ -2,12 +2,12 @@
 
 import { useState } from "react";
 
-import type { VerdictFilterValue } from "@/lib/verdict";
+import type { BedFilterValue } from "@/lib/verdict";
 import { DEFAULT_WARD_VIEW, WARD_KITS, type WardViewId } from "@/lib/wardKit";
 import { createCameraChannel } from "@/lib/wardMap";
 import { buildWardLayout } from "@/lib/wardLayout";
 import { createWardView, getMapFrame, getMapSize } from "@/lib/wardProjection";
-import type { WardBedBoard } from "@/types/ward";
+import type { WardBedBoard } from "@/lib/api/wards";
 
 import { BedHotspotLayer } from "./BedHotspotLayer";
 import { WardMapViewport } from "./WardMapViewport";
@@ -16,7 +16,7 @@ import { WardScene } from "./WardScene";
 type WardMapProps = {
   board: WardBedBoard;
   selectedBedCode?: string;
-  activeFilter: VerdictFilterValue;
+  activeFilter: BedFilterValue;
   /** 水合完成且瀏覽器支援 WebGL 時才載入 3D 場景；之前只有可操作的 DOM 病床按鈕。 */
   isSceneEnabled: boolean;
   onToggle: (bedCode: string) => void;

@@ -1,97 +1,55 @@
-import type { LlmConfig, LlmProvider } from "@/lib/api/llmConfigs";
-import {
-  draftFromConfig,
-  keepsStoredApiKey,
-  type LlmConfigDraft,
-  type LlmConfigDraftErrors,
-  type LlmConfigDraftField,
-  validateDraft,
-} from "@/lib/llmConfigForm";
-import {
-  getProviderOption,
-  isLocalProvider,
-  type ProviderChoice,
-  toProviderChoice,
-} from "@/lib/llmProviders";
+import type { LlmConfig } from "@/lib/api/llmConfigs";
+import type {
+  LlmProviderCatalog,
+  ProviderChoice,
+} from "@/lib/api/llmProviders";
+import { draftFromConfig, type LlmConfigDraft } from "@/lib/llmConfigForm";
 
-export type WizardStepId = "provider" | "connection" | "model" | "details";
-
-export type WizardStep = { id: WizardStepId; title: string };
-
-/** 新增與編輯共用的步驟，一步一頁。 */
-export const WIZARD_STEPS: readonly WizardStep[] = [
-  { id: "provider", title: "選擇服務類型" },
-  { id: "connection", title: "連線設定" },
-  { id: "model", title: "選擇模型" },
-  { id: "details", title: "命名與確認" },
-];
-
-const STEP_FIELDS: Record<WizardStepId, readonly LlmConfigDraftField[]> = {
-  provider: [],
-  connection: ["apiBase", "apiKey"],
-  model: ["model"],
-  details: ["name", "timeoutSeconds"],
-};
-
-// 與後端 LLM_CONFIG_NAME_MAX_LENGTH 一致
-const NAME_MAX_LENGTH = 100;
-const OLLAMA_PROVIDER: LlmProvider = "ollama";
-
-/** 只檢查該步驟負責的欄位。 */
-export function validateStep(
-  stepId: WizardStepId,
-  config: LlmConfig | null,
-  draft: LlmConfigDraft,
-): LlmConfigDraftErrors {
-  const errors = validateDraft(draft, keepsStoredApiKey(config, draft));
-  return Object.fromEntries(
-    STEP_FIELDS[stepId].flatMap((field) =>
-      errors[field] ? [[field, errors[field]]] : [],
-    ),
-  );
+/** 由儲存的服務類型推回畫面上的選項（對照表由後端提供）。 */
+export function toProviderChoice(
+  catalog: LlmProviderCatalog,
+  provider: LlmConfig["provider"],
+): ProviderChoice {
+  const option = catalog.providers.find((item) => item.provider === provider);
+  return option?.choice ?? "local";
 }
 
 function providerForChoice(
+  catalog: LlmProviderCatalog,
   choice: ProviderChoice,
   config: LlmConfig | null,
-): LlmProvider {
-  if (choice !== "local") {
-    return choice;
+): LlmConfig["provider"] {
+  // 編輯中的設定就屬於這個選項時沿用其類型（例如本地模型已偵測為 OpenAI 相容）
+  if (config && toProviderChoice(catalog, config.provider) === choice) {
+    return config.provider;
   }
-  // 本地模型先假設為 Ollama，實際類型由模型清單偵測後更新
-  return config && isLocalProvider(config.provider)
-    ? config.provider
-    : OLLAMA_PROVIDER;
+  const option = catalog.choices.find((item) => item.choice === choice);
+  return option?.default_provider ?? config?.provider ?? "openai";
 }
 
 /**
- * 套用服務類型選擇：回到原本的類型時還原原本的連線設定與模型，換成其他類型則清空，
- * 避免把 A 服務的模型或金鑰帶到 B 服務。名稱與逾時保留。
+ * 套用服務類型選擇（表單狀態，不涉及驗證）：回到原本的類型時還原原本的連線設定與模型，
+ * 換成其他類型則清空，避免把 A 服務的模型或金鑰帶到 B 服務。名稱與逾時保留。
  */
 export function applyProviderChoice(
+  catalog: LlmProviderCatalog,
   draft: LlmConfigDraft,
   choice: ProviderChoice,
   config: LlmConfig | null,
 ): LlmConfigDraft {
-  if (toProviderChoice(draft.provider) === choice) {
+  if (toProviderChoice(catalog, draft.provider) === choice) {
     return draft;
   }
   const original =
-    config && toProviderChoice(config.provider) === choice
+    config && toProviderChoice(catalog, config.provider) === choice
       ? draftFromConfig(config)
       : null;
   return {
     ...draft,
-    provider: providerForChoice(choice, config),
+    provider: providerForChoice(catalog, choice, config),
     model: original?.model ?? "",
-    apiBase: original?.apiBase ?? "",
-    apiKey: "",
-    clearApiKey: false,
+    api_base: original?.api_base ?? "",
+    api_key: "",
+    clear_api_key: false,
   };
-}
-
-/** 預設名稱，例如「Codex・API 金鑰・gpt-5.3-codex」。 */
-export function suggestConfigName(draft: LlmConfigDraft): string {
-  const label = getProviderOption(draft.provider).label;
-  return `${label}・${draft.model.trim()}`.slice(0, NAME_MAX_LENGTH);
 }

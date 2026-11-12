@@ -4,7 +4,7 @@ import { useState } from "react";
 
 import { EyeIcon, EyeSlashIcon } from "@/components/ui/icons";
 import { TextField } from "@/components/ui/TextField";
-import type { FieldRequirement } from "@/lib/llmProviders";
+import type { FieldRequirement } from "@/lib/api/llmProviders";
 
 type ApiKeyFieldProps = {
   id: string;

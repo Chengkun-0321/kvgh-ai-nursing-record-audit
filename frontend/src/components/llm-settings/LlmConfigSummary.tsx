@@ -6,7 +6,6 @@ import { BUTTON_PRIMARY } from "@/components/ui/controlStyles";
 import { PencilSimpleIcon } from "@/components/ui/icons";
 import type { ChatgptLogin } from "@/hooks/useChatgptLogin";
 import type { LlmConfig } from "@/lib/api/llmConfigs";
-import { describeConfig } from "@/lib/llmConfigSummary";
 
 import { ChatgptLoginPanel } from "./ChatgptLoginPanel";
 import { DeleteConfigButton } from "./DeleteConfigButton";
@@ -39,7 +38,7 @@ export function LlmConfigSummary({
           </span>
         )}
       </div>
-      <SummaryList rows={describeConfig(config)} />
+      <SummaryList rows={config.summary_rows} />
       {config.provider === "chatgpt" && <ChatgptLoginPanel login={login} />}
       <div className="flex flex-wrap items-start gap-2">
         <button type="button" onClick={onEdit} className={BUTTON_PRIMARY}>

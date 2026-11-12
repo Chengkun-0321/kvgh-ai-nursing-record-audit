@@ -39,7 +39,7 @@ token 實作在 `frontend/src/app/globals.css` 的 `@theme`；元件只用語意
 | 破壞性   | `danger`、`danger-tint`                                                                  | 刪除按鈕、錯誤訊息（白底約 7.2:1）；與 verdict 的紅色分開定義                                      |
 | 輸入框   | `field-border`                                                                           | 輸入框外框（白底約 3.5:1，符合非文字 ≥3:1）                                                        |
 | 頁面底色 | `backdrop`、`backdrop-glow`、`backdrop-shade`                                            | 全站暖亞麻底色（含首頁病房外），經 `page-backdrop` utility 使用，由工作區 layout 鋪在最底層         |
-| 狀態色   | `verdict-{error,warning,review,pass}` 與 `-strong`                                       | 主色用於圖示；`-strong` 為白底 ≥4.5:1 的文字色                                                     |
+| 狀態色   | `verdict-{error,warning,review,pass,unaudited}` 與 `-strong`                             | 主色用於圖示；`-strong` 為白底 ≥4.5:1 的文字色；`unaudited` 為「尚未稽核」的中性灰（虛線圓圈圖示） |
 | 徽章     | `badge`                                                                                  | 待處理數字徽章（白字 ≥4.5:1）                                                                      |
 | 圓角     | `rounded-card`（20px）、`rounded-panel`（28px）                                          | 卡片／清單、面板／sheet                                                                            |
 | 陰影     | `shadow-card`、`shadow-float`                                                          | 帶暖色調的擴散陰影（與底色同色溫）：一般卡片、浮動層（導覽、面板、狀態列、sheet） |

@@ -8,12 +8,9 @@ import { type DismissReason, useDismissable } from "@/hooks/useDismissable";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { useWardSceneMode } from "@/hooks/useWebGLSupport";
 import { DESKTOP_MEDIA_QUERY } from "@/lib/constants";
-import {
-  countBedsByWorstVerdict,
-  type VerdictFilterValue,
-} from "@/lib/verdict";
+import type { BedFilterValue } from "@/lib/verdict";
 import { getBedButtonId } from "@/lib/wardMap";
-import type { WardBedBoard } from "@/types/ward";
+import type { WardBedBoard } from "@/lib/api/wards";
 
 import { BedDetailPanel } from "./BedDetailPanel";
 import { BedDetailSheet } from "./BedDetailSheet";
@@ -32,10 +29,12 @@ const KEEP_DETAIL_SELECTOR = "[data-keep-detail]";
 export function BedBoard({ board }: BedBoardProps) {
   const isDesktop = useMediaQuery(DESKTOP_MEDIA_QUERY);
   const { mode: sceneMode, reportSceneError } = useWardSceneMode();
-  const [activeFilter, setActiveFilter] = useState<VerdictFilterValue>("ALL");
+  const [activeFilter, setActiveFilter] = useState<BedFilterValue>("ALL");
   const [selectedBedCode, setSelectedBedCode] = useState<string>();
   const panelRef = useRef<HTMLElement>(null);
-  const selectedBed = board.beds.find((bed) => bed.bedCode === selectedBedCode);
+  const selectedBed = board.beds.find(
+    (bed) => bed.bed_code === selectedBedCode,
+  );
 
   function closeDetail(reason: DismissReason | "button") {
     // 以按鈕或 Esc 關閉時把焦點送回原病床，鍵盤使用者不會失去位置
@@ -92,7 +91,7 @@ export function BedBoard({ board }: BedBoardProps) {
           className="ward-status pointer-events-auto absolute bottom-4 left-4 z-20"
         >
           <WardStatusBar
-            bedCounts={countBedsByWorstVerdict(board.beds)}
+            statusCounts={board.status_counts}
             value={activeFilter}
             onChange={setActiveFilter}
           />
@@ -103,7 +102,6 @@ export function BedBoard({ board }: BedBoardProps) {
               key="bed-detail"
               ref={panelRef}
               bed={selectedBed}
-              businessDate={board.businessDate}
               onClose={() => closeDetail("button")}
             />
           )}
@@ -111,7 +109,6 @@ export function BedBoard({ board }: BedBoardProps) {
       </div>
       <BedDetailSheet
         bed={selectedBed}
-        businessDate={board.businessDate}
         isOpen={!isDesktop && selectedBed !== undefined}
         onClose={() => setSelectedBedCode(undefined)}
       />

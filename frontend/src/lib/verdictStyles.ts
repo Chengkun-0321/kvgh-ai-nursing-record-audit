@@ -1,4 +1,4 @@
-import type { Verdict } from "@/types/ward";
+import type { BedBoardStatus } from "@/lib/api/wards";
 
 type VerdictStyle = {
   /** 圖示主色 */
@@ -10,7 +10,7 @@ type VerdictStyle = {
 };
 
 // class 字串需完整寫出，Tailwind 才能在建置時掃描到
-export const VERDICT_STYLES: Record<Verdict, VerdictStyle> = {
+export const VERDICT_STYLES: Record<BedBoardStatus, VerdictStyle> = {
   ERROR: {
     icon: "text-verdict-error",
     text: "text-verdict-error-strong",
@@ -30,5 +30,10 @@ export const VERDICT_STYLES: Record<Verdict, VerdictStyle> = {
     icon: "text-verdict-pass",
     text: "text-verdict-pass-strong",
     tint: "bg-verdict-pass/12",
+  },
+  NOT_AUDITED: {
+    icon: "text-verdict-unaudited",
+    text: "text-verdict-unaudited-strong",
+    tint: "bg-verdict-unaudited/12",
   },
 };

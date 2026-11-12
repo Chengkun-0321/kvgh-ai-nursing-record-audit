@@ -1,4 +1,4 @@
-import type { SummaryRow } from "@/lib/llmConfigSummary";
+import type { SummaryRow } from "@/lib/api/llmProviders";
 
 type SummaryListProps = {
   rows: readonly SummaryRow[];

@@ -6,24 +6,22 @@ import { BUTTON_SECONDARY } from "@/components/ui/controlStyles";
 import { InfoIcon } from "@/components/ui/icons";
 import { useChatStream } from "@/hooks/useChatStream";
 import type { LlmConfig } from "@/lib/api/llmConfigs";
-import { CHAT_MAX_MESSAGES } from "@/lib/constants";
-import { getProviderOption } from "@/lib/llmProviders";
 
 import { ChatComposer } from "./ChatComposer";
 import { ChatMessageBubble } from "./ChatMessageBubble";
+import { useLlmCatalog } from "./LlmCatalogContext";
 
 type ChatTestPanelProps = {
   /** 測試對象；`null` 表示尚未有任何設定 */
   config: LlmConfig | null;
 };
 
-// 一次送出一問，歷史加上新提問不可超過上限
-const LIMIT_REACHED_MESSAGE = `已達 ${CHAT_MAX_MESSAGES / 2} 輪對話上限，請先清除對話。`;
-
 function ChatSession({ config }: { config: LlmConfig }) {
   const { entries, isStreaming, send, stop, clear } = useChatStream(config.id);
   const logRef = useRef<HTMLUListElement>(null);
-  const isLimitReached = entries.length + 1 > CHAT_MAX_MESSAGES;
+  const { limits } = useLlmCatalog();
+  // 一次送出一問，歷史加上新提問不可超過上限
+  const isLimitReached = entries.length + 1 > limits.chat_max_messages;
 
   // 新內容出現時捲到最底；直接設定位置，不做平滑捲動
   useEffect(() => {
@@ -39,8 +37,7 @@ function ChatSession({ config }: { config: LlmConfig }) {
         <div className="min-w-0">
           <h2 className="text-headline">測試對話</h2>
           <p className="truncate text-footnote text-ink-secondary">
-            對象：{config.name}（{getProviderOption(config.provider).label}・
-            {config.model}）
+            對象：{config.name}（{config.provider_label}・{config.model}）
           </p>
         </div>
         <button
@@ -73,7 +70,9 @@ function ChatSession({ config }: { config: LlmConfig }) {
       </ul>
       <ChatComposer
         isStreaming={isStreaming}
-        disabledReason={isLimitReached ? LIMIT_REACHED_MESSAGE : null}
+        disabledReason={
+          isLimitReached ? limits.chat_limit_reached_message : null
+        }
         onSend={send}
         onStop={stop}
       />

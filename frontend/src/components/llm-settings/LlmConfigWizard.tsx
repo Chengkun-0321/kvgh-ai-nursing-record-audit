@@ -7,7 +7,6 @@ import { XIcon } from "@/components/ui/icons";
 import type { ChatgptLogin } from "@/hooks/useChatgptLogin";
 import { useLlmConfigWizard } from "@/hooks/useLlmConfigWizard";
 import type { LlmConfig } from "@/lib/api/llmConfigs";
-import { WIZARD_STEPS } from "@/lib/llmConfigWizard";
 import {
   FADE_SCRIM,
   PANEL_TRANSITION,
@@ -40,7 +39,11 @@ function WizardSheet({
   onSaved,
   titleId,
 }: WizardSheetProps) {
-  const wizard = useLlmConfigWizard({ config, onSaved });
+  const wizard = useLlmConfigWizard({
+    config,
+    onSaved,
+    recheckKey: login.status.state,
+  });
   const headingRef = useRef<HTMLHeadingElement>(null);
 
   // 換步驟後把焦點移到新標題，螢幕報讀會念出目前步驟
@@ -60,7 +63,7 @@ function WizardSheet({
         <div className="min-w-0 flex-1">
           <p className="truncate text-footnote font-semibold text-ink-secondary">
             {config ? `編輯「${config.name}」` : "新增模型"}・步驟{" "}
-            {wizard.stepIndex + 1}／{WIZARD_STEPS.length}
+            {wizard.stepIndex + 1}／{wizard.steps.length}
           </p>
           <h2
             ref={headingRef}
@@ -80,7 +83,10 @@ function WizardSheet({
           <XIcon weight="bold" aria-hidden="true" className="size-5" />
         </button>
       </header>
-      <WizardStepProgress currentIndex={wizard.stepIndex} />
+      <WizardStepProgress
+        steps={wizard.steps}
+        currentIndex={wizard.stepIndex}
+      />
       <WizardStepBody wizard={wizard} login={login} />
       <WizardFooter wizard={wizard} onCancel={onClose} />
     </motion.div>

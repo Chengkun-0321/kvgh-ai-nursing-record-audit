@@ -7,14 +7,9 @@ import { VerdictIcon } from "@/components/VerdictIcon";
 import { BED_DETAIL_PANEL_ID } from "@/components/bed-board/BedDetailPanel";
 import { useMapKeyframe } from "@/hooks/useMapKeyframe";
 import { cn } from "@/lib/utils";
-import {
-  describeFindingCounts,
-  getWorstVerdict,
-  VERDICT_LABELS,
-} from "@/lib/verdict";
 import { VERDICT_STYLES } from "@/lib/verdictStyles";
 import { getBedButtonId, type MapPoint } from "@/lib/wardMap";
-import type { BedStatus } from "@/types/ward";
+import type { BedStatus } from "@/lib/api/wards";
 
 type BedHotspotProps = {
   bed: BedStatus;
@@ -36,7 +31,7 @@ export function BedHotspot({
   onToggle,
 }: BedHotspotProps) {
   const itemRef = useRef<HTMLLIElement>(null);
-  const verdict = getWorstVerdict(bed.findings);
+  const verdict = bed.status;
   useMapKeyframe(itemRef, {
     transform: `translate(${position.x}px, ${position.y}px)`,
   });
@@ -44,14 +39,14 @@ export function BedHotspot({
   return (
     <li ref={itemRef} className="bed-hotspot absolute top-0 left-0">
       <button
-        id={getBedButtonId(bed.bedCode)}
+        id={getBedButtonId(bed.bed_code)}
         type="button"
         data-keep-detail
-        data-bed-code={bed.bedCode}
+        data-bed-code={bed.bed_code}
         aria-pressed={isSelected}
         aria-controls={isSelected ? BED_DETAIL_PANEL_ID : undefined}
-        aria-label={`${bed.bedCode}，${describeFindingCounts(bed.findings)}`}
-        onClick={() => onToggle(bed.bedCode)}
+        aria-label={`${bed.bed_code}，${bed.summary_text}`}
+        onClick={() => onToggle(bed.bed_code)}
         className="group absolute inset-0 rounded-[2rem] outline-none"
       >
         {isSelected && (
@@ -70,12 +65,12 @@ export function BedHotspot({
           )}
         >
           <VerdictIcon verdict={verdict} className="size-4" />
-          {bed.bedCode}
-          {verdict !== "PASS" && (
+          {bed.bed_code}
+          {bed.is_pending && (
             <span
               className={cn("bed-label-verdict", VERDICT_STYLES[verdict].text)}
             >
-              {VERDICT_LABELS[verdict]}
+              {bed.status_label}
             </span>
           )}
         </span>

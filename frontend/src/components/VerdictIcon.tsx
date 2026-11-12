@@ -2,10 +2,10 @@ import type { ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
 import { VERDICT_STYLES } from "@/lib/verdictStyles";
-import type { Verdict } from "@/types/ward";
+import type { BedBoardStatus } from "@/lib/api/wards";
 
 type VerdictIconProps = {
-  verdict: Verdict;
+  verdict: BedBoardStatus;
   className?: string;
 };
 
@@ -23,8 +23,8 @@ const EXCLAMATION = (
   </>
 );
 
-// 形狀差異讓色弱使用者也能分辨：圓環／三角形／驚嘆號圓形／問號圓形
-const ICON_SHAPES: Record<Verdict, ReactNode> = {
+// 形狀差異讓色弱使用者也能分辨：圓環／三角形／驚嘆號圓形／問號圓形／虛線圓圈（尚未稽核）
+const ICON_SHAPES: Record<BedBoardStatus, ReactNode> = {
   PASS: (
     <>
       <circle cx="12" cy="12" r="11" className="fill-current" />
@@ -56,9 +56,19 @@ const ICON_SHAPES: Record<Verdict, ReactNode> = {
       <circle cx="12" cy="17.2" r="1.4" className="fill-white" />
     </>
   ),
+  NOT_AUDITED: (
+    <circle
+      cx="12"
+      cy="12"
+      r="9.5"
+      className="fill-none stroke-current"
+      strokeWidth={2.4}
+      strokeDasharray="3.2 2.6"
+    />
+  ),
 };
 
-/** 稽核判定圖示；一律搭配文字使用，不可單獨以顏色表達狀態。 */
+/** 病床狀態圖示（四種判定與尚未稽核）；一律搭配文字使用，不可單獨以顏色表達狀態。 */
 export function VerdictIcon({ verdict, className }: VerdictIconProps) {
   return (
     <svg

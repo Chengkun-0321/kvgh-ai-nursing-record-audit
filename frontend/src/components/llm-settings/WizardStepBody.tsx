@@ -21,7 +21,7 @@ type WizardStepBodyProps = {
 };
 
 function CurrentStep({ wizard, login }: WizardStepBodyProps) {
-  switch (wizard.step.id) {
+  switch (wizard.step.step_id) {
     case "provider":
       return (
         <WizardProviderStep
@@ -46,7 +46,7 @@ export function WizardStepBody({ wizard, login }: WizardStepBodyProps) {
     <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain px-5 pb-5 sm:px-6">
       <AnimatePresence mode="wait" initial={false}>
         <motion.div
-          key={wizard.step.id}
+          key={wizard.step.step_id}
           initial={{ opacity: 0, x: offset }}
           animate={{ opacity: 1, x: 0 }}
           // 退場只做短淡出，新步驟不必等舊內容滑完

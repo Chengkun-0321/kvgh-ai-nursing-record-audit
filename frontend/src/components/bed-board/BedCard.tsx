@@ -7,14 +7,9 @@ import { VerdictIcon } from "@/components/VerdictIcon";
 import { getBedSpriteSrc } from "@/lib/bedSprites";
 import { SPRING_DEFAULT } from "@/lib/motion";
 import { cn } from "@/lib/utils";
-import {
-  describeFindingCounts,
-  getWorstVerdict,
-  VERDICT_LABELS,
-} from "@/lib/verdict";
 import { VERDICT_STYLES } from "@/lib/verdictStyles";
 import { getBedButtonId } from "@/lib/wardMap";
-import type { BedStatus } from "@/types/ward";
+import type { BedStatus } from "@/lib/api/wards";
 
 import { BED_DETAIL_PANEL_ID } from "./BedDetailPanel";
 import { BedPhoto } from "./BedPhoto";
@@ -34,19 +29,19 @@ const BED_CARD_IMAGE_SIZES = "(min-width: 1024px) 380px, 75vw";
  * 位置與大小以床位寬度（cqw）表示；窄床位只顯示最嚴重判定。
  */
 export function BedCard({ bed, isSelected, isDimmed, onToggle }: BedCardProps) {
-  const verdict = getWorstVerdict(bed.findings);
-  const summary = describeFindingCounts(bed.findings);
+  const verdict = bed.status;
+  const summary = bed.summary_text;
 
   return (
     <button
-      id={getBedButtonId(bed.bedCode)}
+      id={getBedButtonId(bed.bed_code)}
       type="button"
       data-keep-detail
-      data-bed-code={bed.bedCode}
+      data-bed-code={bed.bed_code}
       aria-pressed={isSelected}
       aria-controls={isSelected ? BED_DETAIL_PANEL_ID : undefined}
-      aria-label={`${bed.bedCode}，${summary}`}
-      onClick={() => onToggle(bed.bedCode)}
+      aria-label={`${bed.bed_code}，${summary}`}
+      onClick={() => onToggle(bed.bed_code)}
       className={cn(
         "group absolute inset-0 rounded-[5cqw] focus-ring transition-opacity duration-300 ease-apple",
         isDimmed && "opacity-35",
@@ -59,10 +54,7 @@ export function BedCard({ bed, isSelected, isDimmed, onToggle }: BedCardProps) {
         />
       )}
       <span className="absolute top-[8cqw] left-[10cqw] w-[80cqw] transition-[translate,scale] duration-300 ease-apple group-hover:-translate-y-[0.5cqw] group-active:scale-97 group-active:duration-100">
-        <BedPhoto
-          src={getBedSpriteSrc(bed.patient, verdict)}
-          sizes={BED_CARD_IMAGE_SIZES}
-        />
+        <BedPhoto src={getBedSpriteSrc(bed)} sizes={BED_CARD_IMAGE_SIZES} />
       </span>
       <motion.span
         layout="position"
@@ -78,7 +70,7 @@ export function BedCard({ bed, isSelected, isDimmed, onToggle }: BedCardProps) {
           verdict={verdict}
           className="size-4 @min-[10rem]/bay:size-5"
         />
-        {bed.bedCode}
+        {bed.bed_code}
       </motion.span>
       <motion.span
         layout="position"
@@ -88,9 +80,7 @@ export function BedCard({ bed, isSelected, isDimmed, onToggle }: BedCardProps) {
           VERDICT_STYLES[verdict].text,
         )}
       >
-        <span className="@min-[12rem]/bay:hidden">
-          {VERDICT_LABELS[verdict]}
-        </span>
+        <span className="@min-[12rem]/bay:hidden">{bed.status_label}</span>
         <span className="hidden @min-[12rem]/bay:inline">{summary}</span>
       </motion.span>
     </button>

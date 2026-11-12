@@ -1,5 +1,5 @@
-import { isBedDimmed, type VerdictFilterValue } from "@/lib/verdict";
-import type { WardBedBoard } from "@/types/ward";
+import { isBedDimmed, type BedFilterValue } from "@/lib/verdict";
+import type { WardBedBoard } from "@/lib/api/wards";
 
 import { BedCard } from "./BedCard";
 import { WARD_TITLE_ID } from "./WardTitle";
@@ -7,7 +7,7 @@ import { WARD_TITLE_ID } from "./WardTitle";
 type WardBedGridProps = {
   board: WardBedBoard;
   selectedBedCode?: string;
-  activeFilter: VerdictFilterValue;
+  activeFilter: BedFilterValue;
   onToggle: (bedCode: string) => void;
 };
 
@@ -31,12 +31,12 @@ export function WardBedGrid({
         >
           {board.beds.map((bed) => (
             <li
-              key={bed.bedCode}
+              key={bed.bed_code}
               className="@container/bay relative aspect-20/23"
             >
               <BedCard
                 bed={bed}
-                isSelected={bed.bedCode === selectedBedCode}
+                isSelected={bed.bed_code === selectedBedCode}
                 isDimmed={isBedDimmed(bed, activeFilter)}
                 onToggle={onToggle}
               />

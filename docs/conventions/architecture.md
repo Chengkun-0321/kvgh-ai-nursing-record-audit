@@ -16,7 +16,25 @@ audit_findings（Verdict + Evidence）
         │  api/v1
         ▼
 Next.js：病床總覽 → 點選病床顯示詳情 → 進入病患頁面 → 病患摘要 + 稽核結果 + Evidence
+
+院方每日 JSON（data/<YYYYMMDD>/<病房>/）
+        │  services/hospital_data（只讀，跨日合併；不入庫，見 ADR 0010）
+        ▼
+api/v1/wards、api/v1/raw-patients → Next.js：病床總覽（W63）、原始資料頁
 ```
+
+## 前後端分工
+
+**領域運算與驗證一律在後端，前端只負責渲染**（見 [ADR 0009](../adr/0009-backend-owns-computation.md)）。
+
+| 由後端提供（前端不得自行計算或另存一份規則） | 前端可以做的事 |
+| --- | --- |
+| 病床狀態、各狀態床數、待處理床數、摘要文字、住院天數 | 狀態 → 顏色與圖示的對照、日期格式化 |
+| 原始資料的跨日合併、去重、排序、篩選、依日分組、檢驗矩陣、異常標記 | 篩選造成的淡化、選取狀態、表單草稿 |
+| LLM 設定的欄位規則、上限、逐欄錯誤、建議名稱、確認摘要、模型清單是否可查 | 把表單欄位組成 API 請求 |
+| 服務類型與狀態的顯示名稱 | 3D 場景版面與相機（`wardLayout.ts`、`wardProjection.ts`，屬畫面呈現） |
+
+新增需要判斷的畫面時，先在後端 API 加欄位，不在前端寫判斷。
 
 ## 後端（FastAPI 標準分層）
 
@@ -34,6 +52,8 @@ Next.js：病床總覽 → 點選病床顯示詳情 → 進入病患頁面 → �
 | `core/`     | 設定、例外、列舉、log、加解密 | 標準庫與第三方                                       | `app` 內其他模組             |
 
 依賴方向：`api → services → crud → models`，不可反向。
+
+唯一例外：`api/deps.py` 為了提供 `get_db`（每個請求一個 session）會 import `db.session`；這是 FastAPI 提供 session 的標準位置，其他 `api/` 檔案仍不可 import `db`。
 
 ### `services/` 內部結構
 
@@ -54,10 +74,23 @@ services/
 │   ├── config_service.py  # 模型設定的讀寫、使用中切換、變更紀錄
 │   ├── system_prompt_service.py  # 共用 system prompt 的版本化儲存
 │   ├── model_catalog.py   # 以 httpx 查詢各服務的模型清單、偵測本地伺服器類型（不 import litellm）
+│   ├── model_list_parsers.py  # 各服務模型清單 API 的回應格式與解析
+│   ├── provider_catalog.py    # 服務類型目錄：顯示名稱、範例、精靈步驟、上限（前端唯一來源）
+│   ├── config_summary.py      # 設定摘要文字（已儲存設定與精靈草稿共用）
+│   ├── draft_check.py         # 設定精靈的表單檢查（逐欄錯誤、建議名稱、模型查詢方式）
 │   ├── model_listing.py   # 查詢可用模型的流程：取得金鑰、過濾對話模型
 │   ├── redaction.py       # 服務錯誤說明的金鑰遮蔽
 │   ├── chatgpt_auth.py    # ChatGPT 訂閱的裝置碼登入（唯一可 import litellm 內部模組的例外）
 │   └── prompt_loader.py   # 載入、渲染 Jinja2 prompt（待實作）
+├── hospital_data/         # 院方每日資料（只讀、不入庫，見 ADR 0010）
+│   ├── source.py          # 唯一開啟院方資料檔的模組：路徑驗證、快取
+│   ├── index.py           # 由各日 patientlist 整理病人出現紀錄、統一床號
+│   ├── events.py          # 各區塊 → 時間軸紀錄（宣告式欄位對應）
+│   ├── labs.py            # 檢驗報告解析、去重、檢驗矩陣
+│   ├── timeline.py        # 跨日合併、篩選、依日分組
+│   ├── patients.py        # 病房清單、病人清單、病人摘要、原文
+│   └── raw_data_service.py  # endpoint 呼叫的入口（同步 I/O 放到 thread）
+├── ward_board.py          # 首頁病床總覽（目前每床為「尚未稽核」）
 └── ingestion/
     ├── sources.py         # DataSource Protocol、LocalFixtureSource、RelaySource
     ├── importer.py        # 驗證 → 正規化 → 入庫
@@ -89,7 +122,8 @@ services/
 | 路由                     | 內容                                                                                                                                                               |
 | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `/`                      | 病房地圖：Blender 場景模組依床數組成的 3D 場景搭配病床素材，可拖曳及縮放 50–200%；依最嚴重 Verdict 顯示光暈並篩選（淡化其餘床位）；點選病床於右側（手機為 bottom sheet）顯示病患摘要與稽核結果 |
-| `/patients/[patientKey]` | 病患頁面：病患摘要、各規則稽核結果、Evidence 原文（內容待討論，目前為佔位頁）                                                                                      |
+| `/patients/[patientKey]` | 病患頁面：病患摘要、各規則稽核結果、Evidence 原文（內容待討論，目前為佔位頁，提供「檢視原始資料」連結）                                                            |
+| `/raw-data`              | 原始資料：左側病人清單（該病房所有日期出現過的病人），右側時間軸（可依起訖日與類別篩選）、檢驗總表（項目 × 採檢時間）、院方原文；狀態全在網址 query，見 [ADR 0010](../adr/0010-hospital-raw-data-viewer.md) |
 | `/settings/llm`          | LLM 模型設定：多組設定（同一時間一組使用中）、服務類型、API key（只顯示遮罩值）、ChatGPT 訂閱登入、共用 system prompt、串流測試對話；見 [ADR 0006](../adr/0006-llm-config-settings.md)、[ADR 0007](../adr/0007-llm-system-prompt.md) |
 
 登入後的頁面放在 `app/(workspace)/`，共用工作區外框（頂列、側欄／底部分頁列）；登入頁（待決）之後放在此群組之外。UI 規範見 [ui-design.md](ui-design.md)。
@@ -97,4 +131,5 @@ services/
 ### 資料流
 
 - Server Component 經 `lib/api/` 取資料 → 以 props 傳給 client component 處理互動與動畫
+- 資料載入（含錯誤轉成訊息）放在 `lib/api/`，元件只依結果渲染，不在 JSX 外包 try/catch
 - 前後端契約以 FastAPI OpenAPI 為準；後端 schema 變更 → 前端 `npm run gen:api`

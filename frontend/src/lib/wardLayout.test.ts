@@ -9,7 +9,7 @@ import {
 
 function bedsOf(count: number) {
   return Array.from({ length: count }, (_, index) => ({
-    bedCode: `W-${index + 1}`,
+    bed_code: `W-${index + 1}`,
   }));
 }
 

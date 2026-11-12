@@ -1,34 +1,52 @@
 import { cache } from "react";
 
-import type { BedStatus, WardBedBoard } from "@/types/ward";
+import type { components } from "@/types/api";
 
-import { MOCK_WARD_BED_BOARDS } from "./mockWardData";
+import { apiJson } from "./client";
+
+type WardList = components["schemas"]["WardListRead"];
+export type WardBedBoard = components["schemas"]["WardBedBoardRead"];
+export type BedStatus = components["schemas"]["BedStatusRead"];
+export type BedBoardStatus = components["schemas"]["BedBoardStatus"];
+export type StatusCount = components["schemas"]["StatusCountRead"];
+export type PatientSummary = components["schemas"]["PatientSummaryRead"];
+export type AuditFindingSummary =
+  components["schemas"]["AuditFindingSummaryRead"];
+
+const BASE_PATH = "/api/v1/wards";
 
 /**
- * 取得指定病房的病床總覽（每床的病患摘要與稽核結果摘要）。
+ * 有院方資料的病房與預設病房。以 `cache` 包裝，同一次請求中外框與頁面重複呼叫只取一次。
+ */
+const getWardList = cache((): Promise<WardList> =>
+  apiJson<WardList>(BASE_PATH),
+);
+
+/** 首頁預設顯示的病房代碼（由後端設定決定）。 */
+export async function getDefaultWardCode(): Promise<string> {
+  return (await getWardList()).default_ward_code;
+}
+
+/**
+ * 取得病房的病床總覽；狀態、摘要文字與各狀態床數都由後端算好。
  * 以 `cache` 包裝，同一次請求中外框與頁面重複呼叫只取一次。
- *
- * TODO(待決): 後端完成後改為呼叫 `/api/v1/wards/{ward_code}/beds`，目前回傳虛構資料。
  */
 export const getWardBedBoard = cache(
-  async (wardCode: string): Promise<WardBedBoard> => {
-    const board = MOCK_WARD_BED_BOARDS[wardCode];
-    if (!board) {
-      throw new Error(`查無病房資料：${wardCode}`);
-    }
-    return board;
-  },
+  (wardCode: string): Promise<WardBedBoard> =>
+    apiJson<WardBedBoard>(
+      `${BASE_PATH}/${encodeURIComponent(wardCode)}/bed-board`,
+    ),
 );
 
 /**
- * 依病患匿名鍵找出所在病床；查無時回傳 `undefined`。
- *
- * TODO(待決): 後端完成後改為呼叫病患 API，目前從虛構病床總覽查找。
+ * 頂部導覽的待處理床數。外框在每一頁都會呼叫，後端無法連線或沒有院方資料時回傳 0（隱藏徽章），
+ * 不讓設定頁等與病房無關的頁面跟著失敗；首頁本身仍會顯示錯誤。
  */
-export async function getPatientBed(
-  wardCode: string,
-  patientKey: string,
-): Promise<BedStatus | undefined> {
-  const board = await getWardBedBoard(wardCode);
-  return board.beds.find((bed) => bed.patient.patientKey === patientKey);
+export async function getPendingBedCount(): Promise<number> {
+  try {
+    const board = await getWardBedBoard(await getDefaultWardCode());
+    return board.pending_bed_count;
+  } catch {
+    return 0;
+  }
 }

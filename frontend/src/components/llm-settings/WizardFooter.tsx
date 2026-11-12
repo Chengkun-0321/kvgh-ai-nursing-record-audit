@@ -6,7 +6,6 @@ import {
 } from "@/components/ui/controlStyles";
 import { WarningCircleIcon } from "@/components/ui/icons";
 import type { LlmConfigWizard } from "@/hooks/useLlmConfigWizard";
-import { WIZARD_STEPS } from "@/lib/llmConfigWizard";
 
 type WizardFooterProps = {
   wizard: LlmConfigWizard;
@@ -14,7 +13,7 @@ type WizardFooterProps = {
 };
 
 function primaryLabel(wizard: LlmConfigWizard): string {
-  if (wizard.stepIndex < WIZARD_STEPS.length - 1) {
+  if (wizard.stepIndex < wizard.steps.length - 1) {
     return "下一步";
   }
   if (wizard.isSaving) {

@@ -10,13 +10,13 @@ import {
 import { InfoIcon } from "@/components/ui/icons";
 import { useSystemPromptEditor } from "@/hooks/useSystemPromptEditor";
 import type { LlmSystemPrompt } from "@/lib/api/llmSystemPrompts";
-import { SYSTEM_PROMPT_MAX_CHARS } from "@/lib/constants";
 import {
   describeSavedResult,
   describeSavedSystemPrompt,
 } from "@/lib/systemPrompt";
 import { cn } from "@/lib/utils";
 
+import { useLlmCatalog } from "./LlmCatalogContext";
 import { type Notice, SettingsNotice } from "./SettingsNotice";
 
 type SystemPromptPanelProps = {
@@ -43,6 +43,7 @@ export function SystemPromptPanel({
   initialSystemPrompt,
 }: SystemPromptPanelProps) {
   const editor = useSystemPromptEditor(initialSystemPrompt);
+  const { limits } = useLlmCatalog();
   const headingId = useId();
   const hintId = useId();
   const inputId = useId();
@@ -66,7 +67,7 @@ export function SystemPromptPanel({
         value={editor.draft}
         onChange={(event) => editor.setDraft(event.target.value)}
         aria-describedby={hintId}
-        maxLength={SYSTEM_PROMPT_MAX_CHARS}
+        maxLength={limits.system_prompt_max_chars}
         rows={6}
         spellCheck={false}
         placeholder="例：你是護理紀錄稽核助理，一律使用繁體中文回答，只根據提供的資料判斷。"
@@ -78,7 +79,7 @@ export function SystemPromptPanel({
       <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-footnote text-ink-secondary">
         <span>{describeSavedSystemPrompt(editor.saved)}</span>
         <span className="tabular-nums">
-          {editor.draft.length} / {SYSTEM_PROMPT_MAX_CHARS}
+          {editor.draft.length} / {limits.system_prompt_max_chars}
         </span>
       </div>
       {editor.isChanged && (

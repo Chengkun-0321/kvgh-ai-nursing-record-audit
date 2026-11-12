@@ -4,11 +4,11 @@ import { Canvas } from "@react-three/fiber";
 import { Suspense, useEffect } from "react";
 
 import { preloadWardView } from "@/lib/sceneAssets";
-import type { VerdictFilterValue } from "@/lib/verdict";
+import type { BedFilterValue } from "@/lib/verdict";
 import type { CameraChannel } from "@/lib/wardMap";
 import type { WardLayout } from "@/lib/wardLayout";
 import type { MapFrame } from "@/lib/wardProjection";
-import type { BedStatus } from "@/types/ward";
+import type { BedStatus } from "@/lib/api/wards";
 
 import { BedSpriteLayer } from "./BedSpriteLayer";
 import { DeferredMount } from "./DeferredMount";
@@ -20,7 +20,7 @@ export type WardSceneCanvasProps = {
   beds: readonly BedStatus[];
   layout: WardLayout;
   frame: MapFrame;
-  activeFilter: VerdictFilterValue;
+  activeFilter: BedFilterValue;
   channel: CameraChannel;
 };
 

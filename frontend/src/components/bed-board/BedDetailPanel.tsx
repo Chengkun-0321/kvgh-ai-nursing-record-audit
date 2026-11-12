@@ -5,7 +5,7 @@ import { type Ref, useId } from "react";
 
 import { XIcon } from "@/components/ui/icons";
 import { FADE_FAST, PANEL_MOTION, PANEL_TRANSITION } from "@/lib/motion";
-import type { BedStatus } from "@/types/ward";
+import type { BedStatus } from "@/lib/api/wards";
 
 import { BedDetailContent } from "./BedDetailContent";
 import { PatientPageLink } from "./PatientPageLink";
@@ -14,7 +14,6 @@ export const BED_DETAIL_PANEL_ID = "bed-detail";
 
 type BedDetailPanelProps = {
   bed: BedStatus;
-  businessDate: string;
   onClose: () => void;
   /** AnimatePresence（popLayout）量測位置與外部點擊判斷都需要 DOM 參照 */
   ref?: Ref<HTMLElement>;
@@ -25,12 +24,7 @@ type BedDetailPanelProps = {
  * 進出動畫直接做在玻璃元素本身（祖先淡入會讓 backdrop-filter 暫時失效）；
  * 高度固定、內容區捲動（底緣以遮罩淡出），主要操作固定在底部，切換病床時大卡不會忽高忽低。
  */
-export function BedDetailPanel({
-  bed,
-  businessDate,
-  onClose,
-  ref,
-}: BedDetailPanelProps) {
+export function BedDetailPanel({ bed, onClose, ref }: BedDetailPanelProps) {
   const headingId = useId();
   // 退場動畫期間就不再算作遮擋，地圖可立即回到填滿畫面
   const isPresent = useIsPresent();
@@ -48,7 +42,7 @@ export function BedDetailPanel({
       className="glass pointer-events-auto absolute top-4 right-4 bottom-4 z-30 flex w-detail origin-right flex-col overflow-hidden rounded-card shadow-float"
     >
       <motion.div
-        key={bed.bedCode}
+        key={bed.bed_code}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={FADE_FAST}
@@ -57,7 +51,6 @@ export function BedDetailPanel({
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain mask-b-from-92% p-5 pb-6">
           <BedDetailContent
             bed={bed}
-            businessDate={businessDate}
             headingId={headingId}
             headerAction={
               <button
@@ -72,7 +65,7 @@ export function BedDetailPanel({
           />
         </div>
         <div className="shrink-0 px-5 pb-5">
-          <PatientPageLink patientKey={bed.patient.patientKey} />
+          <PatientPageLink patientKey={bed.patient.patient_key} />
         </div>
       </motion.div>
     </motion.aside>

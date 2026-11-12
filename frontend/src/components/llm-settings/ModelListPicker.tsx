@@ -9,9 +9,11 @@ import {
 import type { ModelListState } from "@/hooks/useAvailableModels";
 import type { AvailableModel } from "@/lib/api/availableModels";
 import type { LlmProvider } from "@/lib/api/llmConfigs";
+import type { LlmProviderCatalog } from "@/lib/api/llmProviders";
 import { DRAFT_FIELD_INPUT_IDS } from "@/lib/llmConfigForm";
-import { getProviderOption } from "@/lib/llmProviders";
 import { cn } from "@/lib/utils";
+
+import { findProviderOption, useLlmCatalog } from "./LlmCatalogContext";
 
 type ModelListPickerProps = {
   provider: LlmProvider;
@@ -29,11 +31,12 @@ function optionLabel(model: AvailableModel): string {
 }
 
 function describeSource(
+  catalog: LlmProviderCatalog,
   provider: LlmProvider,
   state: Extract<ModelListState, { status: "ready" }>,
 ): string {
   if (state.detection) {
-    const server = getProviderOption(state.detection.provider).label;
+    const server = findProviderOption(catalog, state.detection.provider).label;
     return `偵測到${server}：${state.detection.apiBase}`;
   }
   return provider === "chatgpt"
@@ -107,9 +110,10 @@ function ReadyList(
   },
 ) {
   const { provider, state, onReload } = props;
+  const catalog = useLlmCatalog();
   return (
     <>
-      <p className={NOTE_CLASS}>{describeSource(provider, state)}</p>
+      <p className={NOTE_CLASS}>{describeSource(catalog, provider, state)}</p>
       {state.models.length === 0 ? (
         <p className="text-body text-ink">
           伺服器上還沒有可用的模型。使用 Ollama 時，可先執行 ollama pull

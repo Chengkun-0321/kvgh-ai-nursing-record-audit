@@ -15,7 +15,7 @@ import {
   SHEET_TRANSITION,
   shouldDismissSheet,
 } from "@/lib/motion";
-import type { BedStatus } from "@/types/ward";
+import type { BedStatus } from "@/lib/api/wards";
 
 import { BED_DETAIL_PANEL_ID } from "./BedDetailPanel";
 import { BedDetailContent } from "./BedDetailContent";
@@ -23,7 +23,6 @@ import { PatientPageLink } from "./PatientPageLink";
 
 type BedDetailSheetProps = {
   bed: BedStatus | undefined;
-  businessDate: string;
   isOpen: boolean;
   onClose: () => void;
 };
@@ -33,12 +32,7 @@ type BedDetailSheetProps = {
  * 以原生 `<dialog>` 取得 Esc 關閉、背景 inert 與焦點還原；由下進、往下退，
  * 可拖曳把手關閉（依放手速度投影判斷，速度交給退場 spring 延續）。
  */
-export function BedDetailSheet({
-  bed,
-  businessDate,
-  isOpen,
-  onClose,
-}: BedDetailSheetProps) {
+export function BedDetailSheet({ bed, isOpen, onClose }: BedDetailSheetProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const sheetRef = useRef<HTMLDivElement>(null);
   const dragControls = useDragControls();
@@ -120,13 +114,9 @@ export function BedDetailSheet({
               </button>
             </div>
             <div className="overflow-y-auto overscroll-contain px-5 pb-[calc(env(safe-area-inset-bottom)+1.5rem)]">
-              <BedDetailContent
-                bed={bed}
-                businessDate={businessDate}
-                headingId={headingId}
-              />
+              <BedDetailContent bed={bed} headingId={headingId} />
               <PatientPageLink
-                patientKey={bed.patient.patientKey}
+                patientKey={bed.patient.patient_key}
                 className="mt-5"
               />
             </div>

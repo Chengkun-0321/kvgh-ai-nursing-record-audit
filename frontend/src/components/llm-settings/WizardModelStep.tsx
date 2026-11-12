@@ -6,11 +6,10 @@ import { TextField } from "@/components/ui/TextField";
 import { useAvailableModels } from "@/hooks/useAvailableModels";
 import type { ChatgptLogin } from "@/hooks/useChatgptLogin";
 import type { LlmConfigWizard } from "@/hooks/useLlmConfigWizard";
-import type { LlmProvider } from "@/lib/api/llmConfigs";
-import { planModelList } from "@/lib/availableModels";
+import { toModelListRequest } from "@/lib/availableModels";
 import { DRAFT_FIELD_INPUT_IDS } from "@/lib/llmConfigForm";
-import { getProviderOption } from "@/lib/llmProviders";
 
+import { useLlmCatalog, useProviderOption } from "./LlmCatalogContext";
 import { ModelListPicker } from "./ModelListPicker";
 
 type WizardModelStepProps = {
@@ -21,22 +20,20 @@ type ModelStepProps = WizardModelStepProps & {
   login: ChatgptLogin;
 };
 
-const LOCAL_SERVER_TYPES: readonly LlmProvider[] = [
-  "ollama",
-  "openai_compatible",
-];
-
 const LINK_BUTTON_CLASS =
   "self-start min-h-11 rounded-lg px-1 text-body font-semibold text-accent-strong underline-offset-4 focus-ring hover:underline";
 
 /** 手動輸入時無法偵測，本地模型需自行指定伺服器類型。 */
 function LocalServerTypePicker({ wizard }: WizardModelStepProps) {
+  const localOptions = useLlmCatalog().providers.filter(
+    (option) => option.choice === "local",
+  );
   return (
     <fieldset className="flex flex-col gap-1.5">
       <legend className="mb-1.5 text-footnote font-semibold text-ink">
         伺服器類型
       </legend>
-      {LOCAL_SERVER_TYPES.map((provider) => (
+      {localOptions.map(({ provider, label }) => (
         <label
           key={provider}
           className="flex min-h-11 items-center gap-2 text-body text-ink"
@@ -48,7 +45,7 @@ function LocalServerTypePicker({ wizard }: WizardModelStepProps) {
             onChange={() => wizard.updateField("provider", provider)}
             className="size-4.5 accent-accent-strong focus-ring"
           />
-          {getProviderOption(provider).label}
+          {label}
         </label>
       ))}
     </fieldset>
@@ -56,6 +53,10 @@ function LocalServerTypePicker({ wizard }: WizardModelStepProps) {
 }
 
 function ManualModelInput({ wizard }: WizardModelStepProps) {
+  const { model_example: modelExample } = useProviderOption(
+    wizard.draft.provider,
+  );
+  const { limits } = useLlmCatalog();
   return (
     <>
       <TextField
@@ -63,12 +64,12 @@ function ManualModelInput({ wizard }: WizardModelStepProps) {
         label="模型名稱"
         value={wizard.draft.model}
         onChange={(value) => wizard.updateField("model", value)}
-        placeholder={`例：${getProviderOption(wizard.draft.provider).modelExample}`}
+        placeholder={`例：${modelExample}`}
         spellCheck={false}
         autoComplete="off"
         error={wizard.errors.model}
         hint="輸入服務商的模型 ID，不需加上 openai/、gemini/ 等前綴。"
-        maxLength={200}
+        maxLength={limits.model_max_length}
       />
       {wizard.choice === "local" && <LocalServerTypePicker wizard={wizard} />}
     </>
@@ -78,11 +79,15 @@ function ManualModelInput({ wizard }: WizardModelStepProps) {
 /**
  * 第 3 步：自動列出服務目前可用的模型供選擇；清單取不到或找不到想要的模型時可改為手動輸入。
  */
-export function WizardModelStep({ wizard, login }: ModelStepProps) {
+export function WizardModelStep({ wizard }: ModelStepProps) {
   const [isManual, setIsManual] = useState(false);
-  const isChatgptSignedIn = login.status.state === "signed_in";
+  // 是否可查、是否沿用已儲存金鑰由後端決定；請求內容取自被檢查的那份表單
+  const { check } = wizard;
   const { state, reload } = useAvailableModels(
-    planModelList(wizard.config, wizard.draft, isChatgptSignedIn),
+    toModelListRequest(
+      check?.result.model_list ?? null,
+      check?.checkedDraft ?? wizard.draft,
+    ),
     wizard.applyDetection,
   );
 

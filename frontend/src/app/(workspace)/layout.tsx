@@ -4,9 +4,7 @@ import { AppNavBar } from "@/components/app-shell/AppNavBar";
 import { AppTopBar } from "@/components/app-shell/AppTopBar";
 import { MobileTabBar } from "@/components/app-shell/MobileTabBar";
 import { getCurrentUser } from "@/lib/api/users";
-import { getWardBedBoard } from "@/lib/api/wards";
-import { DEFAULT_WARD_CODE } from "@/lib/constants";
-import { countPendingBeds } from "@/lib/verdict";
+import { getPendingBedCount } from "@/lib/api/wards";
 
 type WorkspaceLayoutProps = {
   children: ReactNode;
@@ -16,11 +14,10 @@ type WorkspaceLayoutProps = {
 export default async function WorkspaceLayout({
   children,
 }: WorkspaceLayoutProps) {
-  const [user, board] = await Promise.all([
+  const [user, pendingBedCount] = await Promise.all([
     getCurrentUser(),
-    getWardBedBoard(DEFAULT_WARD_CODE),
+    getPendingBedCount(),
   ]);
-  const pendingBedCount = countPendingBeds(board.beds);
 
   return (
     <div className="min-h-dvh">

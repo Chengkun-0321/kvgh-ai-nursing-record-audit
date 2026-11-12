@@ -4,14 +4,14 @@ import { useRef } from "react";
 
 import { WARD_TITLE_ID } from "@/components/bed-board/WardTitle";
 import { useMapKeyframe } from "@/hooks/useMapKeyframe";
-import { isBedDimmed, type VerdictFilterValue } from "@/lib/verdict";
+import { isBedDimmed, type BedFilterValue } from "@/lib/verdict";
 import type { WardLayout } from "@/lib/wardLayout";
 import {
   getBedHotspot,
   getBedLabelPoint,
   type MapFrame,
 } from "@/lib/wardProjection";
-import type { BedStatus } from "@/types/ward";
+import type { BedStatus } from "@/lib/api/wards";
 
 import { BedHotspot } from "./BedHotspot";
 
@@ -20,7 +20,7 @@ type BedHotspotLayerProps = {
   layout: WardLayout;
   frame: MapFrame;
   selectedBedCode?: string;
-  activeFilter: VerdictFilterValue;
+  activeFilter: BedFilterValue;
   onToggle: (bedCode: string) => void;
 };
 
@@ -63,10 +63,10 @@ export function BedHotspotLayer({
         if (!position) return null;
         return (
           <BedHotspot
-            key={bed.bedCode}
+            key={bed.bed_code}
             bed={bed}
             position={position}
-            isSelected={bed.bedCode === selectedBedCode}
+            isSelected={bed.bed_code === selectedBedCode}
             isDimmed={isBedDimmed(bed, activeFilter)}
             onToggle={onToggle}
           />

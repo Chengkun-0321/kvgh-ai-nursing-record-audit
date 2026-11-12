@@ -84,6 +84,9 @@
   --color-verdict-review-strong: #0040dd;
   --color-verdict-pass: #34c759;
   --color-verdict-pass-strong: #1f7a36;
+  /* 尚未稽核：中性灰，不與四種判定的色相混淆 */
+  --color-verdict-unaudited: #8e8e93;
+  --color-verdict-unaudited-strong: #5c5c61;
 
   /* 病房場景：Blender 產生器讀取這組色票作為 3D 材質（scripts/blender/kit/palette.py），色調取自概念圖；刻意避開 verdict 的紅黃藍綠色相 */
   --color-scene-ambient-glow: #e4d7c1;

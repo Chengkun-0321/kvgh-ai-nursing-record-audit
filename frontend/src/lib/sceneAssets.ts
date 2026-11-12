@@ -11,7 +11,7 @@ import {
 } from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 
-import type { BedStatus } from "@/types/ward";
+import type { BedStatus } from "@/lib/api/wards";
 
 import { getBedSpriteSources } from "./bedSprites";
 import { getKitAssetUrl, type WardKit } from "./wardKit";

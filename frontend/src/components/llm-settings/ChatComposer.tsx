@@ -8,7 +8,7 @@ import {
   INPUT_CLASS,
 } from "@/components/ui/controlStyles";
 import { PaperPlaneRightIcon, StopIcon } from "@/components/ui/icons";
-import { CHAT_MAX_MESSAGE_CHARS } from "@/lib/constants";
+import { useLlmCatalog } from "./LlmCatalogContext";
 import { cn } from "@/lib/utils";
 
 type ChatComposerProps = {
@@ -27,6 +27,7 @@ export function ChatComposer({
   onStop,
 }: ChatComposerProps) {
   const [text, setText] = useState("");
+  const { limits } = useLlmCatalog();
   const canSend = !isStreaming && disabledReason === null && text.trim() !== "";
 
   function submit() {
@@ -66,7 +67,7 @@ export function ChatComposer({
           onChange={(event) => setText(event.target.value)}
           onKeyDown={handleKeyDown}
           rows={2}
-          maxLength={CHAT_MAX_MESSAGE_CHARS}
+          maxLength={limits.chat_max_message_chars}
           disabled={disabledReason !== null}
           placeholder="輸入訊息，Enter 送出、Shift+Enter 換行"
           className={cn(

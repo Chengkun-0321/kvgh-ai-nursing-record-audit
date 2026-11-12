@@ -6,10 +6,10 @@ import { TextureLoader } from "three";
 
 import { getBedSpriteSources } from "@/lib/bedSprites";
 import { prepareSpriteTexture } from "@/lib/sceneAssets";
-import { isBedDimmed, type VerdictFilterValue } from "@/lib/verdict";
+import { isBedDimmed, type BedFilterValue } from "@/lib/verdict";
 import type { BedSlot } from "@/lib/wardLayout";
 import type { WardView } from "@/lib/wardProjection";
-import type { BedStatus } from "@/types/ward";
+import type { BedStatus } from "@/lib/api/wards";
 
 import { BedSprite } from "./BedSprite";
 
@@ -17,7 +17,7 @@ type BedSpriteLayerProps = {
   beds: readonly BedStatus[];
   slots: readonly BedSlot[];
   view: WardView;
-  activeFilter: VerdictFilterValue;
+  activeFilter: BedFilterValue;
 };
 
 /** 所有病床去背圖（依視角使用對應素材）；相同圖片只載入一次。 */

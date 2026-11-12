@@ -8,7 +8,6 @@ import {
   PlusIcon,
 } from "@/components/ui/icons";
 import type { LlmConfig } from "@/lib/api/llmConfigs";
-import { getProviderOption } from "@/lib/llmProviders";
 import { cn } from "@/lib/utils";
 
 type LlmConfigListProps = {
@@ -99,7 +98,7 @@ function LlmConfigRow({
             )}
           </span>
           <span className="block truncate text-footnote text-ink-secondary">
-            {getProviderOption(config.provider).label}・{config.model}
+            {config.provider_label}・{config.model}
           </span>
         </span>
         <CaretRightIcon

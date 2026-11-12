@@ -35,3 +35,5 @@
 | [0006](0006-llm-config-settings.md) | LLM 模型設定頁（多組設定、服務類型、ChatGPT 訂閱登入、串流測試對話） | 提議 |
 | [0007](0007-llm-system-prompt.md) | 共用 System Prompt（版本化、套用所有呼叫、ChatGPT 訂閱不帶 Codex 內建指示） | 提議 |
 | [0008](0008-top-nav-minimal-palette.md) | 頂部導覽列與暖亞麻極簡配色（液態玻璃只當點綴） | 提議 |
+| [0009](0009-backend-owns-computation.md) | 領域運算與驗證一律在後端，前端只負責渲染 | 提議 |
+| [0010](0010-hospital-raw-data-viewer.md) | 院方原始資料檢視（直接讀檔、不入庫）與欄位對應 | 提議 |

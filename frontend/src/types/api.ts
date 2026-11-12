@@ -22,6 +22,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/llm-configs/draft-checks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 檢查設定精靈的表單內容（逐欄錯誤、建議名稱、模型查詢方式、確認摘要） */
+        post: operations["check_llm_config_draft_api_v1_llm_configs_draft_checks_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/llm-configs/{config_id}": {
         parameters: {
             query?: never;
@@ -68,6 +85,23 @@ export interface paths {
         put?: never;
         /** 測試對話（SSE 串流回應） */
         post: operations["chat_with_llm_config_api_v1_llm_configs__config_id__chat_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/llm-providers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 取得服務類型目錄與設定上限 */
+        get: operations["get_llm_provider_catalog_api_v1_llm_providers_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -177,10 +211,159 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/wards": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 列出有院方資料的病房 */
+        get: operations["list_wards_api_v1_wards_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/wards/{ward_code}/bed-board": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 取得病房的病床總覽 */
+        get: operations["get_bed_board_api_v1_wards__ward_code__bed_board_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/wards/{ward_code}/raw-patients": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 列出病房所有日期出現過的病人（原始資料頁） */
+        get: operations["list_raw_patients_api_v1_wards__ward_code__raw_patients_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/raw-patients/{patient_key}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 取得病人摘要 */
+        get: operations["get_patient_detail_api_v1_raw_patients__patient_key__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/raw-patients/{patient_key}/timeline": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 取得病人所有日期合併後的時間軸 */
+        get: operations["get_patient_timeline_api_v1_raw_patients__patient_key__timeline_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/raw-patients/{patient_key}/lab-matrix": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 取得病人檢驗報告的項目 × 時間矩陣 */
+        get: operations["get_lab_matrix_api_v1_raw_patients__patient_key__lab_matrix_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/raw-patients/{patient_key}/source": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 取得病人某日資料檔的原文 */
+        get: operations["get_patient_source_api_v1_raw_patients__patient_key__source_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /**
+         * AbnormalFlag
+         * @description 檢驗值的異常標記，由院方「異常值」欄轉換。
+         * @enum {string}
+         */
+        AbnormalFlag: "high" | "low" | "abnormal" | "normal";
+        /**
+         * AgeGroup
+         * @description 年齡層（< 45／45–64／≥ 65），僅用於選擇病床圖片。
+         * @enum {string}
+         */
+        AgeGroup: "young" | "middle" | "elder";
+        /**
+         * AuditFindingSummaryRead
+         * @description 一條規則的稽核結果摘要；完整 Evidence 於病患頁面呈現。
+         */
+        AuditFindingSummaryRead: {
+            /** Rule Code */
+            rule_code: string;
+            verdict: components["schemas"]["Verdict"];
+            /** Verdict Label */
+            verdict_label: string;
+            /** Message */
+            message: string;
+            /**
+             * Recorded At
+             * Format: date-time
+             */
+            recorded_at: string;
+        };
         /**
          * AvailableModel
          * @description 一個可選的模型；`id` 即設定要儲存的模型名稱（不含 LiteLLM 前綴）。
@@ -213,6 +396,43 @@ export interface components {
         AvailableModelsRead: {
             /** Models */
             models: components["schemas"]["AvailableModel"][];
+        };
+        /**
+         * BedBoardStatus
+         * @description 病床總覽上每床顯示的狀態：已稽核時為最嚴重判定，尚未稽核時為 `NOT_AUDITED`。
+         * @enum {string}
+         */
+        BedBoardStatus: "ERROR" | "WARNING" | "NEEDS_REVIEW" | "PASS" | "NOT_AUDITED";
+        /**
+         * BedStatusRead
+         * @description 一張病床的狀態。
+         */
+        BedStatusRead: {
+            /** Bed Code */
+            bed_code: string;
+            patient: components["schemas"]["PatientSummaryRead"];
+            status: components["schemas"]["BedBoardStatus"];
+            /** Status Label */
+            status_label: string;
+            /** Summary Text */
+            summary_text: string;
+            /** Is Pending */
+            is_pending: boolean;
+            /** Pending Findings */
+            pending_findings: components["schemas"]["AuditFindingSummaryRead"][];
+            /** Empty Findings Text */
+            empty_findings_text: string;
+        };
+        /**
+         * CategoryCountRead
+         * @description 某類紀錄在所有日期合併後的筆數。
+         */
+        CategoryCountRead: {
+            category: components["schemas"]["RawRecordCategory"];
+            /** Label */
+            label: string;
+            /** Count */
+            count: number;
         };
         /**
          * ChatDeltaEvent
@@ -309,10 +529,104 @@ export interface components {
             /** Error Message */
             error_message?: string | null;
         };
+        /**
+         * DraftField
+         * @description 設定精靈中會被檢查的欄位。
+         * @enum {string}
+         */
+        DraftField: "api_base" | "api_key" | "model" | "name" | "timeout_seconds";
+        /**
+         * FieldErrorRead
+         * @description 一個欄位的錯誤訊息。
+         */
+        FieldErrorRead: {
+            field: components["schemas"]["DraftField"];
+            /** Message */
+            message: string;
+        };
+        /**
+         * FieldRequirement
+         * @description 設定欄位在該服務類型是否需要。
+         * @enum {string}
+         */
+        FieldRequirement: "required" | "optional" | "unused";
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
+        };
+        /**
+         * LabMatrixColumnRead
+         * @description 檢驗矩陣的一欄：一個採檢時間。
+         */
+        LabMatrixColumnRead: {
+            /** Time Text */
+            time_text: string;
+            /** Occurred At */
+            occurred_at: string | null;
+        };
+        /**
+         * LabMatrixRead
+         * @description 項目 × 採檢時間的檢驗矩陣；欄位由舊到新，列依項目第一次出現的順序。
+         */
+        LabMatrixRead: {
+            /** Patient Key */
+            patient_key: string;
+            /** Start Date */
+            start_date: string | null;
+            /** End Date */
+            end_date: string | null;
+            /** Columns */
+            columns: components["schemas"]["LabMatrixColumnRead"][];
+            /** Rows */
+            rows: components["schemas"]["LabMatrixRowRead"][];
+        };
+        /**
+         * LabMatrixRowRead
+         * @description 檢驗矩陣的一列：一個檢驗項目。
+         *
+         *     `cells` 與 `columns` 一一對應；沒有檢驗時為空陣列。同一採檢時間、同一項目有多個不同結果時
+         *     全部列出，不互相覆蓋。`reference_ranges` 為此項目出現過的所有不同範圍（依出現順序）。
+         */
+        LabMatrixRowRead: {
+            /** Item */
+            item: string;
+            /** Reference Ranges */
+            reference_ranges: string[];
+            /** Cells */
+            cells: components["schemas"]["LabMatrixValueRead"][][];
+        };
+        /**
+         * LabMatrixValueRead
+         * @description 檢驗矩陣一格中的一個結果。
+         */
+        LabMatrixValueRead: {
+            /** Value */
+            value: string;
+            abnormal_flag: components["schemas"]["AbnormalFlag"] | null;
+        };
+        /**
+         * LabResultRead
+         * @description 一個檢驗項目的結果；`abnormal_flag` 為 null 表示院方未提供異常標記。
+         */
+        LabResultRead: {
+            /** Item */
+            item: string;
+            /** Value */
+            value: string;
+            /** Reference Range */
+            reference_range: string | null;
+            abnormal_flag: components["schemas"]["AbnormalFlag"] | null;
+        };
+        /**
+         * LabeledValueRead
+         * @description 一個「項目：結果」欄位，項目名稱沿用院方原文。
+         */
+        LabeledValueRead: {
+            /** Label */
+            label: string;
+            /** Value */
+            value: string;
         };
         /**
          * LlmConfigCreate
@@ -332,8 +646,67 @@ export interface components {
             timeout_seconds?: number | null;
         };
         /**
+         * LlmConfigDraftCheck
+         * @description 設定精靈目前的表單內容；欄位一律為字串，格式錯誤由後端逐欄回報。
+         */
+        LlmConfigDraftCheck: {
+            /** Config Id */
+            config_id?: string | null;
+            step_id?: components["schemas"]["WizardStepId"] | null;
+            /**
+             * Name
+             * @default
+             */
+            name: string;
+            provider: components["schemas"]["LlmProvider"];
+            /**
+             * Model
+             * @default
+             */
+            model: string;
+            /**
+             * Api Base
+             * @default
+             */
+            api_base: string;
+            /**
+             * Api Key
+             * @default
+             */
+            api_key: string;
+            /**
+             * Timeout Seconds
+             * @default
+             */
+            timeout_seconds: string;
+            /**
+             * Clear Api Key
+             * @default false
+             */
+            clear_api_key: boolean;
+        };
+        /**
+         * LlmConfigDraftCheckRead
+         * @description 表單檢查結果；`errors` 依畫面順序排列，第一個即為要移動焦點的欄位。
+         */
+        LlmConfigDraftCheckRead: {
+            /** Is Valid */
+            is_valid: boolean;
+            /** Errors */
+            errors: components["schemas"]["FieldErrorRead"][];
+            /** Keeps Stored Api Key */
+            keeps_stored_api_key: boolean;
+            /** Stored Api Key Hint */
+            stored_api_key_hint: string | null;
+            /** Suggested Name */
+            suggested_name: string;
+            model_list: components["schemas"]["ModelListPlanRead"];
+            /** Summary Rows */
+            summary_rows: components["schemas"]["SummaryRowRead"][];
+        };
+        /**
          * LlmConfigRead
-         * @description 回傳前端的模型設定；API 金鑰只給遮罩值。
+         * @description 回傳前端的模型設定，附畫面直接顯示的服務名稱與摘要。
          */
         LlmConfigRead: {
             /**
@@ -364,6 +737,10 @@ export interface components {
              * Format: date-time
              */
             updated_at: string;
+            /** Provider Label */
+            provider_label: string;
+            /** Summary Rows */
+            summary_rows: components["schemas"]["SummaryRowRead"][];
             /**
              * Has Api Key
              * @description 是否已儲存 API 金鑰。
@@ -398,6 +775,71 @@ export interface components {
          * @enum {string}
          */
         LlmProvider: "openai" | "chatgpt" | "gemini" | "ollama" | "openai_compatible";
+        /**
+         * LlmProviderCatalogRead
+         * @description 設定頁所需的服務類型目錄、精靈步驟與上限。
+         */
+        LlmProviderCatalogRead: {
+            /** Providers */
+            providers: components["schemas"]["LlmProviderOptionRead"][];
+            /** Choices */
+            choices: components["schemas"]["ProviderChoiceRead"][];
+            /** Wizard Steps */
+            wizard_steps: components["schemas"]["WizardStepRead"][];
+            limits: components["schemas"]["LlmSettingLimitsRead"];
+        };
+        /**
+         * LlmProviderOptionRead
+         * @description 一種服務類型的顯示名稱與欄位規則。
+         */
+        LlmProviderOptionRead: {
+            provider: components["schemas"]["LlmProvider"];
+            choice: components["schemas"]["ProviderChoice"];
+            /** Label */
+            label: string;
+            /** Description */
+            description: string;
+            api_key: components["schemas"]["FieldRequirement"];
+            api_base: components["schemas"]["FieldRequirement"];
+            /** Default Api Base */
+            default_api_base: string | null;
+            /** Api Base Example */
+            api_base_example: string | null;
+            /** Api Key Example */
+            api_key_example: string | null;
+            /** Model Example */
+            model_example: string;
+        };
+        /**
+         * LlmSettingLimitsRead
+         * @description 設定頁需要顯示或限制輸入長度的上限。
+         */
+        LlmSettingLimitsRead: {
+            /** Config Name Max Length */
+            config_name_max_length: number;
+            /** Model Max Length */
+            model_max_length: number;
+            /** Api Base Max Length */
+            api_base_max_length: number;
+            /** Api Key Max Length */
+            api_key_max_length: number;
+            /** Timeout Min Seconds */
+            timeout_min_seconds: number;
+            /** Timeout Max Seconds */
+            timeout_max_seconds: number;
+            /** Default Timeout Seconds */
+            default_timeout_seconds: number;
+            /** Timeout Hint */
+            timeout_hint: string;
+            /** Chat Max Messages */
+            chat_max_messages: number;
+            /** Chat Max Message Chars */
+            chat_max_message_chars: number;
+            /** Chat Limit Reached Message */
+            chat_limit_reached_message: string;
+            /** System Prompt Max Chars */
+            system_prompt_max_chars: number;
+        };
         /**
          * LlmSystemPromptCreate
          * @description 儲存新版本；空字串表示不使用 system prompt。
@@ -443,6 +885,247 @@ export interface components {
             /** Api Base */
             api_base: string;
         };
+        /**
+         * ModelListPlanKind
+         * @description 查詢可用模型的方式；`blocked` 表示缺少必要資訊，前端不發出請求。
+         * @enum {string}
+         */
+        ModelListPlanKind: "local" | "remote" | "blocked";
+        /**
+         * ModelListPlanRead
+         * @description 如何查詢可用模型；`config_id` 為可沿用已儲存金鑰的設定。
+         */
+        ModelListPlanRead: {
+            kind: components["schemas"]["ModelListPlanKind"];
+            /** Reason */
+            reason: string | null;
+            /** Config Id */
+            config_id: string | null;
+        };
+        /**
+         * PatientSummaryRead
+         * @description 病床上的病患摘要；院方資料沒有的欄位為 null（目前姓名、性別、年齡、診斷皆無）。
+         */
+        PatientSummaryRead: {
+            /** Patient Key */
+            patient_key: string;
+            /** Name */
+            name: string | null;
+            sex: components["schemas"]["Sex"] | null;
+            /** Age Years */
+            age_years: number | null;
+            age_group: components["schemas"]["AgeGroup"] | null;
+            /** Admission Date */
+            admission_date: string | null;
+            /** Length Of Stay Days */
+            length_of_stay_days: number | null;
+            /** Diagnosis */
+            diagnosis: string | null;
+        };
+        /**
+         * PatientTimelineRead
+         * @description 一位病人在指定範圍內的時間軸；`days` 由新到舊。
+         */
+        PatientTimelineRead: {
+            /** Patient Key */
+            patient_key: string;
+            /** Start Date */
+            start_date: string | null;
+            /** End Date */
+            end_date: string | null;
+            /** Event Count */
+            event_count: number;
+            /** Days */
+            days: components["schemas"]["TimelineDayRead"][];
+        };
+        /**
+         * ProviderChoice
+         * @description 畫面上的服務類型選項；Ollama 與 OpenAI 相容伺服器合併為「本地模型」。
+         * @enum {string}
+         */
+        ProviderChoice: "openai" | "chatgpt" | "gemini" | "local";
+        /**
+         * ProviderChoiceRead
+         * @description 設定精靈第 1 步的一個選項；`default_provider` 為選取後先套用的服務類型。
+         */
+        ProviderChoiceRead: {
+            choice: components["schemas"]["ProviderChoice"];
+            /** Label */
+            label: string;
+            /** Description */
+            description: string;
+            default_provider: components["schemas"]["LlmProvider"];
+        };
+        /**
+         * RawPatientDetailRead
+         * @description 原始資料頁上方的病人摘要。
+         */
+        RawPatientDetailRead: {
+            /** Patient Key */
+            patient_key: string;
+            /** Ward Code */
+            ward_code: string;
+            /** Bed Code */
+            bed_code: string;
+            /** Admitted At Text */
+            admitted_at_text: string | null;
+            /** Admitted At */
+            admitted_at: string | null;
+            /** Is Current */
+            is_current: boolean;
+            /** Business Dates */
+            business_dates: string[];
+            work_checklist: components["schemas"]["WorkChecklistRead"];
+            /** Category Counts */
+            category_counts: components["schemas"]["CategoryCountRead"][];
+        };
+        /**
+         * RawPatientListRead
+         * @description 某病房所有日期出現過的病人，依床號排序。
+         */
+        RawPatientListRead: {
+            /** Ward Code */
+            ward_code: string;
+            /** Display Name */
+            display_name: string;
+            /**
+             * Latest Business Date
+             * Format: date
+             */
+            latest_business_date: string;
+            /** Patients */
+            patients: components["schemas"]["RawPatientSummaryRead"][];
+        };
+        /**
+         * RawPatientSummaryRead
+         * @description 原始資料頁病人清單的一列。
+         */
+        RawPatientSummaryRead: {
+            /** Patient Key */
+            patient_key: string;
+            /** Bed Code */
+            bed_code: string;
+            /** Admitted At Text */
+            admitted_at_text: string | null;
+            /** Admitted At */
+            admitted_at: string | null;
+            /**
+             * First Business Date
+             * Format: date
+             */
+            first_business_date: string;
+            /**
+             * Last Business Date
+             * Format: date
+             */
+            last_business_date: string;
+            /** Is Current */
+            is_current: boolean;
+            /** Work Checklist Filled Count */
+            work_checklist_filled_count: number;
+            /** Work Checklist Total Count */
+            work_checklist_total_count: number;
+        };
+        /**
+         * RawRecordCategory
+         * @description 原始資料時間軸的紀錄類別；對應院方病人檔的各區塊。
+         * @enum {string}
+         */
+        RawRecordCategory: "nursing_progress_note" | "vital_sign" | "daily_physical_assessment" | "admission_assessment" | "admission_course" | "lab_result" | "gcs" | "medication_order" | "examination" | "consultation" | "bed_transfer";
+        /**
+         * RawSourceRead
+         * @description 病人某日資料檔的原文。
+         */
+        RawSourceRead: {
+            /** Patient Key */
+            patient_key: string;
+            /**
+             * Business Date
+             * Format: date
+             */
+            business_date: string;
+            /** Content */
+            content: string;
+        };
+        /**
+         * Sex
+         * @description 性別。
+         * @enum {string}
+         */
+        Sex: "M" | "F";
+        /**
+         * StatusCountRead
+         * @description 狀態列上一種狀態的床數。
+         */
+        StatusCountRead: {
+            status: components["schemas"]["BedBoardStatus"];
+            /** Label */
+            label: string;
+            /** Count */
+            count: number;
+        };
+        /**
+         * SummaryRowRead
+         * @description 設定摘要的一列。
+         */
+        SummaryRowRead: {
+            /** Label */
+            label: string;
+            /** Value */
+            value: string;
+        };
+        /**
+         * TimelineDayRead
+         * @description 同一天的紀錄，依時間由早到晚排列。
+         */
+        TimelineDayRead: {
+            /**
+             * Day
+             * Format: date
+             */
+            day: string;
+            /** Events */
+            events: components["schemas"]["TimelineEventRead"][];
+        };
+        /**
+         * TimelineEventRead
+         * @description 時間軸上的一筆紀錄。
+         *
+         *     `time_text` 為院方原始時間字串；`occurred_at` 為解析後的台北時間，無法解析時為 null。
+         *     `is_date_only` 表示院方只給日期（如護理記錄），畫面不應顯示時刻。
+         */
+        TimelineEventRead: {
+            /** Event Id */
+            event_id: string;
+            category: components["schemas"]["RawRecordCategory"];
+            /** Category Label */
+            category_label: string;
+            /**
+             * Business Date
+             * Format: date
+             */
+            business_date: string;
+            /** Time Text */
+            time_text: string;
+            /** Occurred At */
+            occurred_at: string | null;
+            /** Is Date Only */
+            is_date_only: boolean;
+            /** Tag */
+            tag: string | null;
+            /** Title */
+            title: string | null;
+            /** Text */
+            text: string | null;
+            /** Fields */
+            fields: components["schemas"]["LabeledValueRead"][];
+            /** Lab Results */
+            lab_results: components["schemas"]["LabResultRead"][];
+            /** Abnormal High Count */
+            abnormal_high_count: number;
+            /** Abnormal Low Count */
+            abnormal_low_count: number;
+        };
         /** ValidationError */
         ValidationError: {
             /** Location */
@@ -455,6 +1138,103 @@ export interface components {
             input?: unknown;
             /** Context */
             ctx?: Record<string, never>;
+        };
+        /**
+         * Verdict
+         * @description 稽核判定（暫定四級，分級方式仍待決）。
+         * @enum {string}
+         */
+        Verdict: "PASS" | "WARNING" | "ERROR" | "NEEDS_REVIEW";
+        /**
+         * WardBedBoardRead
+         * @description 首頁病床總覽。
+         */
+        WardBedBoardRead: {
+            /** Ward Code */
+            ward_code: string;
+            /** Display Name */
+            display_name: string;
+            /**
+             * Business Date
+             * Format: date
+             */
+            business_date: string;
+            /** Bed Count */
+            bed_count: number;
+            /** Pending Bed Count */
+            pending_bed_count: number;
+            /** Status Counts */
+            status_counts: components["schemas"]["StatusCountRead"][];
+            /** Beds */
+            beds: components["schemas"]["BedStatusRead"][];
+        };
+        /**
+         * WardListRead
+         * @description 所有有院方資料的病房；`default_ward_code` 為首頁預設顯示的病房。
+         */
+        WardListRead: {
+            /** Default Ward Code */
+            default_ward_code: string;
+            /** Wards */
+            wards: components["schemas"]["WardRead"][];
+        };
+        /**
+         * WardRead
+         * @description 一個有院方資料的病房。
+         */
+        WardRead: {
+            /** Ward Code */
+            ward_code: string;
+            /** Display Name */
+            display_name: string;
+            /** Business Dates */
+            business_dates: string[];
+            /**
+             * Latest Business Date
+             * Format: date
+             */
+            latest_business_date: string;
+            /** Latest Patient Count */
+            latest_patient_count: number;
+        };
+        /**
+         * WizardStepId
+         * @description 設定精靈的步驟。
+         * @enum {string}
+         */
+        WizardStepId: "provider" | "connection" | "model" | "details";
+        /**
+         * WizardStepRead
+         * @description 設定精靈的一步。
+         */
+        WizardStepRead: {
+            step_id: components["schemas"]["WizardStepId"];
+            /** Title */
+            title: string;
+        };
+        /**
+         * WorkChecklistItemRead
+         * @description 工作清單的一項（院方只提供「有填寫／沒有填寫」）。
+         */
+        WorkChecklistItemRead: {
+            /** Label */
+            label: string;
+            /** Value */
+            value: string;
+            /** Is Filled */
+            is_filled: boolean;
+        };
+        /**
+         * WorkChecklistRead
+         * @description 工作清單；取自病人最新一天的資料檔。
+         */
+        WorkChecklistRead: {
+            /** Items */
+            items: components["schemas"]["WorkChecklistItemRead"][];
+            /** Filled Count */
+            filled_count: number;
+            /** Total Count */
+            total_count: number;
         };
     };
     responses: never;
@@ -505,6 +1285,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["LlmConfigRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    check_llm_config_draft_api_v1_llm_configs_draft_checks_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LlmConfigDraftCheck"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LlmConfigDraftCheckRead"];
                 };
             };
             /** @description Validation Error */
@@ -644,6 +1457,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_llm_provider_catalog_api_v1_llm_providers_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LlmProviderCatalogRead"];
                 };
             };
         };
@@ -814,6 +1647,235 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["LlmSystemPromptRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_wards_api_v1_wards_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WardListRead"];
+                };
+            };
+        };
+    };
+    get_bed_board_api_v1_wards__ward_code__bed_board_get: {
+        parameters: {
+            query?: {
+                business_date?: string | null;
+            };
+            header?: never;
+            path: {
+                /** @description 病房代碼，例：W63 */
+                ward_code: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WardBedBoardRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_raw_patients_api_v1_wards__ward_code__raw_patients_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description 病房代碼，例：W63 */
+                ward_code: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RawPatientListRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_patient_detail_api_v1_raw_patients__patient_key__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description 病患匿名鍵 */
+                patient_key: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RawPatientDetailRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_patient_timeline_api_v1_raw_patients__patient_key__timeline_get: {
+        parameters: {
+            query?: {
+                /** @description 起始日期（含） */
+                start_date?: string | null;
+                /** @description 結束日期（含） */
+                end_date?: string | null;
+                /** @description 紀錄類別 */
+                categories?: components["schemas"]["RawRecordCategory"][] | null;
+            };
+            header?: never;
+            path: {
+                /** @description 病患匿名鍵 */
+                patient_key: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PatientTimelineRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_lab_matrix_api_v1_raw_patients__patient_key__lab_matrix_get: {
+        parameters: {
+            query?: {
+                /** @description 起始日期（含） */
+                start_date?: string | null;
+                /** @description 結束日期（含） */
+                end_date?: string | null;
+            };
+            header?: never;
+            path: {
+                /** @description 病患匿名鍵 */
+                patient_key: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LabMatrixRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_patient_source_api_v1_raw_patients__patient_key__source_get: {
+        parameters: {
+            query?: {
+                /** @description 資料日期；未指定為最新一天 */
+                business_date?: string | null;
+            };
+            header?: never;
+            path: {
+                /** @description 病患匿名鍵 */
+                patient_key: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RawSourceRead"];
                 };
             };
             /** @description Validation Error */

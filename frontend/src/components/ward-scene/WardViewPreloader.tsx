@@ -4,7 +4,7 @@ import { useEffect } from "react";
 
 import { preloadWardView } from "@/lib/sceneAssets";
 import { WARD_KITS, type WardKit } from "@/lib/wardKit";
-import type { BedStatus } from "@/types/ward";
+import type { BedStatus } from "@/lib/api/wards";
 
 type WardViewPreloaderProps = {
   kit: WardKit;

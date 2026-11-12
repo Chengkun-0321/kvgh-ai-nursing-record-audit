@@ -18,7 +18,7 @@ import {
 const FIXTURES = Object.entries(WARD_KITS).map(([id, kit]) => {
   const view = createWardView(kit);
   const layout = buildWardLayout(
-    Array.from({ length: 10 }, (_, i) => ({ bedCode: `W-${i}` })),
+    Array.from({ length: 10 }, (_, i) => ({ bed_code: `W-${i}` })),
     kit,
   );
   return { id, kit, view, layout, frame: getMapFrame(view, layout.bounds) };

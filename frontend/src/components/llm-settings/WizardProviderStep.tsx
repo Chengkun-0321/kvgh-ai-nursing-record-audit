@@ -1,8 +1,10 @@
 "use client";
 
 import { CaretRightIcon, CheckCircleIcon } from "@/components/ui/icons";
-import { PROVIDER_CHOICES, type ProviderChoice } from "@/lib/llmProviders";
+import type { ProviderChoice } from "@/lib/api/llmProviders";
 import { cn } from "@/lib/utils";
+
+import { useLlmCatalog } from "./LlmCatalogContext";
 
 type WizardProviderStepProps = {
   selected: ProviderChoice | null;
@@ -16,6 +18,7 @@ export function WizardProviderStep({
   isEditing,
   onChoose,
 }: WizardProviderStepProps) {
+  const { choices } = useLlmCatalog();
   return (
     <div className="flex flex-col gap-3">
       <p className="text-body text-ink-secondary">
@@ -24,13 +27,13 @@ export function WizardProviderStep({
           : "選擇要串接的模型服務，下一步再填寫連線資訊。"}
       </p>
       <ul className="flex flex-col gap-2">
-        {PROVIDER_CHOICES.map((option) => {
-          const isSelected = option.value === selected;
+        {choices.map((option) => {
+          const isSelected = option.choice === selected;
           return (
-            <li key={option.value}>
+            <li key={option.choice}>
               <button
                 type="button"
-                onClick={() => onChoose(option.value)}
+                onClick={() => onChoose(option.choice)}
                 aria-pressed={isSelected}
                 className={cn(
                   "flex min-h-16 w-full pressable items-center gap-3 rounded-card bg-surface px-4 py-3 text-left shadow-card focus-ring",

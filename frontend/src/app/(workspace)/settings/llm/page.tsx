@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { connection } from "next/server";
 
+import { LlmCatalogProvider } from "@/components/llm-settings/LlmCatalogContext";
 import { LlmSettingsView } from "@/components/llm-settings/LlmSettingsView";
 import { WarningCircleIcon } from "@/components/ui/icons";
 import { loadLlmSettings } from "@/lib/api/llmSettings";
@@ -26,12 +27,14 @@ export default async function LlmSettingsPage() {
 
   if (result.ok) {
     return (
-      <LlmSettingsView
-        header={header}
-        initialConfigs={result.configs}
-        initialChatgptStatus={result.chatgptStatus}
-        initialSystemPrompt={result.systemPrompt}
-      />
+      <LlmCatalogProvider catalog={result.catalog}>
+        <LlmSettingsView
+          header={header}
+          initialConfigs={result.configs}
+          initialChatgptStatus={result.chatgptStatus}
+          initialSystemPrompt={result.systemPrompt}
+        />
+      </LlmCatalogProvider>
     );
   }
   return (
