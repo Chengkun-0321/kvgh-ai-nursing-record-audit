@@ -3,7 +3,7 @@
 使用 LLM 稽核護理師紀錄（入院護理評估、每日身體評估、過程紀錄、轉入／轉出摘要、給藥紀錄…）的完整性與一致性。
 流程：每日讀取病房資料 → 執行稽核規則 → 產出附 Evidence 的稽核結果 → 護理師／護理長確認。
 
-> 目前階段：`frontend/` 已初始化，Apple 風格工作區與首頁病床總覽（Blender 場景模組＋React Three Fiber 的滿版 3D 病房，預設正視、可切換斜視）仍使用前端假資料（`src/lib/api/`）。`backend/` 已初始化 FastAPI 骨架與 LLM 模型設定（`/settings/llm`：多組設定、ChatGPT 訂閱登入、共用 system prompt、串流測試對話，見 [ADR 0006](docs/adr/0006-llm-config-settings.md)、[ADR 0007](docs/adr/0007-llm-system-prompt.md)）；病患資料與稽核規則尚未實作。
+> 目前階段：**領域運算與驗證一律在後端，前端只渲染**（[ADR 0009](docs/adr/0009-backend-owns-computation.md)）。首頁病床總覽（Blender 場景模組＋React Three Fiber 的滿版 3D 病房）顯示院方 W63 病房（根目錄 `data/` 的去識別化資料，後端直接讀檔，見 [ADR 0010](docs/adr/0010-hospital-raw-data-viewer.md)），稽核規則尚未實作，每床為「尚未稽核」。`/raw-data` 原始資料頁以時間軸、檢驗總表、原文檢視各病人所有日期的資料。LLM 模型設定見 [ADR 0006](docs/adr/0006-llm-config-settings.md)、[ADR 0007](docs/adr/0007-llm-system-prompt.md)。資料尚未入庫，稽核規則與匯入流程待實作。
 
 ## 核心原則（領域）
 
@@ -62,7 +62,7 @@
 | 前端 UI、樣式、動畫 | [ui-design.md](docs/conventions/ui-design.md)（依據 `.claude/skills/apple-design`、`.claude/skills/ui-ux-pro-max`） |
 | 新增／修改稽核規則 | [audit-rules.md](docs/conventions/audit-rules.md)、[llm.md](docs/conventions/llm.md) |
 | LLM 呼叫、prompt、模型設定 | [llm.md](docs/conventions/llm.md)、[security-privacy.md](docs/conventions/security-privacy.md) |
-| 資料匯入（假資料／中繼站 JSON） | [data-ingestion.md](docs/conventions/data-ingestion.md) |
+| 資料匯入（院方 JSON／中繼站）、原始資料頁 | [data-ingestion.md](docs/conventions/data-ingestion.md)、[ADR 0010](docs/adr/0010-hospital-raw-data-viewer.md) |
 | DB schema、migration | [backend/CLAUDE.md](backend/CLAUDE.md)、[ADR 0001](docs/adr/0001-sqlite-to-postgresql.md) |
 | 撰寫測試 | [testing.md](docs/conventions/testing.md) |
 | commit、branch | [git-workflow.md](docs/conventions/git-workflow.md) |

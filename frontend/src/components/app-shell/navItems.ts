@@ -1,6 +1,7 @@
 import {
   BedIcon,
   ChartBarIcon,
+  FileTextIcon,
   GearIcon,
   type Icon,
   ListChecksIcon,
@@ -15,6 +16,8 @@ export type NavItemConfig = {
   /** 屬於此項目的路徑前綴，用於標示目前所在位置 */
   activePathPrefixes: readonly string[];
   hasPendingBadge: boolean;
+  /** 手機底部分頁列最多 5 項；尚未推出且較少在手機上使用的項目只在桌機顯示 */
+  showInMobileTabBar: boolean;
 };
 
 // 導覽名稱直接描述內容；未實作的頁面先停用，保留位置讓使用者預期之後的功能
@@ -25,6 +28,7 @@ export const NAV_ITEMS: readonly NavItemConfig[] = [
     icon: BedIcon,
     activePathPrefixes: ["/patients"],
     hasPendingBadge: false,
+    showInMobileTabBar: true,
   },
   {
     label: "待處理項目",
@@ -32,6 +36,7 @@ export const NAV_ITEMS: readonly NavItemConfig[] = [
     icon: ListChecksIcon,
     activePathPrefixes: [],
     hasPendingBadge: true,
+    showInMobileTabBar: true,
   },
   {
     label: "異常紀錄",
@@ -39,6 +44,7 @@ export const NAV_ITEMS: readonly NavItemConfig[] = [
     icon: WarningCircleIcon,
     activePathPrefixes: [],
     hasPendingBadge: false,
+    showInMobileTabBar: true,
   },
   {
     label: "統計報表",
@@ -46,6 +52,15 @@ export const NAV_ITEMS: readonly NavItemConfig[] = [
     icon: ChartBarIcon,
     activePathPrefixes: [],
     hasPendingBadge: false,
+    showInMobileTabBar: false,
+  },
+  {
+    label: "原始資料",
+    href: "/raw-data",
+    icon: FileTextIcon,
+    activePathPrefixes: ["/raw-data"],
+    hasPendingBadge: false,
+    showInMobileTabBar: true,
   },
   {
     label: "設定",
@@ -53,6 +68,7 @@ export const NAV_ITEMS: readonly NavItemConfig[] = [
     icon: GearIcon,
     activePathPrefixes: ["/settings"],
     hasPendingBadge: false,
+    showInMobileTabBar: true,
   },
 ];
 

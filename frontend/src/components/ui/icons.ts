@@ -6,6 +6,7 @@ export { BellIcon } from "@phosphor-icons/react/dist/ssr/Bell";
 export { CaretLeftIcon } from "@phosphor-icons/react/dist/ssr/CaretLeft";
 export { CaretRightIcon } from "@phosphor-icons/react/dist/ssr/CaretRight";
 export { ChartBarIcon } from "@phosphor-icons/react/dist/ssr/ChartBar";
+export { FileTextIcon } from "@phosphor-icons/react/dist/ssr/FileText";
 export { GearIcon } from "@phosphor-icons/react/dist/ssr/Gear";
 export { ListChecksIcon } from "@phosphor-icons/react/dist/ssr/ListChecks";
 export { PlusIcon } from "@phosphor-icons/react/dist/ssr/Plus";
