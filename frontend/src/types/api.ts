@@ -330,6 +330,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/patients/{patient_key}/audits": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 取得病患某日的稽核總覽 */
+        get: operations["get_patient_audits_api_v1_patients__patient_key__audits_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/patients/{patient_key}/audits/{business_date}/rules/{rule_code}/runs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 執行一項稽核規則並回傳結果 */
+        post: operations["run_patient_audit_rule_api_v1_patients__patient_key__audits__business_date__rules__rule_code__runs_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -346,6 +380,29 @@ export interface components {
          * @enum {string}
          */
         AgeGroup: "young" | "middle" | "elder";
+        /**
+         * AuditCycle
+         * @description 稽核週期：決定稽核日期與畫面上的呈現方式。
+         * @enum {string}
+         */
+        AuditCycle: "once_per_admission" | "daily" | "event";
+        /**
+         * AuditFindingRead
+         * @description 一次執行中的一個發現。
+         */
+        AuditFindingRead: {
+            /** Position */
+            position: number;
+            /** Item */
+            item: string;
+            verdict: components["schemas"]["Verdict"];
+            /** Verdict Label */
+            verdict_label: string;
+            /** Message */
+            message: string;
+            /** Evidence */
+            evidence: components["schemas"]["Evidence"][];
+        };
         /**
          * AuditFindingSummaryRead
          * @description 一條規則的稽核結果摘要；完整 Evidence 於病患頁面呈現。
@@ -364,6 +421,106 @@ export interface components {
              */
             recorded_at: string;
         };
+        /**
+         * AuditRuleStatusRead
+         * @description 每日總覽中的一項規則。
+         */
+        AuditRuleStatusRead: {
+            /** Rule Code */
+            rule_code: string;
+            /** Name */
+            name: string;
+            /** Description */
+            description: string;
+            cycle: components["schemas"]["AuditCycle"];
+            /** Cycle Label */
+            cycle_label: string;
+            /**
+             * Effective Business Date
+             * Format: date
+             */
+            effective_business_date: string;
+            availability: components["schemas"]["AvailabilityRead"];
+            /** Can Run */
+            can_run: boolean;
+            /** Include In Run All */
+            include_in_run_all: boolean;
+            latest_run: components["schemas"]["AuditRunRead"] | null;
+        };
+        /**
+         * AuditRunRead
+         * @description 一次稽核執行的結果；`status_label` 為畫面顯示用的狀態文字。
+         */
+        AuditRunRead: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Rule Code */
+            rule_code: string;
+            /** Rule Name */
+            rule_name: string;
+            /** Patient Key */
+            patient_key: string;
+            /**
+             * Business Date
+             * Format: date
+             */
+            business_date: string;
+            status: components["schemas"]["AuditRunStatus"];
+            /** Status Label */
+            status_label: string;
+            /** Status Reason */
+            status_reason: string | null;
+            verdict: components["schemas"]["Verdict"] | null;
+            /** Verdict Label */
+            verdict_label: string | null;
+            /** Summary */
+            summary: string | null;
+            /** Findings */
+            findings: components["schemas"]["AuditFindingRead"][];
+            /** Details */
+            details: {
+                [key: string]: unknown;
+            } | null;
+            /** Model */
+            model: string | null;
+            /** Prompt Version */
+            prompt_version: number | null;
+            /** System Prompt Version */
+            system_prompt_version: number | null;
+            /** Duration Ms */
+            duration_ms: number | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /**
+         * AuditRunStatus
+         * @description 一次稽核執行的狀態；與判定（verdict）分開記錄。
+         * @enum {string}
+         */
+        AuditRunStatus: "COMPLETED" | "NOT_APPLICABLE" | "DATA_UNAVAILABLE" | "FAILED";
+        /**
+         * AvailabilityRead
+         * @description 規則在該日是否可執行，以及不可執行的原因（繁中）。
+         */
+        AvailabilityRead: {
+            state: components["schemas"]["AvailabilityState"];
+            /** Label */
+            label: string;
+            /** Reason */
+            reason: string | null;
+        };
+        /**
+         * AvailabilityState
+         * @description 規則在某日是否可執行。
+         * @enum {string}
+         */
+        AvailabilityState: "available" | "not_applicable" | "data_unavailable";
         /**
          * AvailableModel
          * @description 一個可選的模型；`id` 即設定要儲存的模型名稱（不含 LiteLLM 前綴）。
@@ -535,6 +692,31 @@ export interface components {
          * @enum {string}
          */
         DraftField: "api_base" | "api_key" | "model" | "name" | "timeout_seconds";
+        /**
+         * Evidence
+         * @description 判定依據：excerpt 已確認存在於 record_id 的原文中。
+         */
+        Evidence: {
+            /** Source */
+            source: string;
+            /** Source Label */
+            source_label: string;
+            /** Record Id */
+            record_id: string;
+            /** Field */
+            field: string | null;
+            /**
+             * Business Date
+             * Format: date
+             */
+            business_date: string;
+            /** Time Text */
+            time_text: string;
+            /** Recorded At */
+            recorded_at: string | null;
+            /** Excerpt */
+            excerpt: string;
+        };
         /**
          * FieldErrorRead
          * @description 一個欄位的錯誤訊息。
@@ -901,6 +1083,35 @@ export interface components {
             reason: string | null;
             /** Config Id */
             config_id: string | null;
+        };
+        /**
+         * PatientAuditDayRead
+         * @description 病患某日的稽核總覽。
+         */
+        PatientAuditDayRead: {
+            /** Patient Key */
+            patient_key: string;
+            /** Ward Code */
+            ward_code: string;
+            /** Bed Code */
+            bed_code: string;
+            /** Admitted At */
+            admitted_at: string | null;
+            /** Admitted At Text */
+            admitted_at_text: string | null;
+            /**
+             * Business Date
+             * Format: date
+             */
+            business_date: string;
+            /** Available Dates */
+            available_dates: string[];
+            /** Previous Date */
+            previous_date: string | null;
+            /** Next Date */
+            next_date: string | null;
+            /** Rules */
+            rules: components["schemas"]["AuditRuleStatusRead"][];
         };
         /**
          * PatientSummaryRead
@@ -1876,6 +2087,77 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["RawSourceRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_patient_audits_api_v1_patients__patient_key__audits_get: {
+        parameters: {
+            query?: {
+                /** @description 稽核日期；未指定為病人最新一天 */
+                business_date?: string | null;
+            };
+            header?: never;
+            path: {
+                /** @description 病患匿名鍵 */
+                patient_key: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PatientAuditDayRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    run_patient_audit_rule_api_v1_patients__patient_key__audits__business_date__rules__rule_code__runs_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description 病患匿名鍵 */
+                patient_key: string;
+                /** @description 稽核日期（YYYY-MM-DD） */
+                business_date: string;
+                /** @description 稽核規則代碼，例如 R03 */
+                rule_code: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuditRunRead"];
                 };
             };
             /** @description Validation Error */

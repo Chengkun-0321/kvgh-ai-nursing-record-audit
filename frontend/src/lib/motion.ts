@@ -101,3 +101,17 @@ export const WIZARD_STEP_TRANSITION: Transition = {
   ...SPRING_DEFAULT,
   opacity: { duration: 0.15, ease: "easeOut" },
 };
+
+/** 病患稽核結果（桌機）：與詳情大卡同一語彙，淡入並微微放大到位。 */
+export const AUDIT_RESULT_DESKTOP_MOTION = {
+  initial: { opacity: 0, scale: 0.96 },
+  animate: { opacity: 1, scale: 1 },
+  transition: PANEL_TRANSITION,
+};
+
+/** 病患稽核結果（手機）：由底部滑入的抽屜。 */
+export const AUDIT_RESULT_SHEET_MOTION = {
+  initial: { opacity: 0, y: "100%" },
+  animate: { opacity: 1, y: 0 },
+  transition: SHEET_TRANSITION,
+};

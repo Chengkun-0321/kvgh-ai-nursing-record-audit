@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "./ward-scene.css";
+@import "./patient-audit.css";
 
 /* 設計規範見 docs/conventions/ui-design.md；元件只使用這裡定義的語意 token */
 @theme {

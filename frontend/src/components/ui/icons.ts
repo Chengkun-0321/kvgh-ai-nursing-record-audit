@@ -35,3 +35,9 @@ export { ClockCountdownIcon } from "@phosphor-icons/react/dist/ssr/ClockCountdow
 export { CpuIcon } from "@phosphor-icons/react/dist/ssr/Cpu";
 export { ShieldCheckIcon } from "@phosphor-icons/react/dist/ssr/ShieldCheck";
 export { UsersThreeIcon } from "@phosphor-icons/react/dist/ssr/UsersThree";
+export { CalendarBlankIcon } from "@phosphor-icons/react/dist/ssr/CalendarBlank";
+export { CircleNotchIcon } from "@phosphor-icons/react/dist/ssr/CircleNotch";
+export { MinusCircleIcon } from "@phosphor-icons/react/dist/ssr/MinusCircle";
+export { PlayIcon } from "@phosphor-icons/react/dist/ssr/Play";
+export { ProhibitIcon } from "@phosphor-icons/react/dist/ssr/Prohibit";
+export { WarningOctagonIcon } from "@phosphor-icons/react/dist/ssr/WarningOctagon";

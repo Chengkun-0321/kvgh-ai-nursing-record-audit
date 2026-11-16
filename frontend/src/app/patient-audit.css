@@ -1,0 +1,162 @@
+/*
+ * 病患稽核頁的稽核項目版面。
+ * - 手機與平板（lg 以下）：卡片格，單欄；sm 以上雙欄。
+ * - 桌機（lg 以上）：環狀。中央為示意圖，項目沿橢圓軌道排列，位置以 sin()／cos() 計算。
+ *   項目數由 ol 的 data-count 決定 --n（4–12），索引由 :nth-child 決定 --i。
+ *   卡片寬高與軌道半徑的關係：軌道半徑 = 容器一半 − 卡片一半，因此卡片不會超出容器。
+ *   相鄰卡片不重疊的條件是：斜向相鄰（約 30° 間隔）時水平距離 ≥ 卡片寬，因此卡片寬固定為 11rem，12 項需容器寬 ≥ 約 1150px、高 46rem。
+ *   寬度不足時由 AuditRuleList 改用卡片格（data-layout="grid"）。
+ */
+
+.audit-ring {
+  --card-w: 11rem;
+  --card-h: 9rem;
+  --n: 12;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (min-width: 40rem) {
+  .audit-ring {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.audit-ring[data-count="4"] {
+  --n: 4;
+}
+.audit-ring[data-count="5"] {
+  --n: 5;
+}
+.audit-ring[data-count="6"] {
+  --n: 6;
+}
+.audit-ring[data-count="7"] {
+  --n: 7;
+}
+.audit-ring[data-count="8"] {
+  --n: 8;
+}
+.audit-ring[data-count="9"] {
+  --n: 9;
+}
+.audit-ring[data-count="10"] {
+  --n: 10;
+}
+.audit-ring[data-count="11"] {
+  --n: 11;
+}
+.audit-ring[data-count="12"] {
+  --n: 12;
+}
+
+/* 第 k 項的索引為 k-1；起點在正上方（-90°），順時針排列 */
+.audit-ring > li:nth-child(1) {
+  --i: 0;
+}
+.audit-ring > li:nth-child(2) {
+  --i: 1;
+}
+.audit-ring > li:nth-child(3) {
+  --i: 2;
+}
+.audit-ring > li:nth-child(4) {
+  --i: 3;
+}
+.audit-ring > li:nth-child(5) {
+  --i: 4;
+}
+.audit-ring > li:nth-child(6) {
+  --i: 5;
+}
+.audit-ring > li:nth-child(7) {
+  --i: 6;
+}
+.audit-ring > li:nth-child(8) {
+  --i: 7;
+}
+.audit-ring > li:nth-child(9) {
+  --i: 8;
+}
+.audit-ring > li:nth-child(10) {
+  --i: 9;
+}
+.audit-ring > li:nth-child(11) {
+  --i: 10;
+}
+.audit-ring > li:nth-child(12) {
+  --i: 11;
+}
+
+.audit-ring > li {
+  --a: calc(var(--i, 0) * 360deg / var(--n) - 90deg);
+}
+
+/* 病患識別：卡片格時在清單上方；環狀時疊在左上角（該處沒有卡片） */
+.audit-title {
+  margin-bottom: 1rem;
+}
+
+.audit-hub {
+  display: none;
+  margin: 0;
+}
+
+@media (min-width: 64rem) {
+  .audit-stage[data-layout="ring"] {
+    position: relative;
+    height: 46rem;
+    container-type: size;
+  }
+
+  .audit-stage[data-layout="ring"] .audit-title {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 1;
+    margin: 0;
+  }
+
+  .audit-stage[data-layout="ring"] .audit-hub {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    display: block;
+    width: min(26rem, 40cqw);
+    translate: -50% -50%;
+  }
+
+  .audit-stage[data-layout="ring"] .audit-ring {
+    position: absolute;
+    inset: 0;
+    display: block;
+  }
+
+  /* 同心的軌道：項目的中心落在這條橢圓上 */
+  .audit-stage[data-layout="ring"] .audit-ring::before {
+    content: "";
+    position: absolute;
+    inset: calc(var(--card-h) / 2) calc(var(--card-w) / 2);
+    border: 1px solid var(--color-separator);
+    border-radius: 50%;
+    pointer-events: none;
+  }
+
+  .audit-stage[data-layout="ring"] .audit-ring > li {
+    position: absolute;
+    width: var(--card-w);
+    min-height: var(--card-h);
+    left: calc(50% + (50% - var(--card-w) / 2) * cos(var(--a)));
+    top: calc(50% + (50% - var(--card-h) / 2) * sin(var(--a)));
+    translate: -50% -50%;
+  }
+
+  /* 項目多、桌機寬度不足時的卡片格：三欄，不使用環狀 */
+  .audit-stage[data-layout="grid"] .audit-ring {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
