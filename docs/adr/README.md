@@ -36,4 +36,5 @@
 | [0007](0007-llm-system-prompt.md) | 共用 System Prompt（版本化、套用所有呼叫、ChatGPT 訂閱不帶 Codex 內建指示） | 提議 |
 | [0008](0008-top-nav-minimal-palette.md) | 頂部導覽列與暖亞麻極簡配色（液態玻璃只當點綴） | 提議 |
 | [0009](0009-backend-owns-computation.md) | 領域運算與驗證一律在後端，前端只負責渲染 | 提議 |
-| [0010](0010-hospital-raw-data-viewer.md) | 院方原始資料檢視（直接讀檔、不入庫）與欄位對應 | 提議 |
+| [0010](0010-hospital-raw-data-viewer.md) | 院方原始資料檢視（直接讀檔、不入庫）與欄位對應 | 提議（資料歸日部分由 0011 修正） |
+| [0011](0011-audit-module.md) | 稽核模組架構（七項一律經 LLM、統一流程、稽核週期與執行狀態） | 採用 |

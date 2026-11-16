@@ -4,7 +4,7 @@
 
 ## 建議優先補測試的地方
 
-- 稽核規則的純邏輯部分（`rule` engine、hybrid 的程式篩選）
+- 稽核規則的純邏輯部分（`check_availability`、`build_input`、`validate_output`）
 - 資料匯入的 schema 驗證與正規化
 - gateway 的輸出解析與 hallucination guard
 

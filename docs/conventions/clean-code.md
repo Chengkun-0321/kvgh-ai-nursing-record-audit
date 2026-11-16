@@ -25,24 +25,24 @@
 示意（邏輯為舉例，非實際規則設計）：
 
 ```python
-# ❌ 取資料、判斷、組結果全擠在一起
-async def evaluate(self, ctx: AuditContext) -> AuditFinding:
-    missing = []
-    for consultation in ctx.consultations:
-        if consultation.consulted_at.date() == ctx.business_date:
-            found = False
-            for note in ctx.progress_notes:
-                if consultation.department in note.content:
-                    found = True
-            if not found:
-                missing.append(consultation)
+# ❌ 取資料、篩選、組輸入全擠在一起
+def build_input(self, ctx: AuditContext) -> AuditInput:
+    records = []
+    for record in ctx.records:
+        if record.business_date == ctx.business_date:
+            if record.source == "consultation":
+                records.append(record)
+            elif record.source == "nursing_progress_note":
+                for field in record.fields:
+                    if field.label == "類別" and field.value in ("會診", "營養照會建議"):
+                        records.append(record)
     ...
 
 # ✅ 每一步一個具名函式
-async def evaluate(self, ctx: AuditContext) -> AuditFinding:
-    consultations = _consultations_on(ctx.business_date, ctx.consultations)
-    unrecorded = [c for c in consultations if not _is_recorded(c, ctx.progress_notes)]
-    return _build_finding(unrecorded)
+def build_input(self, ctx: AuditContext) -> AuditInput:
+    consultations = ctx.records_on(ctx.business_date, CONSULTATION_SOURCE)
+    notes = _followup_notes(ctx, _window_end(ctx.business_date))
+    return AuditInput(variables=_variables(consultations, notes), records=(*consultations, *notes))
 ```
 
 ## 命名

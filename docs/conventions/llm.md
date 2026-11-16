@@ -62,32 +62,57 @@
 - 遮罩值（如 `sk-…abcd`）在儲存時另存於 `api_key_hint`；API 回傳前端只給遮罩值，前端永遠拿不到明文；編輯時留空表示沿用
 - 不得出現在 log、例外訊息、稽核結果中；不開啟 LiteLLM 的 verbose／debug log
 
-## gateway 介面
+## gateway 介面（結構化輸出）
+
+實作位於 `services/llm/structured.py`，由 `services/llm/gateway.py` 重新匯出。呼叫端只能從 `gateway` 匯入。
 
 ```python
-async def complete_structured(
-    request: LLMRequest,           # rule_code、prompt 名稱與版本、模板變數
-    output_schema: type[T],        # 期望輸出的 Pydantic model
-) -> LLMResult[T]:                 # parsed、model、prompt_version、system_prompt_version、token 用量、成本、耗時
+async def complete_structured[T: BaseModel](
+    session: AsyncSession,         # 只讀取使用中設定與共用 system prompt；讀完即結束交易
+    request: LLMRequest,           # rule_code、prompt_name、prompt_version、variables（皆為字串）
+    output_schema: type[T],        # 通常是 RuleOutput 的子類別
+) -> LLMResult[T]:                 # parsed、model、prompt_version、system_prompt_version、
+                                   # prompt_tokens、completion_tokens、cost_usd、duration_ms、input_digest、attempts
 ```
+
+例外：
+
+| 例外 | HTTP | 說明 | 稽核的處理 |
+|---|---|---|---|
+| `LLMNotConfiguredError` | 409 | 沒有使用中的模型設定 | 不寫入紀錄，回 409 |
+| `LLMOutputError` | 502 | 格式重試後仍不符合 `output_schema` | `COMPLETED`＋`NEEDS_REVIEW`，不可視為 `PASS` |
+| `LLMConnectionError` | 502 | 連線、驗證、額度等錯誤（LiteLLM 例外轉換，訊息不含金鑰） | `FAILED` |
 
 執行步驟：
 
-1. 讀取啟用中的模型設定並解密 key
-2. 組成訊息：共用 system prompt（有設定時）→ 以 `prompt_loader` 渲染的規則 prompt
-3. `preprocess` hook（目前 pass-through；未來接真實資料時插入去識別化，見 [ADR 0002](../adr/0002-llm-phi-policy.md)）
-4. `litellm.acompletion(...)`：`temperature=0`、`timeout` 取自設定；模型支援時使用 `response_format` 要求 JSON
-5. 以 `output_schema` 驗證輸出；失敗時附上驗證錯誤重試，最多 `LLM_MAX_RETRIES` 次
-6. 仍失敗 → 拋出 `LLMOutputError`，規則轉為 `NEEDS_REVIEW`，**絕不靜默視為 PASS**
-7. 記錄 model、prompt_version、system_prompt_version、token 用量、成本（`litellm.completion_cost`）、耗時
+1. 讀取使用中的模型設定（`crud/llm_config.get_active`）與共用 system prompt 快照（`read_call_snapshot`）。讀完即結束交易，呼叫期間不占 DB 連線。
+2. ChatGPT 訂閱：呼叫前確認 token 可用（`ensure_access_token`）。
+3. 組呼叫參數（`call_support.prepare_call`）：`timeout` 取自該設定的逾時秒數、`drop_params=True`、`temperature=0`、`num_retries` 取 `LLM_STRUCTURED_NUM_RETRIES`。
+4. 渲染規則 prompt（`prompt_loader.render_prompt`，`StrictUndefined`，缺變數直接失敗）。`input_digest` 為渲染後 prompt 的 sha256，不存全文。
+5. 訊息順序：共用 system prompt（有設定時）→ 規則 prompt。
+6. 非串流呼叫 `litellm.acompletion`，帶 `response_format={"type": "json_object"}`，受 `LLM_MAX_CONCURRENCY` 限制。
+7. 以 `output_schema.model_validate_json` 驗證（先去除外層的 ```` ```json ```` 圍欄）。不符時把錯誤位置與錯誤類型（不含輸入值）附在對話中重試，最多 `LLM_MAX_RETRIES` 次。
+8. 仍不符 → 拋出 `LLMOutputError`。
+9. 記錄 model、prompt_version、system_prompt_version、token 用量、成本（`litellm.completion_cost`，查不到時為 `None`，不影響結果）、耗時、attempts。
 
-網路錯誤、429、timeout 以指數退避重試（LiteLLM `num_retries`），與第 5 步的格式重試分開計算。
+重試的關係：
+
+- 格式重試（第 7 步）與網路重試（LiteLLM `num_retries`，網路錯誤、429、逾時，指數退避）分開計算。
+- 最多呼叫次數為 (1 + `LLM_MAX_RETRIES`) × (1 + `LLM_STRUCTURED_NUM_RETRIES`)，預設為 9 次。
+
+併發與 ChatGPT 訂閱：
+
+- 併發閘門 `_GATE` 是程序內的 `asyncio.Semaphore`，上限 `LLM_MAX_CONCURRENCY`；每個 event loop 各自建立。閘門只涵蓋模型呼叫，不涵蓋 DB。
+- ChatGPT 訂閱的 `CHATGPT_DEFAULT_INSTRUCTIONS` 只能在 `CHATGPT_INSTRUCTIONS_LOCK` 內設定，並且只在 `acompletion` 回傳後才解除鎖。與測試對話共用同一把鎖（見 [ADR 0007](../adr/0007-llm-system-prompt.md)）。
+- 去識別化的插入點是 `structured.py` 的 `_preprocess`（見 [ADR 0002](../adr/0002-llm-phi-policy.md)），目前原樣傳遞、不做任何處理。接入真實病患資料前必須在這裡補上去識別化，並更新本節。
 
 ## Prompt 規範
 
-- 位置：`app/prompts/<rule_code>_<name>/v<N>.j2`（Jinja2），內容繁中
+- 位置：`app/prompts/<prompt_name>/v<N>.j2`（Jinja2），內容繁中。`prompt_name` 與規則的 `prompt_name` 相同，例如 `r03_admission_completeness`，只允許小寫英數與底線（`LLMRequest` 驗證）。現有：`r01_admission_course`、`r02_copy_paste`、`r03_admission_completeness`、`r04_assessment_followup`、`r05_transfer_summary`、`r06_consultation`、`r07_medication_followup`
+- 渲染：`prompt_loader.py`，`StrictUndefined`（缺變數直接失敗）、不做 autoescape（純文字）
 - 版本：已用於產出稽核結果的 prompt 不得就地修改語意，改版請新增 `v<N+1>.j2`；稽核結果記錄 `prompt_version`，確保可重現
-- 必要要素清單由程式常數注入，不在 prompt 內重複寫死
+- 必要要素清單與院方欄位對照由程式常數注入，不在 prompt 內重複寫死
+- 資料區塊格式：每筆紀錄以 `<record source="…" id="…" date="…" time="…">` 標示，欄位為「標籤：值」；多行值以縮排續行（見 `services/audit/records.py`）
 - 結構：
 
 ```
@@ -103,12 +128,17 @@ async def complete_structured(
   - 資料不足以判斷時回傳 NEEDS_REVIEW
 ```
 
-## Hallucination guard
+## Hallucination guard（Evidence 核對）
 
-- LLM 回傳的每筆 Evidence，後端須驗證 `excerpt` 確實存在於對應 `record_id` 的原文（正規化空白後比對）
-- 驗證失敗的 Evidence 丟棄；若無任何有效 Evidence，結果降為 `NEEDS_REVIEW`
+實作：`services/audit/evidence.py`、`services/audit/text.py`。完整規則見 [audit-rules.md](audit-rules.md#evidence-核對)。
+
+- LLM 只回傳 `record_id` 與 `excerpt`；來源、欄位、日期、時間由程式依 `record_id` 回填
+- 比對前去除**所有空白**與格式字元、私用區字元、變體選擇器（`squash`），不是只摺疊空白
+- `excerpt` 必須是該紀錄某欄位值（或「標籤：值」「標籤值」）的子字串；跨欄位的片段則比對整筆原文與時間字串
+- 驗證失敗的 Evidence 丟棄；`WARNING` 的 finding 若無任何有效 Evidence，降為 `NEEDS_REVIEW`
+- 整體判定取 LLM 整體判定與各 finding 中較嚴重者；`WARNING` 整體若無有效 Evidence 同樣降為 `NEEDS_REVIEW`
 
 ## 測試與評估
 
-- 單元測試一律 mock gateway，不打真實 API
-- 準確率評估與單元測試分開：`backend/evaluation/` 以護理長標註的 golden set 計算各規則 precision／recall／F1，手動執行（會產生費用）
+- 單元測試一律 mock gateway，不打真實 API（`tests/services/llm/test_structured.py`、`tests/services/audit/`）
+- 準確率評估與單元測試分開：規劃中的 `backend/evaluation/` 以護理長標註的 golden set 計算各規則 precision／recall／F1，手動執行（會產生費用）。**目前尚未建立。**

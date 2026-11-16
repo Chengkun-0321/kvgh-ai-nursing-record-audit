@@ -1,13 +1,13 @@
 # 系統架構圖
 
-> 狀態：草稿。元件的程式名稱為目標設計，尚未與後端現有模組（`services/audit`、`services/ingestion`、`services/llm/gateway.py`）逐一對照；分層與 import 限制見 [architecture.md](conventions/architecture.md)。
+> 狀態：草稿。稽核模組已實作（`services/audit`、`services/llm/gateway.py` 的 `complete_structured`），但目前為**手動觸發**，見 [ADR 0011](adr/0011-audit-module.md)。圖中的排程器、中繼站拉資料（`services/ingestion`）與批次稽核尚未實作，屬規劃。元件程式名稱為目標設計，與現有模組的對照見 [architecture.md](conventions/architecture.md)。
 
 ## 說明
 
 一天的流程如下：
 
 1. 院方把當天的護理資料上傳到資料中繼站。
-2. 護理稽核系統的排程器在固定時間，先到中繼站拉資料、存進系統的資料夾，再開始稽核。
+2. 【規劃】護理稽核系統的排程器在固定時間，先到中繼站拉資料、存進系統的資料夾，再開始稽核。目前由使用者手動觸發稽核，資料直接讀取院方資料夾。
 3. 稽核任務準備向紀錄讀取要護理紀錄；紀錄讀取讀資料夾，整理後回傳。
 4. 每項稽核規則挑出所需紀錄，填入該項規則的提示詞，再交給大型語言模型（LLM）分析。
 5. LLM 的回傳結果經檢查：通過就存進稽核結果資料庫；不通過就附上錯誤原因要求重產，超過次數上限仍不通過，存成「需人工確認」，不當作正常。
@@ -64,7 +64,7 @@ flowchart LR
 
 | 圖上名稱 | 程式元件名（暫定） | 做什麼 |
 |---|---|---|
-| 排程器 | Scheduler | 固定時間觸發兩件事：拉資料、開始稽核 |
+| 排程器 | Scheduler | 【規劃，尚未實作】固定時間觸發兩件事：拉資料、開始稽核 |
 | 紀錄讀取 | RecordGateway | 讀資料夾，轉成統一格式的護理紀錄 |
 | 稽核任務準備 | AuditTaskBuilder | 每項稽核各自挑紀錄、填入提示詞 |
 | LLM 呼叫 | LLMGateway | 唯一送出 LLM 請求的地方 |
@@ -96,10 +96,10 @@ flowchart LR
 
 | 項目 | 狀態 |
 |---|---|
-| 稽核項目有幾項、是哪些（對照 [audit-rules.md](conventions/audit-rules.md)，R08–R11 為候選） | 待確認 |
-| 程式元件名與後端現有模組的對應 | 待確認 |
+| 稽核項目有幾項、是哪些（對照 [audit-rules.md](conventions/audit-rules.md)；R01–R04、R06 已實作，R05、R07 預留，R08–R11 為候選） | 已對照程式 |
+| 程式元件名與後端現有模組的對應（如 `AuditService`、`gateway.complete_structured`） | 見 [architecture.md](conventions/architecture.md) |
 | 中繼站的傳輸方式與認證 | 待決（見 CLAUDE.md） |
 | 資料夾位置與內容的存放規範（不得 commit，見 CLAUDE.md） | 待確認 |
 | 前端顯示 Evidence 時，病患摘要與原文片段從哪取得（結果查詢目前只讀稽核結果） | 圖上未畫出 |
-| 格式檢查現行規範放在 LLM 呼叫內（llm.md 步驟 5），圖上拆成獨立的「結果檢查」；兩者要統一 | 待確認 |
-| 可用程式判斷的規則是否不經 LLM（核心原則 4） | 圖上未畫出 |
+| 格式檢查：`complete_structured` 內的格式重試（llm.md 步驟 7）與圖上的「結果檢查」已分開實作；Evidence 核對與規則專屬驗證在 service 的後段。圖上的「結果檢查」合併兩者 | 已決（見 ADR 0011） |
+| 七項稽核一律經 LLM 判定，程式不下判定（取代「Rule 優先」） | 已決（見 ADR 0011） |

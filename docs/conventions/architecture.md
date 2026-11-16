@@ -5,22 +5,18 @@
 ## 系統資料流
 
 ```
-院方假資料 / 中繼站每日 JSON
-        │  services/ingestion（DataSource）
-        ▼
-DB：原始批次紀錄 + 正規化病患資料
-        │  services/audit（每日批次執行 AuditRule）
+院方每日 JSON（data/<YYYYMMDD>/<病房>/，只讀，不入庫，ADR 0010）
+        │  services/hospital_data（跨日合併；稽核歸日依紀錄本身的時間，ADR 0011）
+        │
+        ├─→ services/audit（手動觸發 AuditRule，ADR 0011）
         │        └─→ services/llm/gateway → LiteLLM → 使用者設定的模型
+        │        ▼
+        │   audit_runs（每次執行一列）＋ audit_findings（Verdict + Evidence）
+        │
         ▼
-audit_findings（Verdict + Evidence）
-        │  api/v1
-        ▼
-Next.js：病床總覽 → 點選病床顯示詳情 → 進入病患頁面 → 病患摘要 + 稽核結果 + Evidence
+api/v1 → Next.js：病床總覽（W63）、原始資料頁、病患頁（稽核結果與 Evidence）
 
-院方每日 JSON（data/<YYYYMMDD>/<病房>/）
-        │  services/hospital_data（只讀，跨日合併；不入庫，見 ADR 0010）
-        ▼
-api/v1/wards、api/v1/raw-patients → Next.js：病床總覽（W63）、原始資料頁
+（中繼站匯入 services/ingestion 尚未實作，見 data-ingestion.md。）
 ```
 
 ## 前後端分工
@@ -59,17 +55,26 @@ api/v1/wards、api/v1/raw-patients → Next.js：病床總覽（W63）、原始�
 
 ```
 services/
-├── audit/
-│   ├── runner.py          # run_daily_audit(business_date)：組 context → 執行規則 → 存結果
-│   ├── context.py         # AuditContext 組裝（規則所需資料一次備妥）
-│   ├── base.py            # AuditRule Protocol、共用 helper
+├── audit/                 # 稽核模組（ADR 0011）
+│   ├── service.py         # AuditService：固定流程、稽核週期、每日總覽；交易邊界在此
+│   ├── context.py         # build_audit_context：一次備妥病患所有日期的紀錄（不入庫）
+│   ├── records.py         # 院方紀錄 → SourceRecord；渲染 prompt 的 <record> 區塊
+│   ├── evidence.py        # LLM 輸出的 Evidence 核對、WARNING 降級、整體判定
+│   ├── text.py            # 比對用的文字正規化（去除雜訊字元）
+│   ├── registry.py        # RULE_REGISTRY：新增規則時在此註冊一行
+│   ├── runs.py            # 核對後的結果 → AuditRun／AuditFinding（不含 DB 操作）
+│   ├── views.py           # ORM → 回應結構
+│   ├── labels.py          # 狀態、週期、可否執行的繁中文字
 │   └── rules/
-│       ├── __init__.py    # RULE_REGISTRY
-│       ├── r01_admission_course.py
-│       └── …
+│       ├── base.py        # AuditRule Protocol、Availability、AuditInput
+│       ├── r01_admission_course.py … r07_medication_followup.py
+│       └── r02_comparison.py、r04_checks.py、r04_output.py（規則的輔助模組）
 ├── llm/
 │   ├── __init__.py        # 內網：改用 LiteLLM 內建的模型價格表
-│   ├── gateway.py         # 唯一 LLM 出口（目前提供測試對話串流）
+│   ├── gateway.py         # 唯一 LLM 出口：測試對話串流、complete_structured（重新匯出）
+│   ├── structured.py      # complete_structured：渲染、呼叫、JSON 驗證、格式重試、併發閘門
+│   ├── call_support.py    # 讀取設定快照、組 LiteLLM 參數、錯誤對照、ChatGPT 指示（不含訊息）
+│   ├── prompt_loader.py   # 載入、渲染 app/prompts/ 底下的 Jinja2 prompt（StrictUndefined）
 │   ├── chat_stream.py     # 測試對話串流：轉成 delta／done／error 事件、確定性關閉上游（不 import litellm）
 │   ├── error_messages.py  # 模型服務例外 → 繁中訊息（例外類別由 gateway 傳入，不 import litellm）
 │   ├── providers.py       # 服務類型 → LiteLLM 前綴、必填欄位（不 import litellm）
@@ -84,7 +89,6 @@ services/
 │   ├── redaction.py       # 服務錯誤說明的金鑰遮蔽
 │   ├── chatgpt_auth.py    # ChatGPT 訂閱的裝置碼登入（唯一可 import litellm 內部模組的例外）
 │   ├── login_poll_thread.py  # 裝置碼登入的輪詢執行緒：專屬 daemon 執行緒、名額上限（不 import litellm）
-│   └── prompt_loader.py   # 載入、渲染 Jinja2 prompt（待實作）
 ├── hospital_data/         # 院方每日資料（只讀、不入庫，見 ADR 0010）
 │   ├── source.py          # 唯一開啟院方資料檔的模組：路徑驗證、快取
 │   ├── index.py           # 由各日 patientlist 整理病人出現紀錄、統一床號
@@ -100,8 +104,9 @@ services/
     └── normalizers.py
 ```
 
-- `run_daily_audit(business_date)` 是批次入口，可由 API、CLI 或排程呼叫（排程機制待決）
-- 規則細節見 [audit-rules.md](audit-rules.md)；LLM 見 [llm.md](llm.md)；匯入見 [data-ingestion.md](data-ingestion.md)
+- 稽核目前只有單項執行入口：`AuditService.run_rule`（病患頁按鈕與一鍵稽核，經 API 呼叫）與 `get_day_overview`。
+- **規劃、尚未實作**：`run_daily_audit(business_date)` 批次入口與排程（ADR 0011 決策 7，排程機制待決）。
+- 規則細節見 [audit-rules.md](audit-rules.md)；LLM 見 [llm.md](llm.md)；匯入見 [data-ingestion.md](data-ingestion.md)；流程與稽核週期見 [ADR 0011](../adr/0011-audit-module.md)
 
 ### 預期核心資料表
 
@@ -110,8 +115,8 @@ services/
 | `ingestion_batches`   | 每次匯入的來源、日期、檔案 checksum、狀態            |
 | `ingestion_errors`    | 單筆驗證失敗紀錄                                     |
 | 病患／紀錄相關表      | **待院方 JSON 格式確定後設計**                       |
-| `audit_runs`          | 每次稽核批次（日期、規則集、模型、耗時、token 用量） |
-| `audit_findings`      | 每位病患每條規則的 Verdict 與 Evidence               |
+| `audit_runs`          | 一次稽核執行：病患、規則、稽核日、狀態、判定、摘要、`details`、模型、prompt 版本、輸入 sha256、token、成本、耗時。重跑新增一列，不覆蓋（ADR 0011） |
+| `audit_findings`      | 一次執行中的發現：項目、判定、訊息，以及通過核對的 Evidence（JSON） |
 | `llm_configs`         | 使用者設定的模型（API key 加密存放）                 |
 | `llm_system_prompts`  | 共用 system prompt，每次儲存為一個新版本             |
 | `setting_change_logs` | 設定變更操作紀錄                                     |
@@ -125,7 +130,7 @@ services/
 | 路由                     | 內容                                                                                                                                                               |
 | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `/`                      | 病房地圖：Blender 場景模組依床數組成的 3D 場景搭配病床素材，可拖曳及縮放 50–200%；依最嚴重 Verdict 顯示光暈並篩選（淡化其餘床位）；點選病床於右側（手機為 bottom sheet）顯示病患摘要與稽核結果 |
-| `/patients/[patientKey]` | 病患頁面：病患摘要、各規則稽核結果、Evidence 原文（內容待討論，目前為佔位頁，提供「檢視原始資料」連結）                                                            |
+| `/patients/[patientKey]` | 病患頁面：病患摘要、各規則稽核結果（手動觸發，依稽核日顯示）、Evidence 原文；API 為 `GET /api/v1/patients/{patient_key}/audits`、`POST …/rules/{rule_code}/runs`。前端實作中，以 ADR 0011 為準 |
 | `/raw-data`              | 原始資料：左側病人清單（該病房所有日期出現過的病人），右側時間軸（可依起訖日與類別篩選）、檢驗總表（項目 × 採檢時間）、院方原文；狀態全在網址 query，見 [ADR 0010](../adr/0010-hospital-raw-data-viewer.md) |
 | `/settings/llm`          | LLM 模型設定：多組設定（同一時間一組使用中）、服務類型、API key（只顯示遮罩值）、ChatGPT 訂閱登入、共用 system prompt、串流測試對話；見 [ADR 0006](../adr/0006-llm-config-settings.md)、[ADR 0007](../adr/0007-llm-system-prompt.md) |
 

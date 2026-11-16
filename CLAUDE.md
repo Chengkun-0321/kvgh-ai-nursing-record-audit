@@ -1,16 +1,20 @@
 # 高榮 AI 護理紀錄稽核系統（kvgh-ai-nursing-record-audit）
 
 使用 LLM 稽核護理師紀錄（入院護理評估、每日身體評估、過程紀錄、轉入／轉出摘要、給藥紀錄…）的完整性與一致性。
-流程：每日讀取病房資料 → 執行稽核規則 → 產出附 Evidence 的稽核結果 → 護理師／護理長確認。
+流程：讀取院方病房資料 → 依稽核週期執行稽核規則（目前手動觸發）→ 產出附 Evidence 的稽核結果 → 護理師／護理長確認。
 
-> 目前階段：**領域運算與驗證一律在後端，前端只渲染**（[ADR 0009](docs/adr/0009-backend-owns-computation.md)）。首頁病床總覽（Blender 場景模組＋React Three Fiber 的滿版 3D 病房）顯示院方 W63 病房（根目錄 `data/` 的去識別化資料，後端直接讀檔，見 [ADR 0010](docs/adr/0010-hospital-raw-data-viewer.md)），稽核規則尚未實作，每床為「尚未稽核」。`/raw-data` 原始資料頁以時間軸、檢驗總表、原文檢視各病人所有日期的資料。LLM 模型設定見 [ADR 0006](docs/adr/0006-llm-config-settings.md)、[ADR 0007](docs/adr/0007-llm-system-prompt.md)。資料尚未入庫，稽核規則與匯入流程待實作。
+> 目前階段：**領域運算與驗證一律在後端，前端只渲染**（[ADR 0009](docs/adr/0009-backend-owns-computation.md)）。
+> - **稽核模組已實作**（[ADR 0011](docs/adr/0011-audit-module.md)）：R01–R04、R06 可執行；R05、R07 為預留（院方資料不足，回「院方尚未提供資料」）。結果存入 `audit_runs`／`audit_findings`，病患頁手動觸發（單項與一鍵稽核）。
+> - **尚未做**：排程與整個病房的批次稽核；首頁病床總覽仍每床「尚未稽核」（尚未改讀稽核結果）；中繼站匯入（`services/ingestion`）。
+> - 院方資料（根目錄 `data/` 的去識別化資料）由後端直接讀檔、不入庫，見 [ADR 0010](docs/adr/0010-hospital-raw-data-viewer.md)。首頁病床總覽（Blender 場景模組＋React Three Fiber 的滿版 3D 病房）顯示院方 W63 病房。`/raw-data` 原始資料頁以時間軸、檢驗總表、原文檢視各病人所有日期的資料。
+> - LLM 模型設定見 [ADR 0006](docs/adr/0006-llm-config-settings.md)、[ADR 0007](docs/adr/0007-llm-system-prompt.md)。
 
 ## 核心原則（領域）
 
 1. **只提醒，不修改**：系統不得寫回或修改任何病歷資料。
 2. **每個判定都要有 Evidence**：來源、紀錄 ID、欄位、日期、原文片段；沒有 Evidence 不得輸出異常。
 3. **不一致 ≠ 錯誤**：訊息用「…不一致／未見紀錄，請確認」，禁止「護理師寫錯」這類措辭。
-4. **Rule 優先，LLM 其次**：可用程式判斷的（欄位完整性、日期、次數）不交給 LLM。
+4. **LLM 判定，程式核對**：七項稽核一律經 LLM 判定；程式只整理事實、核對 Evidence、驗證輸出結構，不下判定（[ADR 0011](docs/adr/0011-audit-module.md)）。取代舊的「Rule 優先，LLM 其次」。
 5. **不自行發明稽核規則**：只實作 [audit-rules.md](docs/conventions/audit-rules.md) 清單內的項目。
 
 ## 技術棧
@@ -61,6 +65,7 @@
 | 任何程式撰寫 | [clean-code.md](docs/conventions/clean-code.md)、[architecture.md](docs/conventions/architecture.md) |
 | 前端 UI、樣式、動畫 | [ui-design.md](docs/conventions/ui-design.md)（依據 `.claude/skills/apple-design`、`.claude/skills/ui-ux-pro-max`） |
 | 新增／修改稽核規則 | [audit-rules.md](docs/conventions/audit-rules.md)、[llm.md](docs/conventions/llm.md) |
+| 稽核流程、稽核週期、執行狀態 | [ADR 0011](docs/adr/0011-audit-module.md)、[architecture.md](docs/conventions/architecture.md) |
 | LLM 呼叫、prompt、模型設定 | [llm.md](docs/conventions/llm.md)、[security-privacy.md](docs/conventions/security-privacy.md) |
 | 資料匯入（院方 JSON／中繼站）、原始資料頁 | [data-ingestion.md](docs/conventions/data-ingestion.md)、[ADR 0010](docs/adr/0010-hospital-raw-data-viewer.md) |
 | DB schema、migration | [backend/CLAUDE.md](backend/CLAUDE.md)、[ADR 0001](docs/adr/0001-sqlite-to-postgresql.md) |
@@ -120,8 +125,11 @@ npm run gen:api
 ## 待決事項（遇到時先詢問，不自行假設）
 
 - 院方 JSON 資料格式、中繼站傳輸方式與認證
-- Verdict 分級（暫定 `PASS` / `WARNING` / `ERROR` / `NEEDS_REVIEW`）
-- 複製紀錄相似度門檻（80% 或 90%）
+- Verdict 分級（暫定 `PASS` / `WARNING` / `ERROR` / `NEEDS_REVIEW`；目前 LLM 最高只到 `WARNING`，`ERROR` 沒有產生來源）
+- R06 追蹤期限算法（目前以會診日期起算，暫定 `AUDIT_CONSULT_FOLLOWUP_DAYS` = 1；院方沒有簽收與回覆時間）
+- R04 是否把「跌倒危險」「移動能力」視為需要追蹤的異常項目（程式目前不排除；`audit-rules.md` 原列「防跌」為排除項目）
+- R05、R07 所需的院方資料：轉出／轉入摘要、給藥執行紀錄
+- R01、R03 的選項清單與「不適用」狀態
 - 夜間批次排程機制、使用者登入與權限
 - 候選稽核項目（R08–R11）是否納入第一版
 - 接真實資料後的 PHI 外送政策（見 [ADR 0002](docs/adr/0002-llm-phi-policy.md)）
