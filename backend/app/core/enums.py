@@ -90,6 +90,31 @@ class Verdict(StrEnum):
     NEEDS_REVIEW = "NEEDS_REVIEW"
 
 
+class AuditRunStatus(StrEnum):
+    """一次稽核執行的狀態；與判定（verdict）分開記錄。"""
+
+    COMPLETED = "COMPLETED"
+    NOT_APPLICABLE = "NOT_APPLICABLE"  # 當日無此事件，未呼叫 LLM
+    DATA_UNAVAILABLE = "DATA_UNAVAILABLE"  # 院方未提供所需資料，未呼叫 LLM
+    FAILED = "FAILED"
+
+
+class AuditCycle(StrEnum):
+    """稽核週期：決定稽核日期與畫面上的呈現方式。"""
+
+    ONCE_PER_ADMISSION = "once_per_admission"  # 固定記在入院日
+    DAILY = "daily"  # 畫面所選日期
+    EVENT = "event"  # 事件發生日；當日無事件則不適用
+
+
+class AvailabilityState(StrEnum):
+    """規則在某日是否可執行。"""
+
+    AVAILABLE = "available"
+    NOT_APPLICABLE = "not_applicable"
+    DATA_UNAVAILABLE = "data_unavailable"
+
+
 class Sex(StrEnum):
     """性別。"""
 

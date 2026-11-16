@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import get_settings
 from app.db.session import get_session_factory
+from app.services.audit.service import AuditService
 from app.services.hospital_data.source import HospitalDataSource
 
 
@@ -26,3 +27,11 @@ def get_hospital_data_source() -> HospitalDataSource:
 
 
 HospitalData = Annotated[HospitalDataSource, Depends(get_hospital_data_source)]
+
+
+def get_audit_service(source: HospitalData) -> AuditService:
+    """稽核服務；院方資料來源與測試共用同一個 dependency override。"""
+    return AuditService(source)
+
+
+AuditServiceDep = Annotated[AuditService, Depends(get_audit_service)]

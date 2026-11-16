@@ -1,11 +1,12 @@
 """原始資料頁的病人 API：摘要、時間軸、檢驗矩陣、原文。"""
 
 from datetime import date
-from typing import Annotated, Final
+from typing import Annotated
 
 from fastapi import APIRouter, Path, Query
 
 from app.api.deps import HospitalData
+from app.core.constants import PATIENT_KEY_PATTERN
 from app.core.enums import RawRecordCategory
 from app.schemas.hospital_data.patients import RawPatientDetailRead, RawSourceRead
 from app.schemas.hospital_data.timeline import LabMatrixRead, PatientTimelineRead
@@ -14,7 +15,6 @@ from app.services.hospital_data.timeline import TimelineFilter
 
 router = APIRouter(prefix="/raw-patients", tags=["原始資料"])
 
-PATIENT_KEY_PATTERN: Final = r"^[0-9A-Za-z]{1,32}$"
 PatientKey = Annotated[str, Path(pattern=PATIENT_KEY_PATTERN, description="病患匿名鍵")]
 StartDate = Annotated[date | None, Query(description="起始日期（含）")]
 EndDate = Annotated[date | None, Query(description="結束日期（含）")]

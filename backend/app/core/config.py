@@ -30,6 +30,12 @@ class Settings(BaseSettings):
     LLM_DEFAULT_TIMEOUT_SECONDS: int = 60
     # 測試對話要立即呈現錯誤，預設不重試
     LLM_CHAT_NUM_RETRIES: int = 0
+    # 結構化輸出（稽核）格式不符時的重試次數，不含第一次呼叫
+    LLM_MAX_RETRIES: int = 2
+    # 結構化輸出遇到網路錯誤、429、逾時的重試次數（LiteLLM 指數退避），與格式重試分開計算
+    LLM_STRUCTURED_NUM_RETRIES: int = 2
+    # 同時進行中的結構化 LLM 呼叫數（一鍵稽核時多張卡片同時送出）
+    LLM_MAX_CONCURRENCY: int = 3
 
     # ChatGPT 訂閱登入的 token 檔目錄；含登入憑證，只能放在不進版控的 data/
     CHATGPT_TOKEN_DIR: Path = DATA_DIR / "chatgpt"
@@ -44,6 +50,11 @@ class Settings(BaseSettings):
     HOSPITAL_DATA_DIR: Path = PROJECT_ROOT / "data"
     # 首頁與原始資料頁預設顯示的病房
     DEFAULT_WARD_CODE: str = "W63"
+
+    # R02：複製比對回溯天數，含當日（預設當日加前 4 日）
+    AUDIT_COPY_LOOKBACK_DAYS: int = 5
+    # R06：會診後幾日內要有相應紀錄；暫定值，院方待確認
+    AUDIT_CONSULT_FOLLOWUP_DAYS: int = 1
 
 
 @lru_cache

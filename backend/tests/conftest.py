@@ -25,7 +25,7 @@ from app.db.base import Base
 from app.main import app
 from app.services.hospital_data.source import HospitalDataSource
 from app.services.llm import chatgpt_auth
-from tests.hospital_data_samples import write_sample_hospital_data
+from tests.hospital_data_samples import write_audit_hospital_data, write_sample_hospital_data
 
 
 @pytest.fixture(autouse=True)
@@ -43,6 +43,12 @@ def chatgpt_token_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
 def hospital_data_source(tmp_path: Path) -> HospitalDataSource:
     """指向虛構院方資料的資料來源，不讀取專案的 data/。"""
     return HospitalDataSource(write_sample_hospital_data(tmp_path / "hospital_data"))
+
+
+@pytest.fixture
+def audit_hospital_data_source(tmp_path: Path) -> HospitalDataSource:
+    """稽核測試用的虛構院方資料（W98），不讀取專案的 data/。"""
+    return HospitalDataSource(write_audit_hospital_data(tmp_path / "audit_hospital_data"))
 
 
 @pytest.fixture

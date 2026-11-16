@@ -20,6 +20,10 @@ SETTING_ACTOR_MAX_LENGTH = 100
 
 # 病房代碼（如 W63）：API 路徑參數與讀取院方資料夾共用同一規則
 WARD_CODE_PATTERN = r"^[A-Z]{1,3}\d{1,4}$"
+# 病患匿名鍵（HCASENO）：API 路徑參數共用同一規則
+PATIENT_KEY_PATTERN = r"^[0-9A-Za-z]{1,32}$"
+# 稽核規則代碼（R01–R11）
+RULE_CODE_PATTERN = r"^R\d{2}$"
 
 # 院方資料的時間沒有時區，一律視為台北時間
 BUSINESS_TIMEZONE = "Asia/Taipei"

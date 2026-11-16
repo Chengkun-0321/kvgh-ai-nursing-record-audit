@@ -8,6 +8,7 @@ from app.api.v1.endpoints import (
     llm_configs,
     llm_providers,
     llm_system_prompts,
+    patient_audits,
     raw_patients,
     wards,
 )
@@ -20,3 +21,4 @@ api_router.include_router(available_models.router)
 api_router.include_router(llm_system_prompts.router)
 api_router.include_router(wards.router)
 api_router.include_router(raw_patients.router)
+api_router.include_router(patient_audits.router)

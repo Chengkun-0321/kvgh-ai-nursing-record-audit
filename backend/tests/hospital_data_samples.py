@@ -25,10 +25,12 @@ _EXAMINATION_DAY_1 = {
 }
 
 
-def _patient_list(business_date: str, entries: list[tuple[str, str, str]]) -> dict[str, object]:
+def _patient_list(
+    business_date: str, entries: list[tuple[str, str, str]], ward_code: str = WARD_CODE
+) -> dict[str, object]:
     return {
         "資料日期": f"{business_date[:4]}-{business_date[4:6]}-{business_date[6:]}",
-        "病房": WARD_CODE,
+        "病房": ward_code,
         "病人數": len(entries),
         "病人名單": [
             {"床號": bed, "HCASENO": key, "HHISNUM": "0", "檔案": file_name}
@@ -99,6 +101,69 @@ def write_sample_hospital_data(root: Path) -> Path:
     }
     for (business_date, file_name), content in files.items():
         path = root / business_date / WARD_CODE / file_name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(content, ensure_ascii=False), encoding="utf-8")
+    return root
+
+
+# 稽核測試用的虛構病房：一位病人、兩天資料。入院日（2025-12-31）早於資料的第一天，
+# 每日身評的時間是 2026-01-02，但第一天的檔案就已帶著它，用來測試依紀錄時間歸日（非資料夾日期）。
+AUDIT_WARD_CODE: Final = "W98"
+AUDIT_P3_KEY: Final = "2001"
+AUDIT_P3_FILE: Final = "2001_9101.json"
+_AUDIT_ADMITTED: Final = "2025-12-31 10:00:00"
+_AUDIT_SNAPSHOT_ASSESSMENT: Final = {
+    "身評時間": "2026-01-02 08:00:00",
+    "呼吸音": "雙側呼吸音清，無囉音",
+    "意識": "清楚",
+}
+
+
+def _audit_checklist() -> list[dict[str, str]]:
+    return [
+        {
+            "基本資料": "有填寫",
+            "個人病史": "沒有填寫",
+            "營養評估": "有填寫",
+            "日常生活": "有填寫",
+            "身體評估": "有填寫",
+            "心理評估": "有填寫",
+            "環境": "有填寫",
+        }
+    ]
+
+
+def _audit_day_1() -> dict[str, object]:
+    return {
+        "病人基本資料": [{"入院時間": _AUDIT_ADMITTED, "床號": "W98-001"}],
+        "工作清單": _audit_checklist(),
+        "入院經過": ["虛構入院經過段落"],
+        "每日身評": [_AUDIT_SNAPSHOT_ASSESSMENT],
+        "護理記錄": [{"日期": "2026-01-01", "類別": "交班", "內容": "虛構交班內容"}],
+        "會診": [{"日期": "2026-01-01 09:00:00", "科別": "營養科"}],
+    }
+
+
+def _audit_day_2() -> dict[str, object]:
+    return {
+        "病人基本資料": [{"入院時間": _AUDIT_ADMITTED, "床號": "W98-001"}],
+        "工作清單": _audit_checklist(),
+        "每日身評": [_AUDIT_SNAPSHOT_ASSESSMENT],
+        "護理記錄": [{"日期": "2026-01-02", "類別": "衛教指導", "內容": "虛構衛教內容"}],
+    }
+
+
+def write_audit_hospital_data(root: Path) -> Path:
+    """在 `root` 底下寫出稽核測試用的虛構院方資料（W98），回傳 `root`。"""
+    entry = [("001", AUDIT_P3_KEY, AUDIT_P3_FILE)]
+    files = {
+        (DAY_1, "patientlist.json"): _patient_list(DAY_1, entry, AUDIT_WARD_CODE),
+        (DAY_2, "patientlist.json"): _patient_list(DAY_2, entry, AUDIT_WARD_CODE),
+        (DAY_1, AUDIT_P3_FILE): _audit_day_1(),
+        (DAY_2, AUDIT_P3_FILE): _audit_day_2(),
+    }
+    for (business_date, file_name), content in files.items():
+        path = root / business_date / AUDIT_WARD_CODE / file_name
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(json.dumps(content, ensure_ascii=False), encoding="utf-8")
     return root

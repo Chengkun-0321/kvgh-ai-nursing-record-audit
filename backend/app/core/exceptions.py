@@ -44,6 +44,16 @@ class LLMConnectionError(AppError):
     status_code = 502
 
 
+class LLMNotConfiguredError(ConflictError):
+    """沒有使用中的模型設定，無法執行需要 LLM 的稽核。"""
+
+
+class LLMOutputError(AppError):
+    """模型輸出經重試後仍不符合要求的格式；稽核規則會轉為 NEEDS_REVIEW，不視為 PASS。"""
+
+    status_code = 502
+
+
 class ChatgptAuthRequiredError(ConflictError):
     """ChatGPT 訂閱尚未登入或登入已失效。"""
 
