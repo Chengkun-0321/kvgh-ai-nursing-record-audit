@@ -43,9 +43,18 @@ def run_finding_labels(rule: AuditRule, details: Mapping[str, object] | None) ->
 
 
 def finding_verdict_label(finding: AuditFinding, labels: Mapping[str, str]) -> str:
-    """規則的專屬文字只取代「無法判定」；其他判定一律用共同文字。"""
+    """PASS 與 NEEDS_REVIEW 可使用規則指定的文字；提醒類判定維持共同文字。
+
+    Args:
+        finding: 含判定與項目名稱的發現。
+        labels: 規則指定的「發現項目 → 顯示文字」，未指定時可為空。
+
+    Returns:
+        可套用的規則文字，未指定或不允許取代時回傳共同文字。
+    """
     default = VERDICT_LABELS[finding.verdict]
-    if finding.verdict != Verdict.NEEDS_REVIEW:
+    # 提醒類判定不得被規則文字淡化，僅允許 PASS 與 NEEDS_REVIEW 使用專屬文字。
+    if finding.verdict not in (Verdict.PASS, Verdict.NEEDS_REVIEW):
         return default
     return labels.get(finding.item, default)
 

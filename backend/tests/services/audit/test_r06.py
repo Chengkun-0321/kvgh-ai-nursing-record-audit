@@ -1,72 +1,60 @@
-"""R06 會診資訊↔護理紀錄：可執行判斷、追蹤期限、輸入整理、輸出驗證與 prompt 渲染（虛構資料）。"""
+"""R06 逐筆追蹤測試（虛構資料，不呼叫 LLM）；依指定修改範圍集中情境與反例，超過 300 行。"""
 
-from datetime import date
+import re
+from dataclasses import replace
+from datetime import date, timedelta
 from types import SimpleNamespace
-from typing import Any
 
 import pytest
+from pydantic import ValidationError
 
 from app.core.enums import AvailabilityState, RawRecordCategory
 from app.core.exceptions import LLMOutputError
 from app.schemas.hospital_data.patients import WorkChecklistRead
-from app.schemas.llm_structured import RuleOutput
+from app.schemas.llm_structured import LlmEvidence, LlmFinding, RuleOutput
 from app.services.audit.context import AuditContext
+from app.services.audit.evidence import verify_output
 from app.services.audit.records import SourceField, SourceRecord, render_records_block
 from app.services.audit.rules import r06_consultation
-from app.services.audit.rules.base import AuditInput
-from app.services.audit.rules.r06_consultation import R06Consultation, R06Output
-from app.services.llm.prompt_loader import render_prompt
+from app.services.audit.rules.base import AuditInput, LabelsFindings
+from app.services.audit.rules.r06_consultation import (
+    ConsultationMatch,
+    ConsultationStatus,
+    R06Consultation,
+    R06Output,
+)
+from app.services.audit.views import run_finding_labels
+from app.services.llm.prompt_loader import PROMPTS_DIR, render_prompt
 
-_DAY = date(2026, 11, 3)
-_NEXT_DAY = date(2026, 11, 4)
-_CONSULT_ID = "consult-fake-0001"
-_OTHER_CONSULT_ID = "consult-fake-0002"
-_IN_WINDOW_NOTE_ID = "note-fake-0001"
-_OTHER_CATEGORY_NOTE_ID = "note-fake-0002"
-_AFTER_WINDOW_NOTE_ID = "note-fake-0003"
+_DAY = date(2032, 2, 1)
+_PREVIOUS = _DAY - timedelta(days=1)
+_ITEM = f"{_PREVIOUS} 胸腔內科"
 
 
-def _record(
-    record_id: str,
-    source: RawRecordCategory,
-    day: date,
-    fields: list[tuple[str, str]],
-) -> SourceRecord:
+def _record(record_id: str, day: date, category: str = "胸腔內科(V:醫師甲)") -> SourceRecord:
+    is_note = record_id.startswith("note")
+    fields = (SourceField("類別", category),)
+    if is_note:
+        fields += (SourceField("內容", f"{_PREVIOUS} 胸腔內科醫師甲會診，建議追蹤。"),)
     return SourceRecord(
         record_id=record_id,
-        source=source.value,
+        source=(
+            RawRecordCategory.NURSING_PROGRESS_NOTE if is_note else RawRecordCategory.CONSULTATION
+        ),
         business_date=day,
-        time_text="2026/11/03 16:22",
+        time_text=f"{day:%Y/%m/%d} 16:22",
         recorded_at=None,
-        fields=tuple(SourceField(label, value) for label, value in fields),
+        fields=fields,
     )
 
 
-def _consult(record_id: str = _CONSULT_ID, day: date = _DAY) -> SourceRecord:
-    return _record(record_id, RawRecordCategory.CONSULTATION, day, [("類別", "胸腔內科(V:醫師甲)")])
-
-
-def _note(record_id: str, day: date, category: str) -> SourceRecord:
-    text = "【會診】 - 2026/11/03 16:22 胸腔內科醫師會診，建議追蹤。"
-    return _record(
-        record_id,
-        RawRecordCategory.NURSING_PROGRESS_NOTE,
-        day,
-        [("類別", category), ("內容", text)],
-    )
-
-
-def _ctx(
-    records: tuple[SourceRecord, ...],
-    patient_dates: tuple[date, ...] = (_DAY, _NEXT_DAY),
-    day: date = _DAY,
-) -> AuditContext:
+def _ctx(records: tuple[SourceRecord, ...], earliest: date = _PREVIOUS) -> AuditContext:
     return AuditContext(
         patient_key="FAKE-PATIENT",
         ward_code="FAKE-WARD",
         bed_code="01",
-        business_date=day,
-        patient_dates=patient_dates,
+        business_date=_DAY,
+        patient_dates=(_DAY, earliest),
         admitted_at=None,
         admitted_at_text=None,
         work_checklist=WorkChecklistRead(items=[], filled_count=0, total_count=0),
@@ -74,208 +62,410 @@ def _ctx(
     )
 
 
-def _output(
-    consultations: list[tuple[str, bool]],
-    verdict: str = "NEEDS_REVIEW",
-    findings: list[dict[str, Any]] | None = None,
-) -> R06Output:
-    payload: dict[str, Any] = {
-        "verdict": verdict,
-        "summary": "x",
-        "findings": findings or [],
-        "consultations": [
-            {"record_id": record_id, "matched": matched} for record_id, matched in consultations
-        ],
-    }
-    return R06Output.model_validate(payload)
+def _input(earliest: date = _PREVIOUS) -> AuditInput:
+    return R06Consultation(1).build_input(
+        _ctx((_record("consult-1", _PREVIOUS), _record("note-1", _DAY, "會診")), earliest)
+    )
 
 
-def _rule(days: int = 1) -> R06Consultation:
-    return R06Consultation(followup_days=days)
+def _output(status: ConsultationStatus = "NOT_FOUND", complete: bool = True) -> R06Output:
+    verdict = "PASS" if status != "NOT_FOUND" else "WARNING" if complete else "NEEDS_REVIEW"
+    return R06Output.model_validate(
+        {
+            "verdict": verdict,
+            "summary": "請確認會診追蹤狀況",
+            "consultations": [{"record_id": "consult-1", "item": _ITEM, "status": status}],
+            "findings": [
+                {
+                    "item": _ITEM,
+                    "verdict": verdict,
+                    "message": "已見對應的護理紀錄" if status == "MATCHED" else "請確認追蹤狀況",
+                    "evidence": [
+                        {
+                            "record_id": "note-1" if status == "MATCHED" else "consult-1",
+                            "excerpt": "胸腔內科",
+                        }
+                    ],
+                }
+            ],
+        }
+    )
 
 
-def test_rule_is_event_cycle_with_prompt_identity() -> None:
-    rule = _rule()
-
-    assert (rule.code, rule.prompt_name, rule.prompt_version) == (
+def test_identity_and_optional_interface() -> None:
+    rule = R06Consultation(1)
+    assert (rule.code, rule.prompt_name, rule.prompt_version, rule.cycle.value) == (
         "R06",
         "r06_consultation",
-        1,
+        3,
+        "event",
     )
-    assert rule.cycle.value == "event"
+    assert isinstance(rule, LabelsFindings)
+    assert not hasattr(rule, "status_notes")
 
 
-def test_not_applicable_when_no_consultation_on_the_day() -> None:
-    ctx = _ctx((_note(_IN_WINDOW_NOTE_ID, _NEXT_DAY, "會診"),))
+def test_only_grace_consultation_is_available_and_passes() -> None:
+    rule = R06Consultation(1)
+    ctx = _ctx((_record("consult-1", _DAY),))
+    audit_input = rule.build_input(ctx)
+    output = _output("IN_GRACE")
+    output.consultations[0].item = output.findings[0].item = f"{_DAY} 胸腔內科"
 
-    availability = _rule().check_availability(ctx)
+    rule.validate_output(output, audit_input)
 
-    assert availability.state == AvailabilityState.NOT_APPLICABLE
-    assert availability.reason == "當日沒有會診"
-
-
-def test_available_when_consultation_on_the_day() -> None:
-    ctx = _ctx((_consult(),))
-
-    assert _rule().check_availability(ctx).state == AvailabilityState.AVAILABLE
+    assert rule.check_availability(ctx).state == AvailabilityState.AVAILABLE
+    assert audit_input.records == ctx.records
+    assert f"到期日：{_DAY + timedelta(days=1)}" in audit_input.variables["consult_block"]
+    assert "期限狀態：寬限期中" in audit_input.variables["consult_block"]
+    assert output.verdict == "PASS"
 
 
-def test_window_includes_followup_categories_only_within_followup_days() -> None:
+@pytest.mark.parametrize(
+    "status,complete",
+    [("MATCHED", True), ("MATCHED", False), ("NOT_FOUND", True), ("NOT_FOUND", False)],
+)
+def test_due_consultation_valid_outcomes(status: ConsultationStatus, complete: bool) -> None:
+    audit_input = _input(_PREVIOUS if complete else _DAY)
+    output = _output(status, complete)
+
+    R06Consultation(1).validate_output(output, audit_input)
+    verified = verify_output(output, {record.record_id: record for record in audit_input.records})
+
+    assert verified.verdict.value == output.verdict
+    assert len(verified.findings[0].evidence) == 1
+    assert verified.findings[0].evidence[0].source == (
+        RawRecordCategory.NURSING_PROGRESS_NOTE
+        if status == "MATCHED"
+        else RawRecordCategory.CONSULTATION
+    )
+
+
+def test_mixed_due_and_grace_use_per_consultation_data_status() -> None:
+    rule = R06Consultation(1)
+    audit_input = rule.build_input(
+        _ctx((_record("consult-1", _PREVIOUS), _record("consult-2", _DAY)), _DAY)
+    )
+    output = _output(complete=False)
+    item = f"{_DAY} 胸腔內科"
+    output.consultations.append(
+        ConsultationMatch(record_id="consult-2", item=item, status="IN_GRACE")
+    )
+    output.findings.append(
+        LlmFinding(
+            item=item,
+            verdict="PASS",
+            message="寬限期中",
+            evidence=[LlmEvidence(record_id="consult-2", excerpt="胸腔內科")],
+        )
+    )
+
+    rule.validate_output(output, audit_input)
+
+    facts = audit_input.facts["consultation_facts"]
+    assert isinstance(facts, list)
+    assert [fact["data_complete"] for fact in facts] == [False, True]
+    assert "尚未到齊" in audit_input.variables["consult_block"]
+    assert "已到齊" in audit_input.variables["consult_block"]
+    assert output.verdict == "NEEDS_REVIEW"
+
+
+@pytest.mark.parametrize("days", [0, 1, 2])
+def test_window_filters_dates_sources_and_categories(days: int) -> None:
+    start = _DAY - timedelta(days=days)
     ctx = _ctx(
         (
-            _consult(),
-            _note(_IN_WINDOW_NOTE_ID, _NEXT_DAY, "會診"),
-            _note(_OTHER_CATEGORY_NOTE_ID, _NEXT_DAY, "一般護理"),
-            _note(_AFTER_WINDOW_NOTE_ID, date(2026, 11, 5), "營養照會建議"),
+            _record("consult-before", start - timedelta(days=1)),
+            _record("consult-start", start),
+            _record("consult-end", _DAY),
+            _record("consult-future", _DAY + timedelta(days=1)),
+            _record("note-before", start - timedelta(days=1), "會診"),
+            _record("note-start", start, "會診"),
+            _record("note-end", _DAY, "營養照會建議"),
+            _record("note-other", _DAY, "一般護理"),
+            _record("note-future", _DAY + timedelta(days=1), "會診"),
         ),
-        patient_dates=(_DAY, _NEXT_DAY, date(2026, 11, 5)),
+        start,
     )
 
-    audit_input = _rule(days=1).build_input(ctx)
-
-    cited = [record.record_id for record in audit_input.records]
-    assert cited == [_CONSULT_ID, _IN_WINDOW_NOTE_ID]
-    assert audit_input.variables["window_start"] == "2026-11-03"
-    assert audit_input.variables["window_end"] == "2026-11-04"
-
-
-def test_window_counts_nutrition_consult_category_as_followup() -> None:
-    ctx = _ctx((_consult(), _note(_IN_WINDOW_NOTE_ID, _DAY, "營養照會建議")))
-
-    audit_input = _rule(days=0).build_input(ctx)
+    audit_input = R06Consultation(days).build_input(ctx)
 
     assert [record.record_id for record in audit_input.records] == [
-        _CONSULT_ID,
-        _IN_WINDOW_NOTE_ID,
+        "consult-start",
+        "consult-end",
+        "note-start",
+        "note-end",
     ]
+    assert audit_input.variables["window_start"] == str(start)
+    facts = audit_input.facts["consultation_facts"]
+    assert isinstance(facts, list)
+    assert [fact["is_due"] for fact in facts] == [True, days == 0]
+    assert [fact["deadline"] for fact in facts] == [str(_DAY), str(_DAY + timedelta(days=days))]
 
 
-def test_followup_marked_complete_when_last_data_day_reaches_window_end() -> None:
-    ctx = _ctx((_consult(),), patient_dates=(_DAY, _NEXT_DAY))
-
-    audit_input = _rule(days=1).build_input(ctx)
-
-    assert audit_input.variables["followup_data_status"] == "已到齊"
-    assert audit_input.variables["last_data_date"] == "2026-11-04"
-
-
-def test_followup_marked_incomplete_when_last_data_day_is_before_window_end() -> None:
-    ctx = _ctx((_consult(),), patient_dates=(_DAY,))
-
-    audit_input = _rule(days=1).build_input(ctx)
-
-    assert audit_input.variables["followup_data_status"] == "尚未到齊"
-
-
-def test_consult_block_lists_time_and_department_per_consultation() -> None:
-    ctx = _ctx((_consult(), _consult(_OTHER_CONSULT_ID, _DAY)))
-
-    block = _rule().build_input(ctx).variables["consult_block"]
-
-    assert f"record_id={_CONSULT_ID}" in block
-    assert f"record_id={_OTHER_CONSULT_ID}" in block
-    assert "科別：胸腔內科(V:醫師甲)" in block
-
-
-def test_default_followup_days_come_from_settings(monkeypatch: pytest.MonkeyPatch) -> None:
-    fake = SimpleNamespace(AUDIT_CONSULT_FOLLOWUP_DAYS=2)
-    monkeypatch.setattr(r06_consultation, "get_settings", lambda: fake)
-    ctx = _ctx((_consult(),), patient_dates=(_DAY, _NEXT_DAY))
-
-    audit_input = R06Consultation().build_input(ctx)
-
-    assert audit_input.variables["window_end"] == "2026-11-05"
-
-
-def test_prompt_renders_status_and_records() -> None:
-    ctx = _ctx((_consult(), _note(_IN_WINDOW_NOTE_ID, _NEXT_DAY, "會診")), patient_dates=(_DAY,))
-    audit_input = _rule().build_input(ctx)
-    variables = {
-        **audit_input.variables,
-        "records_block": render_records_block(audit_input.records),
-    }
-
-    text = render_prompt("r06_consultation", 1, variables)
-
-    assert "尚未到齊" in text
-    assert f'id="{_CONSULT_ID}"' in text
-    assert f'id="{_IN_WINDOW_NOTE_ID}"' in text
-    assert "2026-11-04" in text
-
-
-def test_valid_output_passes_when_every_consultation_is_answered() -> None:
-    audit_input = AuditInput(
-        variables={"followup_data_status": "已到齊"},
-        records=(_consult(),),
+def test_no_consultations_in_window_is_not_applicable() -> None:
+    ctx = _ctx(
+        (
+            _record("consult-old", _PREVIOUS - timedelta(days=1)),
+            _record("consult-future", _DAY + timedelta(days=1)),
+            _record("note-1", _DAY, "會診"),
+        )
     )
+    assert R06Consultation(1).check_availability(ctx).state == AvailabilityState.NOT_APPLICABLE
 
-    _rule().validate_output(_output([(_CONSULT_ID, True)], verdict="PASS"), audit_input)
 
-
-def test_missing_consultation_answer_is_rejected() -> None:
-    audit_input = AuditInput(
-        variables={"followup_data_status": "已到齊"},
-        records=(_consult(), _consult(_OTHER_CONSULT_ID)),
+def test_days_from_settings_and_constructor_override(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        r06_consultation, "get_settings", lambda: SimpleNamespace(AUDIT_CONSULT_FOLLOWUP_DAYS=2)
     )
-
-    with pytest.raises(LLMOutputError):
-        _rule().validate_output(_output([(_CONSULT_ID, True)]), audit_input)
-
-
-def test_unknown_consultation_id_is_rejected() -> None:
-    audit_input = AuditInput(
-        variables={"followup_data_status": "已到齊"},
-        records=(_consult(),),
+    ctx = _ctx((_record("consult-1", _DAY - timedelta(days=2)),))
+    assert R06Consultation().build_input(ctx).variables["window_start"] == str(
+        _DAY - timedelta(days=2)
     )
-
-    with pytest.raises(LLMOutputError):
-        _rule().validate_output(_output([("not-in-input", True)]), audit_input)
+    assert R06Consultation(0).check_availability(ctx).state == AvailabilityState.NOT_APPLICABLE
 
 
-def test_duplicated_consultation_answer_is_rejected() -> None:
-    audit_input = AuditInput(
-        variables={"followup_data_status": "已到齊"},
-        records=(_consult(),),
+@pytest.mark.parametrize(
+    "category,expected",
+    [
+        ("胸腔內科(V:醫師甲)", "胸腔內科"),
+        ("胸腔內科（V:醫師甲）", "胸腔內科"),
+        ("(醫師甲)", "院方未提供科別"),
+        ("", "院方未提供科別"),
+    ],
+)
+def test_item_strips_physician_annotation(category: str, expected: str) -> None:
+    audit_input = R06Consultation(1).build_input(_ctx((_record("consult-1", _PREVIOUS, category),)))
+    assert f"item={_PREVIOUS} {expected}｜" in audit_input.variables["consult_block"]
+
+
+def test_same_day_same_department_remains_one_finding_per_record() -> None:
+    audit_input = R06Consultation(1).build_input(
+        _ctx((_record("consult-1", _PREVIOUS), _record("consult-2", _PREVIOUS)))
     )
-
-    with pytest.raises(LLMOutputError):
-        _rule().validate_output(_output([(_CONSULT_ID, True), (_CONSULT_ID, False)]), audit_input)
-
-
-def test_unmatched_consultation_cannot_be_pass() -> None:
-    audit_input = AuditInput(
-        variables={"followup_data_status": "已到齊"},
-        records=(_consult(),),
+    output = _output()
+    output.consultations.append(
+        output.consultations[0].model_copy(update={"record_id": "consult-2"})
     )
+    output.findings.append(output.findings[0].model_copy(deep=True))
+    output.findings[1].evidence[0].record_id = "consult-2"
+    R06Consultation(1).validate_output(output, audit_input)
 
-    with pytest.raises(LLMOutputError):
-        _rule().validate_output(_output([(_CONSULT_ID, False)], verdict="PASS"), audit_input)
+
+@pytest.mark.parametrize("mutation", ["missing", "unknown", "duplicate", "note_id"])
+def test_rejects_invalid_consultation_coverage(mutation: str) -> None:
+    output = _output()
+    if mutation == "missing":
+        output.consultations.clear()
+    elif mutation == "duplicate":
+        output.consultations.append(output.consultations[0])
+    else:
+        output.consultations[0].record_id = "note-1" if mutation == "note_id" else "unknown"
+    with pytest.raises(LLMOutputError, match="會診清單"):
+        R06Consultation(1).validate_output(output, _input())
 
 
-def test_warning_is_rejected_while_followup_data_incomplete() -> None:
-    audit_input = AuditInput(
-        variables={"followup_data_status": "尚未到齊"},
-        records=(_consult(),),
+@pytest.mark.parametrize("days,status", [(1, "IN_GRACE"), (2, "NOT_FOUND"), (0, "IN_GRACE")])
+def test_rejects_status_inconsistent_with_deadline(days: int, status: ConsultationStatus) -> None:
+    ctx = _ctx((_record("consult-1", _DAY if days == 0 else _PREVIOUS),))
+    with pytest.raises(LLMOutputError, match="追蹤期限"):
+        R06Consultation(days).validate_output(
+            _output(status), R06Consultation(days).build_input(ctx)
+        )
+
+
+@pytest.mark.parametrize(
+    "mutation",
+    [
+        "missing",
+        "extra",
+        "wrong_item",
+        "wrong_match_item",
+        "warning_for_matched",
+        "pass_for_missing",
+        "review_for_complete",
+    ],
+)
+def test_rejects_findings_inconsistent_with_status(mutation: str) -> None:
+    output = _output()
+    if mutation == "missing":
+        output.findings.clear()
+    elif mutation == "extra":
+        output.findings.append(output.findings[0])
+    else:
+        _mutate_finding(output, mutation)
+    with pytest.raises(LLMOutputError, match="發現與會診"):
+        R06Consultation(1).validate_output(output, _input())
+
+
+def _mutate_finding(output: R06Output, mutation: str) -> None:
+    if mutation == "wrong_item":
+        output.findings[0].item = "其他項目"
+    elif mutation == "wrong_match_item":
+        output.consultations[0].item = "其他項目"
+    elif mutation == "warning_for_matched":
+        output.consultations[0].status = "MATCHED"
+    else:
+        output.findings[0].verdict = "PASS" if mutation == "pass_for_missing" else "NEEDS_REVIEW"
+
+
+def test_rejects_incomplete_data_warning_per_consultation() -> None:
+    with pytest.raises(LLMOutputError, match="尚未到齊"):
+        R06Consultation(1).validate_output(_output(), _input(_DAY))
+
+
+@pytest.mark.parametrize(
+    "status,verdict", [("NOT_FOUND", "PASS"), ("MATCHED", "WARNING"), ("NOT_FOUND", "NEEDS_REVIEW")]
+)
+def test_rejects_inconsistent_overall_verdict(status: ConsultationStatus, verdict: str) -> None:
+    output = _output(status)
+    output = R06Output.model_validate({**output.model_dump(), "verdict": verdict})
+    with pytest.raises(LLMOutputError, match="整體判定"):
+        R06Consultation(1).validate_output(output, _input())
+
+
+@pytest.mark.parametrize("word", ["寫錯", "漏寫", "違規", "忘記"])
+@pytest.mark.parametrize("target", ["summary", "message"])
+def test_rejects_accusatory_wording(word: str, target: str) -> None:
+    output = _output()
+    if target == "summary":
+        output.summary = f"護理師{word}"
+    else:
+        output.findings[0].message = f"護理師{word}"
+    with pytest.raises(LLMOutputError, match="提醒原則"):
+        R06Consultation(1).validate_output(output, _input())
+
+
+@pytest.mark.parametrize(
+    "status,evidence_id",
+    [
+        ("MATCHED", "consult-1"),
+        ("NOT_FOUND", "note-1"),
+        ("MATCHED", "unknown"),
+        ("NOT_FOUND", None),
+    ],
+)
+def test_rejects_wrong_or_missing_evidence(
+    status: ConsultationStatus, evidence_id: str | None
+) -> None:
+    output = _output(status)
+    output.findings[0].evidence = (
+        [] if evidence_id is None else [LlmEvidence(record_id=evidence_id, excerpt="胸腔內科")]
     )
-    finding = {"item": "胸腔內科", "verdict": "WARNING", "message": "x", "evidence": []}
-    output = _output([(_CONSULT_ID, False)], verdict="WARNING", findings=[finding])
-
-    with pytest.raises(LLMOutputError):
-        _rule().validate_output(output, audit_input)
+    with pytest.raises(LLMOutputError, match="依據"):
+        R06Consultation(1).validate_output(output, _input())
 
 
-def test_needs_review_is_allowed_while_followup_data_incomplete() -> None:
-    audit_input = AuditInput(
-        variables={"followup_data_status": "尚未到齊"},
-        records=(_consult(),),
-    )
-
-    _rule().validate_output(_output([(_CONSULT_ID, False)], verdict="NEEDS_REVIEW"), audit_input)
+def test_matched_note_before_consultation_is_rejected() -> None:
+    ctx = _ctx((_record("consult-1", _DAY), _record("note-1", _PREVIOUS, "會診")))
+    output = _output("MATCHED")
+    output.consultations[0].item = output.findings[0].item = f"{_DAY} 胸腔內科"
+    with pytest.raises(LLMOutputError, match="依據"):
+        R06Consultation(1).validate_output(output, R06Consultation(1).build_input(ctx))
 
 
 def test_non_r06_output_is_rejected() -> None:
-    plain = RuleOutput(verdict="PASS", summary="x", findings=[])
-    audit_input = AuditInput(variables={"followup_data_status": "已到齊"})
+    with pytest.raises(LLMOutputError, match="會診清單"):
+        R06Consultation(1).validate_output(RuleOutput(verdict="PASS", summary="請確認"), _input())
 
-    with pytest.raises(LLMOutputError):
-        _rule().validate_output(plain, audit_input)
+
+def test_schema_rejects_unknown_status() -> None:
+    payload = _output().model_dump()
+    payload["consultations"][0]["status"] = "UNKNOWN"
+    with pytest.raises(ValidationError):
+        R06Output.model_validate(payload)
+
+
+@pytest.mark.parametrize(
+    "details",
+    [
+        None,
+        {},
+        {"consultations": None},
+        {"consultations": []},
+        {"consultations": [{"record_id": "consult-1", "matched": False}]},
+    ],
+)
+def test_finding_labels_empty_without_current_details(details: dict[str, object] | None) -> None:
+    assert run_finding_labels(R06Consultation(1), details) == {}
+
+
+def test_finding_labels_only_override_grace() -> None:
+    details = {
+        "consultations": [
+            {"record_id": "consult-1", "item": "項目甲", "status": "IN_GRACE"},
+            {"record_id": "consult-2", "item": "項目乙", "status": "MATCHED"},
+            {"record_id": "consult-3", "item": "項目丙", "status": "NOT_FOUND"},
+        ]
+    }
+    assert run_finding_labels(R06Consultation(1), details) == {"項目甲": "寬限期中"}
+
+
+@pytest.mark.parametrize("day", [date(2031, 1, 1), date(2033, 12, 31)])
+def test_prompt_dates_all_come_from_input(day: date) -> None:
+    rule = R06Consultation(1)
+    ctx = replace(_ctx((_record("consult-1", day),)), business_date=day, patient_dates=(day,))
+    audit_input = rule.build_input(ctx)
+    text = render_prompt(
+        rule.prompt_name,
+        rule.prompt_version,
+        {**audit_input.variables, "records_block": render_records_block(audit_input.records)},
+    )
+    template = (PROMPTS_DIR / "r06_consultation/v3.j2").read_text()
+
+    assert not re.search(r"\d{4}[-/]\d{2}[-/]\d{2}", template)
+    assert set(re.findall(r"\d{4}[-/]\d{2}[-/]\d{2}", text)) <= {
+        str(day - timedelta(days=1)),
+        str(day),
+        str(day + timedelta(days=1)),
+        day.strftime("%Y/%m/%d"),
+    }
+    assert "寬限期中不是缺漏" in text
+    assert "次日記前一日" in text
+    assert "內文的日期時間" in text
+    assert "營養照會建議" in text
+    assert "{{" not in text
+    assert 'id="consult-1"' in text
+
+
+@pytest.mark.parametrize("verdict", ["WARNING", "NEEDS_REVIEW"])
+def test_grace_finding_must_be_pass(verdict: str) -> None:
+    ctx = _ctx((_record("consult-1", _DAY),))
+    output = _output("IN_GRACE")
+    output.consultations[0].item = output.findings[0].item = f"{_DAY} 胸腔內科"
+    output.findings[0] = LlmFinding.model_validate(
+        {**output.findings[0].model_dump(), "verdict": verdict}
+    )
+    with pytest.raises(LLMOutputError, match="發現與會診"):
+        R06Consultation(1).validate_output(output, R06Consultation(1).build_input(ctx))
+
+
+def test_matched_in_grace_is_pass_and_uses_default_label() -> None:
+    ctx = _ctx((_record("consult-1", _DAY), _record("note-1", _DAY, "會診")))
+    output = _output("MATCHED")
+    output.consultations[0].item = output.findings[0].item = f"{_DAY} 胸腔內科"
+
+    R06Consultation(1).validate_output(output, R06Consultation(1).build_input(ctx))
+
+    assert run_finding_labels(R06Consultation(1), output.model_dump()) == {}
+    assert output.verdict == "PASS"
+
+
+def test_two_days_includes_middle_day_in_grace() -> None:
+    ctx = _ctx(
+        (
+            _record("consult-1", _DAY - timedelta(days=2)),
+            _record("consult-2", _PREVIOUS),
+            _record("consult-3", _DAY),
+        ),
+        _DAY - timedelta(days=2),
+    )
+    audit_input = R06Consultation(2).build_input(ctx)
+    facts = audit_input.facts["consultation_facts"]
+
+    assert isinstance(facts, list)
+    assert [fact["is_due"] for fact in facts] == [True, False, False]
+    assert [fact["deadline"] for fact in facts] == [
+        str(_DAY),
+        str(_DAY + timedelta(days=1)),
+        str(_DAY + timedelta(days=2)),
+    ]

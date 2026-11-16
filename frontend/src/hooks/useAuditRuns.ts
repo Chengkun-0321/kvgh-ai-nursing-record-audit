@@ -8,7 +8,12 @@ import {
 } from "react";
 
 import { toErrorMessage } from "@/lib/api/client";
-import { type PatientAuditDay, runPatientAudit } from "@/lib/api/patientAudits";
+import {
+  type AuditRuleStatus,
+  getPatientAuditDay,
+  type PatientAuditDay,
+  runPatientAudit,
+} from "@/lib/api/patientAudits";
 import {
   type AuditRuleView,
   type AuditScopeState,
@@ -40,6 +45,14 @@ export type AuditRunsHook = {
 type RequestRegistry = RefObject<Map<string, AbortController>>;
 type ScopeSetter = Dispatch<SetStateAction<AuditScopeState>>;
 
+/** 執行成功後重新取得的規則清單（含後端最新的 can_run）；只對應產生它的範圍。 */
+type OverviewSnapshot = { scope: string; rules: AuditRuleStatus[] };
+type OverviewSetter = Dispatch<SetStateAction<OverviewSnapshot | null>>;
+type RefreshOverview = () => Promise<void>;
+
+/** 重新讀取總覽的請求登記鍵；規則代號不會與之衝突。 */
+const OVERVIEW_REQUEST_KEY = "__overview__";
+
 /**
  * 登記執行中的請求。範圍（病人或日期）改變、或元件卸載時全部中止，
  * 並清除執行中旗標；中止後的遲到回應不會再寫入狀態。
@@ -62,6 +75,18 @@ function useRequestRegistry(
   }, [scope, setState]);
 
   return registry;
+}
+
+/**
+ * 範圍改變時丟棄舊範圍的總覽快照，避免切回原範圍時採用過期的規則清單。
+ * 與 useRequestRegistry 相同的清理時機。
+ */
+function useOverviewReset(scope: string, setOverview: OverviewSetter): void {
+  useEffect(() => {
+    return () => {
+      setOverview((prev) => (prev?.scope === scope ? null : prev));
+    };
+  }, [scope, setOverview]);
 }
 
 /** 呼叫後端執行單項規則，回傳要寫入狀態的內容；中止時回傳 `null`（不寫入）。 */
@@ -88,10 +113,46 @@ async function fetchRunPatch(
   }
 }
 
+/**
+ * 執行成功後重新讀取總覽。一次性規則執行完成後，後端的 can_run 會變成 false，
+ * 不重讀的話畫面會留著稽核按鈕，再按就收到 409。讀取失敗時保留目前畫面。
+ */
+function createRefreshOverview(
+  day: PatientAuditDay,
+  setOverview: OverviewSetter,
+  registry: RequestRegistry,
+): RefreshOverview {
+  const scope = scopeKeyOf(day);
+  return async () => {
+    const requests = registry.current;
+    // 較新的讀取取代尚未完成的舊讀取，舊回應不會覆蓋新快照
+    requests.get(OVERVIEW_REQUEST_KEY)?.abort();
+    const controller = new AbortController();
+    requests.set(OVERVIEW_REQUEST_KEY, controller);
+    try {
+      const fresh = await getPatientAuditDay(
+        day.patient_key,
+        day.business_date,
+        controller.signal,
+      );
+      if (!controller.signal.aborted) {
+        setOverview({ scope, rules: fresh.rules });
+      }
+    } catch {
+      // 重新讀取失敗或已中止時不寫入；已顯示的結果保留，下次執行會再嘗試同步
+    } finally {
+      if (requests.get(OVERVIEW_REQUEST_KEY) === controller) {
+        requests.delete(OVERVIEW_REQUEST_KEY);
+      }
+    }
+  };
+}
+
 function createRunRule(
   day: PatientAuditDay,
   setState: ScopeSetter,
   registry: RequestRegistry,
+  refreshOverview: RefreshOverview,
 ): AuditRunsHook["runRule"] {
   const scope = scopeKeyOf(day);
   return async (ruleCode) => {
@@ -112,16 +173,19 @@ function createRunRule(
     if (patch && !controller.signal.aborted) {
       setState((prev) => patchRule(prev, scope, ruleCode, patch));
     }
+    if (patch?.run && !controller.signal.aborted) {
+      void refreshOverview();
+    }
   };
 }
 
 function createRunAll(
-  day: PatientAuditDay,
+  rules: AuditRuleStatus[],
   runRule: AuditRunsHook["runRule"],
   registry: RequestRegistry,
 ): AuditRunsHook["runAll"] {
   return async () => {
-    const codes = day.rules
+    const codes = rules
       .filter(
         (rule) => isRunAllTarget(rule) && !registry.current.has(rule.rule_code),
       )
@@ -137,11 +201,16 @@ function createRunAll(
 export function useAuditRuns(day: PatientAuditDay): AuditRunsHook {
   const scope = scopeKeyOf(day);
   const [state, setState] = useState(() => emptyScopeState(scope));
+  const [overview, setOverview] = useState<OverviewSnapshot | null>(null);
   const registry = useRequestRegistry(scope, setState);
-  const runRule = createRunRule(day, setState, registry);
-  const runAll = createRunAll(day, runRule, registry);
+  useOverviewReset(scope, setOverview);
+  const refreshOverview = createRefreshOverview(day, setOverview, registry);
+  const runRule = createRunRule(day, setState, registry, refreshOverview);
 
-  const rules = buildRuleViews(day.rules, stateForScope(state, scope));
+  const sourceRules = overview?.scope === scope ? overview.rules : day.rules;
+  const runAll = createRunAll(sourceRules, runRule, registry);
+
+  const rules = buildRuleViews(sourceRules, stateForScope(state, scope));
   const targets = rules.filter(isRunAllTarget);
   return {
     rules,

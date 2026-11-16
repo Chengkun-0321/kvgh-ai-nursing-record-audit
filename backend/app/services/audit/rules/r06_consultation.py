@@ -1,111 +1,173 @@
-"""R06 會診資訊↔護理紀錄（事件規則）。
+"""R06 會診資訊↔護理紀錄：截至稽核日的逐筆期限追蹤。
 
-當日有會診時，檢查每一筆會診在追蹤期限內，護理紀錄中是否有相應的書寫。第一版只看「有沒有對應紀錄」，
-不比對建議內容；同一科多次會診靠內文的日期、時間、醫師分辨。
-
-院方資料限制：會診只有時間與科別，沒有簽收時間、回覆時間與狀態，因此期限以會診時間起算，
-期限為「當日＋`AUDIT_CONSULT_FOLLOWUP_DAYS`」（含當日）。若院方資料的最後一天早於期限最後一天，
-期限內的後續資料尚未進來，找不到對應紀錄時只能回 NEEDS_REVIEW，不得判為 WARNING。
-判定由 LLM 做，程式只整理事實並核對 Evidence。
+納入 D−N 至 D（含）的會診與指定類別護理紀錄，逐筆提供到期日、是否已到期及資料狀態。
+LLM 判斷期限內是否已有對應書寫；寬限期中不是缺漏。會診日早於最早資料日時，
+已到期但未見對應紀錄只能 NEEDS_REVIEW。程式只整理事實並驗證輸出，不碰 DB 或呼叫 LLM。
 """
 
-from datetime import timedelta
-from typing import ClassVar, Final
+import re
+from collections.abc import Mapping
+from datetime import date, timedelta
+from typing import ClassVar, Final, Literal
 
 from pydantic import BaseModel, Field
 
 from app.core.config import get_settings
 from app.core.enums import AuditCycle, RawRecordCategory
 from app.core.exceptions import LLMOutputError
-from app.schemas.llm_structured import RuleOutput
+from app.schemas.llm_structured import LlmFinding, RuleOutput
 from app.services.audit.context import AuditContext
 from app.services.audit.records import SourceRecord
-from app.services.audit.rules.base import (
-    AuditInput,
-    Availability,
-    available,
-    not_applicable,
-)
+from app.services.audit.rules.base import AuditInput, Availability, available, not_applicable
 
-# 護理紀錄中，類別欄位為下列名稱者才視為會診後的對應書寫
 FOLLOWUP_CATEGORIES: Final[tuple[str, ...]] = ("會診", "營養照會建議")
 _CATEGORY_LABEL: Final = "類別"
 _NO_DEPARTMENT: Final = "院方未提供科別"
-_NO_CONSULT_REASON: Final = "當日沒有會診"
+_NO_CONSULT_REASON: Final = "追蹤範圍內沒有會診"
+_PHYSICIAN_NOTE_PATTERN: Final = re.compile(r"[(（].*$")
 _DATA_COMPLETE: Final = "已到齊"
 _DATA_INCOMPLETE: Final = "尚未到齊"
+_GRACE_LABEL: Final = "寬限期中"
 _INVALID_OUTPUT_MESSAGE: Final = "模型輸出的會診清單與紀錄不符，無法判定"
-_UNMATCHED_VERDICT_MESSAGE: Final = "有會診未找到對應紀錄，整體判定不得為 PASS"
-_INCOMPLETE_WARNING_MESSAGE: Final = "期限內資料尚未到齊時不得判為 WARNING"
+_DEADLINE_MESSAGE: Final = "模型輸出的會診狀態與追蹤期限不一致，無法判定"
+_VERDICT_MESSAGE: Final = "模型輸出的整體判定與會診狀態不一致，無法判定"
+_INCOMPLETE_WARNING_MESSAGE: Final = "期限內資料尚未到齊的會診不得判為 WARNING"
+_FINDING_MESSAGE: Final = "模型輸出的發現與會診項目或狀態不一致，無法判定"
+_SOURCE_MESSAGE: Final = "模型輸出的依據與會診或追蹤期限不符，無法判定"
+_WORDING_MESSAGE: Final = "模型輸出用語不符合提醒原則，無法判定"
+_FORBIDDEN_WORDS: Final = ("寫錯", "漏寫", "違規", "忘記")
+
+ConsultationStatus = Literal["MATCHED", "IN_GRACE", "NOT_FOUND"]
 
 
 class ConsultationMatch(BaseModel):
-    """一筆會診在追蹤期限內是否找到對應的護理紀錄。"""
+    """一筆會診的追蹤狀態；item 與同位置的 finding 對應。"""
 
     record_id: str
-    matched: bool
+    item: str
+    status: ConsultationStatus
 
 
 class R06Output(RuleOutput):
-    """R06 的專屬欄位：每筆會診是否找到對應紀錄（存入結果的 details）。"""
+    """逐筆會診狀態存入 details；findings 與 consultations 依相同順序排列。"""
 
     consultations: list[ConsultationMatch] = Field(default_factory=list)
 
 
+class _ConsultationFacts(BaseModel):
+    """程式計算的逐筆事實；供 prompt、輸出核對與結果保存共用。"""
+
+    record_id: str
+    item: str
+    deadline: date
+    is_due: bool
+    data_complete: bool
+
+
 class R06Consultation:
-    """R06 規則。`followup_days` 未指定時讀取設定 `AUDIT_CONSULT_FOLLOWUP_DAYS`。"""
+    """截至稽核日追蹤會診；未指定 followup_days 時讀取設定的日曆天數。"""
 
     code: ClassVar[str] = "R06"
     name: ClassVar[str] = "會診資訊↔護理紀錄"
     description: ClassVar[str] = (
-        "當日會診之後，期限內是否有相應的護理紀錄（只看有無，不比對建議內容）。"
+        "截至稽核日，追蹤範圍內的會診是否已見期限內對應護理紀錄；"
+        "寬限期中不是缺漏，已到期而未見紀錄時提醒確認（只看有無，不比對建議內容）。"
     )
     cycle: ClassVar[AuditCycle] = AuditCycle.EVENT
     prompt_name: ClassVar[str] = "r06_consultation"
-    prompt_version: ClassVar[int] = 1
+    prompt_version: ClassVar[int] = 3
     output_schema: ClassVar[type[RuleOutput]] = R06Output
 
     def __init__(self, followup_days: int | None = None) -> None:
         self._followup_days = followup_days
 
     def check_availability(self, ctx: AuditContext) -> Availability:
-        if not _consultations_on(ctx):
-            return not_applicable(_NO_CONSULT_REASON)
-        return available()
+        """追蹤範圍內有任何會診即可稽核，包含寬限期中的會診。"""
+        return available() if self._consultations(ctx) else not_applicable(_NO_CONSULT_REASON)
 
     def build_input(self, ctx: AuditContext) -> AuditInput:
-        day = ctx.business_date
-        end = day + timedelta(days=self._days())
-        consultations = _consultations_on(ctx)
+        """整理截至稽核日的會診、護理紀錄及逐筆期限事實。"""
+        start = ctx.business_date - timedelta(days=self._days())
+        consultations = self._consultations(ctx)
         notes = [
             record
-            for record in ctx.records_between(day, end, RawRecordCategory.NURSING_PROGRESS_NOTE)
+            for record in ctx.records_between(
+                start, ctx.business_date, RawRecordCategory.NURSING_PROGRESS_NOTE
+            )
             if _is_followup_note(record)
         ]
-        last_day = max(ctx.patient_dates)
+        facts = [_consult_facts(record, ctx, self._days()) for record in consultations]
         variables = {
-            "window_start": day.isoformat(),
-            "window_end": end.isoformat(),
-            "last_data_date": last_day.isoformat(),
-            "followup_data_status": _DATA_COMPLETE if last_day >= end else _DATA_INCOMPLETE,
-            "consult_block": "\n".join(_consult_line(record) for record in consultations),
+            "window_start": start.isoformat(),
+            "window_end": ctx.business_date.isoformat(),
+            "followup_days": str(self._days()),
+            "earliest_data_date": min(ctx.patient_dates).isoformat(),
+            "followup_categories": "、".join(FOLLOWUP_CATEGORIES),
+            "consult_block": "\n".join(
+                _consult_line(record, fact)
+                for record, fact in zip(consultations, facts, strict=True)
+            ),
         }
-        return AuditInput(variables=variables, records=(*consultations, *notes))
+        return AuditInput(
+            variables=variables,
+            records=(*consultations, *notes),
+            facts={"consultation_facts": [fact.model_dump(mode="json") for fact in facts]},
+        )
 
     def validate_output(self, output: RuleOutput, audit_input: AuditInput) -> None:
+        """核對覆蓋、期限、判定、逐筆 finding、依據來源與提醒用語。"""
         if not isinstance(output, R06Output):
             raise LLMOutputError(_INVALID_OUTPUT_MESSAGE)
         _check_coverage(output, audit_input)
-        _check_verdict(output, audit_input)
+        entries = audit_input.facts.get("consultation_facts")
+        if not isinstance(entries, list):
+            raise LLMOutputError(_INVALID_OUTPUT_MESSAGE)
+        facts = {
+            fact.record_id: fact
+            for fact in (_ConsultationFacts.model_validate(item) for item in entries)
+        }
+        _check_findings(output, facts, audit_input)
+        _check_verdict(output)
+        texts = [output.summary, *(finding.message for finding in output.findings)]
+        if any(word in text for text in texts for word in _FORBIDDEN_WORDS):
+            raise LLMOutputError(_WORDING_MESSAGE)
+
+    def finding_labels(self, details: Mapping[str, object] | None) -> Mapping[str, str]:
+        """寬限期中的項目顯示「寬限期中」，已見對應紀錄維持預設。"""
+        entries = (details or {}).get("consultations")
+        if not isinstance(entries, list):
+            return {}
+        # 舊版 details 只有 matched；歷史結果維持預設文字，不能因缺少新欄位而讀取失敗。
+        return {
+            item["item"]: _GRACE_LABEL
+            for item in entries
+            if isinstance(item, dict)
+            and isinstance(item.get("item"), str)
+            and item.get("status") == "IN_GRACE"
+        }
 
     def _days(self) -> int:
         if self._followup_days is not None:
             return self._followup_days
         return get_settings().AUDIT_CONSULT_FOLLOWUP_DAYS
 
+    def _consultations(self, ctx: AuditContext) -> list[SourceRecord]:
+        return ctx.records_between(
+            ctx.business_date - timedelta(days=self._days()),
+            ctx.business_date,
+            RawRecordCategory.CONSULTATION,
+        )
 
-def _consultations_on(ctx: AuditContext) -> list[SourceRecord]:
-    return ctx.records_on(ctx.business_date, RawRecordCategory.CONSULTATION)
+
+def _consult_facts(record: SourceRecord, ctx: AuditContext, days: int) -> _ConsultationFacts:
+    deadline = record.business_date + timedelta(days=days)
+    return _ConsultationFacts(
+        record_id=record.record_id,
+        item=f"{record.business_date.isoformat()} {_note_department(record)}",
+        deadline=deadline,
+        is_due=deadline <= ctx.business_date,
+        data_complete=record.business_date >= min(ctx.patient_dates),
+    )
 
 
 def _is_followup_note(record: SourceRecord) -> bool:
@@ -115,10 +177,6 @@ def _is_followup_note(record: SourceRecord) -> bool:
     )
 
 
-def _consult_line(record: SourceRecord) -> str:
-    return f"- record_id={record.record_id}｜時間：{record.time_text}｜科別：{_department(record)}"
-
-
 def _department(record: SourceRecord) -> str:
     return next(
         (field.value for field in record.fields if field.label == _CATEGORY_LABEL),
@@ -126,8 +184,22 @@ def _department(record: SourceRecord) -> str:
     )
 
 
+def _note_department(record: SourceRecord) -> str:
+    """去掉科別中的醫師註記；去完為空時使用未提供科別文字。"""
+    return _PHYSICIAN_NOTE_PATTERN.sub("", _department(record)).strip() or _NO_DEPARTMENT
+
+
+def _consult_line(record: SourceRecord, fact: _ConsultationFacts) -> str:
+    status = _DATA_COMPLETE if fact.data_complete else _DATA_INCOMPLETE
+    due = "已到期" if fact.is_due else _GRACE_LABEL
+    return (
+        f"- record_id={record.record_id}｜item={fact.item}｜時間：{record.time_text}"
+        f"｜科別：{_department(record)}｜到期日：{fact.deadline.isoformat()}"
+        f"｜期限狀態：{due}｜期限內資料：{status}"
+    )
+
+
 def _check_coverage(output: R06Output, audit_input: AuditInput) -> None:
-    """每筆會診都要有且只有一筆回覆，且 record_id 出自本次提供的會診紀錄。"""
     expected = {
         record.record_id
         for record in audit_input.records
@@ -138,11 +210,58 @@ def _check_coverage(output: R06Output, audit_input: AuditInput) -> None:
         raise LLMOutputError(_INVALID_OUTPUT_MESSAGE)
 
 
-def _check_verdict(output: R06Output, audit_input: AuditInput) -> None:
-    """不得靜默判為 PASS；資料尚未到齊時不得以 WARNING 下結論。"""
-    has_unmatched = any(not item.matched for item in output.consultations)
-    if has_unmatched and output.verdict == "PASS":
-        raise LLMOutputError(_UNMATCHED_VERDICT_MESSAGE)
-    incomplete = audit_input.variables["followup_data_status"] == _DATA_INCOMPLETE
-    if incomplete and any(finding.verdict == "WARNING" for finding in output.findings):
-        raise LLMOutputError(_INCOMPLETE_WARNING_MESSAGE)
+def _check_findings(
+    output: R06Output, facts: Mapping[str, _ConsultationFacts], audit_input: AuditInput
+) -> None:
+    if len(output.findings) != len(output.consultations):
+        raise LLMOutputError(_FINDING_MESSAGE)
+    records = {record.record_id: record for record in audit_input.records}
+    for match, finding in zip(output.consultations, output.findings, strict=True):
+        fact = facts[match.record_id]
+        if (fact.is_due and match.status == "IN_GRACE") or (
+            not fact.is_due and match.status == "NOT_FOUND"
+        ):
+            raise LLMOutputError(_DEADLINE_MESSAGE)
+        if not fact.data_complete and finding.verdict == "WARNING":
+            raise LLMOutputError(_INCOMPLETE_WARNING_MESSAGE)
+        expected = "PASS"
+        if match.status == "NOT_FOUND":
+            expected = "WARNING" if fact.data_complete else "NEEDS_REVIEW"
+        if match.item != fact.item or finding.item != fact.item or finding.verdict != expected:
+            raise LLMOutputError(_FINDING_MESSAGE)
+        _check_evidence(match, finding, fact, records)
+
+
+def _check_evidence(
+    match: ConsultationMatch,
+    finding: LlmFinding,
+    fact: _ConsultationFacts,
+    records: Mapping[str, SourceRecord],
+) -> None:
+    if not finding.evidence:
+        raise LLMOutputError(_SOURCE_MESSAGE)
+    consult = records[match.record_id]
+    for evidence in finding.evidence:
+        record = records.get(evidence.record_id)
+        if match.status != "MATCHED":
+            valid = evidence.record_id == match.record_id
+        else:
+            valid = (
+                record is not None
+                and record.source == RawRecordCategory.NURSING_PROGRESS_NOTE
+                and _is_followup_note(record)
+                and consult.business_date <= record.business_date <= fact.deadline
+            )
+        if not valid:
+            raise LLMOutputError(_SOURCE_MESSAGE)
+
+
+def _check_verdict(output: R06Output) -> None:
+    expected = "PASS"
+    verdicts = {finding.verdict for finding in output.findings}
+    if "WARNING" in verdicts:
+        expected = "WARNING"
+    elif "NEEDS_REVIEW" in verdicts:
+        expected = "NEEDS_REVIEW"
+    if output.verdict != expected:
+        raise LLMOutputError(_VERDICT_MESSAGE)

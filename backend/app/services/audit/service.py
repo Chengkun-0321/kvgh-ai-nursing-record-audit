@@ -15,8 +15,15 @@ from typing import Final
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.enums import AuditCycle, AuditRunStatus, AvailabilityState
-from app.core.exceptions import AppError, LLMNotConfiguredError, LLMOutputError, NotFoundError
+from app.core.enums import AuditCycle, AuditRunStatus, AvailabilityState, Verdict
+from app.core.exceptions import (
+    AppError,
+    DayNotEndedError,
+    LLMNotConfiguredError,
+    LLMOutputError,
+    NotFoundError,
+    RuleSettledError,
+)
 from app.crud import audit_run as audit_run_crud
 from app.models.audit import AuditRun
 from app.schemas.audit import (
@@ -26,6 +33,7 @@ from app.schemas.audit import (
     PatientAuditDayRead,
 )
 from app.schemas.llm_structured import LLMRequest, RuleOutput
+from app.services.audit.clock import TodayProvider, is_day_ended, taipei_today
 from app.services.audit.context import AuditContext, build_audit_context
 from app.services.audit.evidence import verify_output
 from app.services.audit.labels import AUDIT_CYCLE_LABELS, AVAILABILITY_LABELS
@@ -42,6 +50,8 @@ logger = logging.getLogger(__name__)
 RULE_NOT_FOUND_MESSAGE: Final = "查無此稽核項目"
 OUTPUT_NEEDS_REVIEW_MESSAGE: Final = "模型輸出未通過格式或規則驗證，無法判定，請人工確認"
 EXECUTION_FAILED_MESSAGE: Final = "稽核執行失敗，請稍後再試"
+DAY_NOT_ENDED_MESSAGE: Final = "當日尚未結束，隔日起才能稽核"
+RULE_SETTLED_MESSAGE: Final = "此項為每次入院一次的稽核，已完成，不可重複執行"
 _SKIPPED_STATUS: Final = {
     AvailabilityState.NOT_APPLICABLE: AuditRunStatus.NOT_APPLICABLE,
     AvailabilityState.DATA_UNAVAILABLE: AuditRunStatus.DATA_UNAVAILABLE,
@@ -51,21 +61,26 @@ _COMMON_OUTPUT_FIELDS: Final = frozenset(RuleOutput.model_fields)
 
 
 class AuditService:
-    """病患稽核的對外入口：每日總覽與單項執行。"""
+    """病患稽核的對外入口：每日總覽與單項執行。
 
-    def __init__(self, source: HospitalDataSource) -> None:
+    `today` 注入「今天」（測試用固定日期；正式用台北時間）。
+    """
+
+    def __init__(self, source: HospitalDataSource, today: TodayProvider = taipei_today) -> None:
         self._source = source
+        self._today = today
 
     async def get_day_overview(
         self, session: AsyncSession, patient_key: str, business_date: date | None
     ) -> PatientAuditDayRead:
-        """某日的稽核總覽；`business_date` 未指定時為病人最新一天。
+        """某日的稽核總覽；`business_date` 未指定時為已結束的最新一天（沒有時為最新一天）。
 
         Raises:
             NotFoundError: 查無病人，或該日沒有此病人的資料。
         """
-        ctx = await build_audit_context(self._source, patient_key, business_date)
-        rules = [await _rule_status(session, ctx, rule) for rule in RULE_REGISTRY.values()]
+        today = self._today()
+        ctx = await build_audit_context(self._source, patient_key, business_date, today)
+        rules = [await _rule_status(session, ctx, rule, today) for rule in RULE_REGISTRY.values()]
         previous_date, next_date = _neighbors(ctx.patient_dates, ctx.business_date)
         return PatientAuditDayRead(
             patient_key=ctx.patient_key,
@@ -87,11 +102,22 @@ class AuditService:
 
         Raises:
             NotFoundError: 查無規則、病人或該日資料。
+            DayNotEndedError: 所選日期尚未結束（不寫入紀錄）。
+            RuleSettledError: 一次性規則已完成（不寫入紀錄）。
             LLMNotConfiguredError: 需要 LLM 但沒有使用中的模型設定（不寫入紀錄）。
         """
         rule = _get_rule(rule_code)
-        ctx = await build_audit_context(self._source, patient_key, business_date)
-        target = RunTarget(rule.code, patient_key, effective_business_date(rule, ctx))
+        today = self._today()
+        ctx = await build_audit_context(self._source, patient_key, business_date, today)
+        if not is_day_ended(ctx.business_date, today):
+            raise DayNotEndedError(DAY_NOT_ENDED_MESSAGE)
+        rule_day = rule_day_on(rule, ctx, today)
+        latest = await audit_run_crud.get_latest(
+            session, patient_key, rule.code, rule_day.business_date
+        )
+        if _is_settled_once(rule, latest):
+            raise RuleSettledError(RULE_SETTLED_MESSAGE)
+        target = RunTarget(rule.code, patient_key, rule_day.business_date)
         run = await _execute(session, rule, ctx, target)
         await audit_run_crud.add(session, run)
         await session.commit()
@@ -183,19 +209,30 @@ class RuleDay:
         return self.availability.state == AvailabilityState.AVAILABLE
 
 
-def rule_day_on(rule: AuditRule, ctx: AuditContext) -> RuleDay:
-    """規則的稽核日（一次性規則為入院日）與該日的可否執行。"""
+def rule_day_on(rule: AuditRule, ctx: AuditContext, today: date) -> RuleDay:
+    """規則的稽核日（一次性規則為入院日）與該日的可否執行。
+
+    可否執行以「畫面所選日期」（`ctx.business_date`）是否已結束判斷，不看一次性規則的入院日。
+    病患頁與病床總覽都經由此函式，兩邊結果一致。
+    """
     day = effective_business_date(rule, ctx)
+    if not is_day_ended(ctx.business_date, today):
+        return RuleDay(
+            business_date=day,
+            availability=Availability(AvailabilityState.DAY_NOT_ENDED, DAY_NOT_ENDED_MESSAGE),
+        )
     return RuleDay(business_date=day, availability=rule.check_availability(ctx.for_date(day)))
 
 
 async def _rule_status(
-    session: AsyncSession, ctx: AuditContext, rule: AuditRule
+    session: AsyncSession, ctx: AuditContext, rule: AuditRule, today: date
 ) -> AuditRuleStatusRead:
-    rule_day = rule_day_on(rule, ctx)
+    rule_day = rule_day_on(rule, ctx, today)
     latest = await audit_run_crud.get_latest(
         session, ctx.patient_key, rule.code, rule_day.business_date
     )
+    # 一次性規則已 settled 後不可再執行；一鍵稽核也不納入（見 _is_settled_once）
+    can_run = rule_day.can_run and not _is_settled_once(rule, latest)
     return AuditRuleStatusRead(
         rule_code=rule.code,
         name=rule.name,
@@ -204,19 +241,28 @@ async def _rule_status(
         cycle_label=AUDIT_CYCLE_LABELS[rule.cycle],
         effective_business_date=rule_day.business_date,
         availability=_availability_read(rule_day.availability),
-        can_run=rule_day.can_run,
-        include_in_run_all=rule_day.can_run and not _is_settled_once(rule, latest),
+        can_run=can_run,
+        include_in_run_all=can_run,
         latest_run=to_run_read(latest, rule) if latest is not None else None,
     )
 
 
 def _is_settled_once(rule: AuditRule, latest: AuditRun | None) -> bool:
-    """一次性規則是否已有完成的結果；有的話一鍵稽核不重跑（要重跑按該項自己的按鈕）。"""
+    """一次性規則是否已完成稽核（settled）；settled 後不可再執行，一鍵稽核也不納入。
+
+    例外：模型輸出未通過驗證（COMPLETED 且判定為 NEEDS_REVIEW、附有原因）不算 settled，仍可重跑。
+    """
     return (
         rule.cycle == AuditCycle.ONCE_PER_ADMISSION
         and latest is not None
         and latest.status == AuditRunStatus.COMPLETED
+        and not _is_validation_failure(latest)
     )
+
+
+def _is_validation_failure(run: AuditRun) -> bool:
+    """LLM 輸出未通過格式或規則驗證（見 `runs.needs_review_run`）。"""
+    return run.verdict == Verdict.NEEDS_REVIEW and bool(run.status_reason)
 
 
 def _availability_read(availability: Availability) -> AvailabilityRead:

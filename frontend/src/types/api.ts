@@ -520,7 +520,7 @@ export interface components {
          * @description 規則在某日是否可執行。
          * @enum {string}
          */
-        AvailabilityState: "available" | "not_applicable" | "data_unavailable";
+        AvailabilityState: "available" | "not_applicable" | "data_unavailable" | "day_not_ended";
         /**
          * AvailableModel
          * @description 一個可選的模型；`id` 即設定要儲存的模型名稱（不含 LiteLLM 前綴）。

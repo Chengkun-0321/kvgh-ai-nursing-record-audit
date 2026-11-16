@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import get_settings
 from app.db.session import get_session_factory
+from app.services.audit.clock import TodayProvider, taipei_today
 from app.services.audit.service import AuditService
 from app.services.hospital_data.source import HospitalDataSource
 
@@ -29,9 +30,17 @@ def get_hospital_data_source() -> HospitalDataSource:
 HospitalData = Annotated[HospitalDataSource, Depends(get_hospital_data_source)]
 
 
-def get_audit_service(source: HospitalData) -> AuditService:
+def get_today_provider() -> TodayProvider:
+    """稽核用的「今天」（台北時間）；測試以 dependency_overrides 換成固定日期。"""
+    return taipei_today
+
+
+TodayProviderDep = Annotated[TodayProvider, Depends(get_today_provider)]
+
+
+def get_audit_service(source: HospitalData, today: TodayProviderDep) -> AuditService:
     """稽核服務；院方資料來源與測試共用同一個 dependency override。"""
-    return AuditService(source)
+    return AuditService(source, today)
 
 
 AuditServiceDep = Annotated[AuditService, Depends(get_audit_service)]

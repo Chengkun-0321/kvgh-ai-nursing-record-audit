@@ -11,6 +11,7 @@ export type AuditDisplayKind =
   | "unaudited"
   | "not_applicable"
   | "unavailable"
+  | "day_not_ended"
   | "failed"
   | "running";
 
@@ -69,6 +70,14 @@ function fromAvailability(availability: AuditAvailability): AuditDisplay {
   if (availability.state === "data_unavailable") {
     return {
       kind: "unavailable",
+      verdict: null,
+      label: availability.label,
+      reason: availability.reason,
+    };
+  }
+  if (availability.state === "day_not_ended") {
+    return {
+      kind: "day_not_ended",
       verdict: null,
       label: availability.label,
       reason: availability.reason,

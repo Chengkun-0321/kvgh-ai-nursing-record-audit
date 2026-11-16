@@ -80,5 +80,5 @@ class LabelsFindings(Protocol):
     """選用介面：規則要替某些發現指定專屬顯示文字時實作。"""
 
     def finding_labels(self, details: Mapping[str, object] | None) -> Mapping[str, str]:
-        """回傳「發現項目名稱 → 顯示文字」；只會取代「無法判定」的預設文字。"""
+        """回傳「發現項目名稱 → 顯示文字」；只取代「紀錄完整」與「無法判定」的預設文字。"""
         ...

@@ -72,9 +72,11 @@ def run_key(run: AuditRun) -> RunKey:
     return (run.patient_key, run.rule_code, run.business_date)
 
 
-def build_bed_status(bed: BedSnapshot, latest: Mapping[RunKey, AuditRun]) -> BedStatusRead:
-    """組出一張病床的狀態；`latest` 為 `list_latest_runs` 的結果，依查詢鍵索引。"""
-    outcomes = [_outcome(rule, bed.ctx, latest) for rule in RULE_REGISTRY.values()]
+def build_bed_status(
+    bed: BedSnapshot, latest: Mapping[RunKey, AuditRun], today: date
+) -> BedStatusRead:
+    """組出一張病床的狀態；`latest` 依查詢鍵索引，`today` 與病患頁相同。"""
+    outcomes = [_outcome(rule, bed.ctx, latest, today) for rule in RULE_REGISTRY.values()]
     completed = [o.completed_run for o in outcomes if o.completed_run is not None]
     status = _status_of(completed)
     pending = _pending_findings(outcomes)
@@ -95,8 +97,10 @@ def build_bed_status(bed: BedSnapshot, latest: Mapping[RunKey, AuditRun]) -> Bed
     )
 
 
-def _outcome(rule: AuditRule, ctx: AuditContext, latest: Mapping[RunKey, AuditRun]) -> _RuleOutcome:
-    rule_day = rule_day_on(rule, ctx)
+def _outcome(
+    rule: AuditRule, ctx: AuditContext, latest: Mapping[RunKey, AuditRun], today: date
+) -> _RuleOutcome:
+    rule_day = rule_day_on(rule, ctx, today)
     run = latest.get((ctx.patient_key, rule.code, rule_day.business_date))
     # 最新一次為 FAILED、NOT_APPLICABLE 或 DATA_UNAVAILABLE 都不算已完成
     completed = run if run is not None and run.status == AuditRunStatus.COMPLETED else None

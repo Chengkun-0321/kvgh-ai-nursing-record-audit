@@ -6,6 +6,7 @@ import { ApiError } from "@/lib/api/client";
 import {
   type AuditRuleStatus,
   type AuditRun,
+  getPatientAuditDay,
   type PatientAuditDay,
   runPatientAudit,
 } from "@/lib/api/patientAudits";
@@ -13,9 +14,13 @@ import {
 import { useAuditRuns } from "./useAuditRuns";
 import { renderHookHarness } from "./useAuditRunsHarness";
 
-vi.mock("@/lib/api/patientAudits", () => ({ runPatientAudit: vi.fn() }));
+vi.mock("@/lib/api/patientAudits", () => ({
+  runPatientAudit: vi.fn(),
+  getPatientAuditDay: vi.fn(),
+}));
 
 const runPatientAuditMock = vi.mocked(runPatientAudit);
+const getPatientAuditDayMock = vi.mocked(getPatientAuditDay);
 
 function makeRun(ruleCode: string, businessDate: string): AuditRun {
   return {
@@ -87,6 +92,76 @@ function deferred<T>(): { promise: Promise<T>; resolve: (value: T) => void } {
 
 beforeEach(() => {
   runPatientAuditMock.mockReset();
+  getPatientAuditDayMock.mockReset();
+  // 預設重新讀取失敗，讓既有測試只依本地執行狀態判斷
+  getPatientAuditDayMock.mockRejectedValue(new Error("未設定"));
+});
+
+it("一次性規則執行成功後重新讀取總覽，can_run 變為 false 且不再可一鍵稽核", async () => {
+  const harness = await renderHookHarness(
+    useAuditRuns,
+    makeDay("2026-11-16", [makeRule("R01", { can_run: true })]),
+  );
+  runPatientAuditMock.mockResolvedValue(makeRun("R01", "2026-11-16"));
+  getPatientAuditDayMock.mockResolvedValue(
+    makeDay("2026-11-16", [
+      makeRule("R01", {
+        can_run: false,
+        include_in_run_all: false,
+        latest_run: makeRun("R01", "2026-11-16"),
+      }),
+    ]),
+  );
+
+  await act(() => harness.current.runRule("R01"));
+  await act(() => Promise.resolve());
+
+  expect(getPatientAuditDayMock).toHaveBeenCalledWith(
+    "P001",
+    "2026-11-16",
+    expect.any(AbortSignal),
+  );
+  expect(harness.current.rules[0]?.can_run).toBe(false);
+  expect(harness.current.canRunAll).toBe(false);
+  expect(harness.current.rules[0]?.displayedRun?.summary).toBe("R01 結果");
+});
+
+it("切走再切回原日期後，使用伺服器新載入的規則，不採用舊的總覽快照", async () => {
+  const day1105 = makeDay("2026-11-05", [makeRule("R01", { can_run: true })]);
+  const day1104 = makeDay("2026-11-04", [makeRule("R01", { can_run: true })]);
+  const harness = await renderHookHarness(useAuditRuns, day1105);
+  runPatientAuditMock.mockResolvedValue(makeRun("R01", "2026-11-05"));
+  getPatientAuditDayMock.mockResolvedValue(
+    makeDay("2026-11-05", [makeRule("R01", { can_run: false })]),
+  );
+
+  await act(() => harness.current.runRule("R01"));
+  await act(() => Promise.resolve());
+  expect(harness.current.rules[0]?.can_run).toBe(false);
+
+  await act(() => harness.rerender(day1104));
+  // 伺服器重新載入的 11/05：規則已是可執行，與先前快照不同
+  const reloaded1105 = makeDay("2026-11-05", [
+    makeRule("R01", { can_run: true }),
+  ]);
+  await act(() => harness.rerender(reloaded1105));
+
+  expect(harness.current.rules[0]?.can_run).toBe(true);
+  expect(harness.current.canRunAll).toBe(true);
+});
+
+it("重新讀取總覽失敗時保留目前畫面，不清除執行結果", async () => {
+  const harness = await renderHookHarness(
+    useAuditRuns,
+    makeDay("2026-11-16", [makeRule("R01")]),
+  );
+  runPatientAuditMock.mockResolvedValue(makeRun("R01", "2026-11-16"));
+
+  await act(() => harness.current.runRule("R01"));
+  await act(() => Promise.resolve());
+
+  expect(harness.current.rules[0]?.can_run).toBe(true);
+  expect(harness.current.rules[0]?.displayedRun?.summary).toBe("R01 結果");
 });
 
 it("單項執行成功後，顯示的結果換成新結果", async () => {

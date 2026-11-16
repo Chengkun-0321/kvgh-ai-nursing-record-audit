@@ -2,6 +2,7 @@ import { VerdictIcon } from "@/components/VerdictIcon";
 import {
   type Icon,
   CircleNotchIcon,
+  ClockCountdownIcon,
   MinusCircleIcon,
   ProhibitIcon,
   WarningCircleIcon,
@@ -23,6 +24,7 @@ const PHOSPHOR_ICONS: Record<AuditDisplayKind, Icon> = {
   unaudited: WarningCircleIcon,
   not_applicable: MinusCircleIcon,
   unavailable: ProhibitIcon,
+  day_not_ended: ClockCountdownIcon,
   failed: WarningOctagonIcon,
   running: CircleNotchIcon,
 };
@@ -32,6 +34,7 @@ const TEXT_CLASS: Record<AuditDisplayKind, string> = {
   unaudited: "text-ink-secondary",
   not_applicable: "text-ink-secondary",
   unavailable: "text-ink-secondary",
+  day_not_ended: "text-ink-secondary",
   failed: "text-danger",
   running: "text-accent-strong",
 };

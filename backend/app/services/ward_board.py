@@ -19,6 +19,7 @@ from app.schemas.ward_board import (
     StatusCountRead,
     WardBedBoardRead,
 )
+from app.services.audit.clock import TodayProvider, default_business_date
 from app.services.audit.context import context_from_history
 from app.services.audit.registry import RULE_REGISTRY
 from app.services.audit.service import effective_business_date
@@ -36,19 +37,34 @@ from app.services.ward_board_status import (
 )
 
 
+@dataclass(frozen=True)
+class BedBoardQuery:
+    """病床總覽的查詢：病房、稽核日（未指定為預設日）、「今天」的來源。"""
+
+    ward_code: str
+    business_date: date | None
+    today: TodayProvider
+
+
 async def get_ward_bed_board(
     session: AsyncSession,
     source: HospitalDataSource,
-    ward_code: str,
-    business_date: date | None,
+    query: BedBoardQuery,
 ) -> WardBedBoardRead:
-    """取得病床總覽；未指定日期時為該病房最新一天。"""
-    snapshot = await asyncio.to_thread(load_ward_day, source, ward_code, business_date)
+    """取得病床總覽；未指定日期時為已結束的最新一天（沒有時為最新一天）。
+
+    「今天」只在此取用一次，整份總覽用同一個值，與病患頁的判斷一致。
+    """
+    today_date = query.today()
+    snapshot = await asyncio.to_thread(
+        load_ward_day, source, query.ward_code, query.business_date, today_date
+    )
     latest = await _latest_runs(session, snapshot.beds)
     beds = sorted(
-        (build_bed_status(bed, latest) for bed in snapshot.beds),
+        (build_bed_status(bed, latest, today_date) for bed in snapshot.beds),
         key=lambda bed: bed.bed_code,
     )
+    ward_code = query.ward_code
     return WardBedBoardRead(
         ward_code=ward_code,
         display_name=ward_display_name(ward_code),
@@ -69,14 +85,14 @@ class WardDaySnapshot:
 
 
 def load_ward_day(
-    source: HospitalDataSource, ward_code: str, business_date: date | None
+    source: HospitalDataSource, ward_code: str, business_date: date | None, today: date
 ) -> WardDaySnapshot:
     """同步讀取某病房某日的所有病床（供 thread 執行）。
 
     病患的資料快照與病患頁共用 `context_from_history`；同一病人在病患頁與病床總覽的紀錄與日期一致。
     """
     ward_dates = list_ward_dates(source, ward_code)
-    target = _resolve_business_date(ward_dates, business_date)
+    target = _resolve_business_date(ward_dates, business_date, today)
     histories = list_ward_histories(source, ward_code, ward_dates)
     beds = [
         _bed_snapshot(source, ward_code, history, target)
@@ -86,9 +102,10 @@ def load_ward_day(
     return WardDaySnapshot(business_date=target, beds=beds)
 
 
-def _resolve_business_date(dates: list[date], business_date: date | None) -> date:
+def _resolve_business_date(dates: list[date], business_date: date | None, today: date) -> date:
+    """與病患頁相同的預設規則（見 `clock.default_business_date`）。"""
     if business_date is None:
-        return dates[-1]
+        return default_business_date(dates, today)
     if business_date not in dates:
         raise NotFoundError(DATE_NOT_FOUND_MESSAGE)
     return business_date
@@ -97,7 +114,7 @@ def _resolve_business_date(dates: list[date], business_date: date | None) -> dat
 def _bed_snapshot(
     source: HospitalDataSource, ward_code: str, history: PatientHistory, target: date
 ) -> BedSnapshot:
-    ctx = context_from_history(source, history, target)
+    ctx = context_from_history(source, history, target)  # 目標日已由呼叫端確認存在
     appearance = history.appearance_on(target)
     # 入院日取自該日的病人檔（與原本病床總覽相同），而非最新一天的檔案
     patient_file = source.read_patient_file(target, ward_code, appearance.file_name)

@@ -14,14 +14,17 @@
 | R03 | 入院護理評估指定項目完整性 | 一次性 | 已實作 |
 | R04 | 每日身體評估異常 ↔ 後續追蹤紀錄 | 每日 | 已實作 |
 | R05 | 轉入／轉出摘要完整性 | 事件 | 預留（模組與 prompt 已建，不呼叫 LLM） |
-| R06 | 會診資訊 ↔ 護理紀錄 | 事件 | 已實作 |
+| R06 | 會診資訊 ↔ 護理紀錄 | 事件（截至稽核日逐筆追蹤，見 ADR 0012） | 已實作 |
 | R07 | 給藥後療效／副作用／不良反應追蹤 | 事件 | 預留（模組與 prompt 已建，不呼叫 LLM） |
 | R08 | 侵入性檢查／治療前說明 | — | 候選（高度可行），未實作 |
 | R09 | 藥物執行前衛教 | — | 候選（高度可行），未實作 |
 | R10 | 情緒困擾 ≥ 4 後續處置紀錄 | — | 候選（待確認），未實作 |
 | R11 | 待簽同意書提醒 | — | 候選（報表附加項），未實作 |
 
-- 稽核週期的定義與日期規則見 ADR 0011 決策 3。
+- 稽核週期的定義與日期規則見 ADR 0011 決策 3；其中一次性規則的重跑與 R06 的追蹤範圍已由 ADR 0012 修正。
+- **稽核日必須已結束**（全部七項）：稽核日 < 今天（Asia/Taipei）才可執行。所選日期未結束時，可稽核性為 `DAY_NOT_ENDED`，`run_rule` 回 409，不寫入紀錄（ADR 0012 決策 1）。
+- **一次性規則完成後不可再執行**（R01、R03）：最新一列為 `COMPLETED` 且非驗證失敗時，`can_run` 與 `include_in_run_all` 為 false，`run_rule` 回 409，不寫入紀錄。驗證失敗造成的 `NEEDS_REVIEW` 仍可重跑（ADR 0012 決策 3）。
+- **寬限期中**（R06）：逐筆會診尚未到期且未見對應紀錄時為 `IN_GRACE`，該筆判定 `PASS`，仍可稽核（ADR 0012 決策 2）。
 - **預留**：`check_availability` 固定回傳 `DATA_UNAVAILABLE`，流程不呼叫 LLM。資料到位後的修改步驟寫在各模組的 docstring。
 - 候選規則（R08–R11）尚未實作。規劃的開關設定 `ENABLED_AUDIT_RULES` 目前不存在於 `core/config.py`；實作時再新增，並同步 `.env.example`。
 
@@ -44,6 +47,7 @@
 
 ### R01 入院經過 ↔ 身體評估一致性（一次性）
 
+- 執行：一次性。已完成後不可再執行，見 ADR 0012 決策 3。
 - 適用條件：有「入院經過」與「入院身體評估」紀錄。缺任一者為 `DATA_UNAVAILABLE`。
 - 輸入：入院經過全文、入院身體評估原文（各欄位）、院方入院時間。
 - LLM 判定：
@@ -81,6 +85,7 @@
 
 ### R03 入院護理評估完整性（一次性）
 
+- 執行：一次性。已完成後不可再執行，見 ADR 0012 決策 3。
 - 適用條件：院方有工作清單。沒有則 `DATA_UNAVAILABLE`。
 - 輸入：工作清單 7 項的填寫狀態（合成為一筆 `work_checklist` 紀錄）、入院經過紀錄是否有內容。
 - 必要項目與院方欄位的對照：
@@ -130,19 +135,28 @@
 
 ### R06 會診資訊 ↔ 護理紀錄（事件）
 
-- 適用條件：當日有會診紀錄。沒有則 `NOT_APPLICABLE`。
-- 追蹤期限：以會診日期起算，期限為當日到當日加 `AUDIT_CONSULT_FOLLOWUP_DAYS` 日（含當日），預設 1，即兩天。**暫定**，院方待確認（見 ADR 0011 待確認事項）。
-- 輸入：
-  - 當日每筆會診（record_id、時間、科別）。
-  - 期限內類別為「會診」或「營養照會建議」的護理紀錄。
-  - 院方最後一天的資料日期，與期限最後一天比較，決定「期限內資料」是否已到齊（`已到齊`／`尚未到齊`）。
-- LLM 判定：每筆會診在期限內是否有對應的護理紀錄（只看有無，不比對建議內容）。
-- 專屬輸出：`consultations`，每筆 `{record_id, matched}`。
-- 專屬驗證：
-  - 每筆會診都必須有且只有一筆回覆，`record_id` 必須出自本次提供的會診紀錄。
-  - 有未對應的會診時，整體判定不得為 `PASS`。
-  - 期限內資料尚未到齊時，不得出現 `WARNING`（改以 `NEEDS_REVIEW` 表示資料不足）。
-- 已知限制：院方會診只有時間與科別，沒有簽收、回覆時間與狀態。
+- 稽核日 D 為所選日期，結果記在 D。追蹤範圍為 D−N 至 D（含），N 為 `AUDIT_CONSULT_FOLLOWUP_DAYS`，預設 1 日，待院方確認。
+- 每筆會診的追蹤期限為會診日 C 至 C＋N（含）；C＋N 是期限到期日。
+- 已結束的稽核日，範圍內有會診即 `available`；沒有則為 `not_applicable`，原因「追蹤範圍內沒有會診」。
+- 輸入：追蹤範圍內的每筆會診，及同期類別為「會診」或「營養照會建議」的護理紀錄。資料不超過 D。
+- 程式逐筆計算到期日、是否到期與資料是否到齊。會診日早於病患最早資料日時，標示資料尚未到齊；此檢查不驗證期間內是否有缺日。
+- LLM 使用 `r06_consultation/v3.j2`，判斷期限內且不晚於 D 是否已有對應護理紀錄。它只判斷有無，不比對建議內容。prompt 指示以內文日期、時間與醫師區分同科多次會診。
+
+| 逐筆狀態 | 條件 | 判定 | prompt 要求的訊息 |
+|---|---|---|---|
+| `MATCHED` | 已見期限內對應紀錄 | `PASS` | 已見對應的護理紀錄 |
+| `IN_GRACE` | 尚未到期且未見對應紀錄 | `PASS` | 寬限期中，追蹤期限至 ＜到期日＞ |
+| `NOT_FOUND` | 已到期、未見紀錄，資料已到齊 | `WARNING` | 期限至 ＜到期日＞，護理紀錄中未見相應紀錄，請確認 |
+| `NOT_FOUND` | 已到期、未見紀錄，資料尚未到齊 | `NEEDS_REVIEW` | 期限內的資料尚未提供，暫無法判定 |
+
+- `consultations` 每筆為 `{record_id, item, status}`，與 `findings` 同順序逐筆對應；同日同科不合併。`item` 為會診日及科別，刪除科別中第一個左括號及其後文字；空值用「院方未提供科別」。
+- 整體有 `WARNING` 時為 `WARNING`；否則有 `NEEDS_REVIEW` 時為 `NEEDS_REVIEW`；其餘為 `PASS`。只有寬限期中的會診仍為 `PASS`。
+- 程式核對會診 ID 完整且不重複、逐筆數量與順序、項目、期限與狀態、資料狀態與判定、整體判定及依據來源。`MATCHED` 依據須為該會診日至到期日內的指定類別護理紀錄；其餘狀態須引用該筆會診。共用 Evidence 核對另驗證原文片段。
+- 程式檢查摘要與訊息不得含「寫錯」「漏寫」「違規」「忘記」，但不強制訊息等於 prompt 範例，也不核對語意是否真的對應。LLM 仍負責判斷對應關係。
+- 發現標籤：`IN_GRACE` 對應「寬限期中」；`MATCHED` 的預設標籤為「紀錄完整」。細節也顯示 LLM 訊息；prompt 要求「已見對應的護理紀錄」，但程式不強制該字句。規則專屬標籤只取代 `PASS` 與 `NEEDS_REVIEW` 的預設文字。舊結果缺少新狀態欄位時維持預設。
+- 顯示限制：標籤以項目名稱對照；同日同科不同會診若狀態不同，寬限期標籤可能套到另一筆 `PASS` 發現。
+- 已知限制：院方會診沒有簽收與回覆時間；舊結果查詢未依 prompt 版本過濾。沒有排程，須於所選資料日手動稽核。
+- 已驗證案例與未驗證的 `WARNING` 實例見 [ADR 0012](../adr/0012-audit-day-rules.md)。
 
 ### R07 給藥後療效與不良反應追蹤（事件，預留）
 
@@ -165,12 +179,13 @@ class Verdict(StrEnum):
 class AuditCycle(StrEnum):
     ONCE_PER_ADMISSION = "once_per_admission"  # 固定記在入院日
     DAILY = "daily"                            # 畫面所選日期
-    EVENT = "event"                            # 事件發生日；當日無事件則不適用
+    EVENT = "event"                            # 畫面所選日期；R06 以追蹤範圍內的會診判斷適用性
 
 class AvailabilityState(StrEnum):
     AVAILABLE = "available"
     NOT_APPLICABLE = "not_applicable"
     DATA_UNAVAILABLE = "data_unavailable"
+    DAY_NOT_ENDED = "day_not_ended"            # 所選稽核日尚未結束（今天或之後），不可執行（ADR 0012）
 
 # app/services/audit/rules/base.py
 @dataclass(frozen=True)
@@ -198,6 +213,10 @@ class AuditRule(Protocol):
     def validate_output(self, output: RuleOutput, audit_input: AuditInput) -> None: ...
     # 不符時拋出 LLMOutputError（訊息為模組常數），結果轉為 COMPLETED＋NEEDS_REVIEW
 
+@runtime_checkable
+class LabelsFindings(Protocol):  # 選用；僅取代 PASS 或 NEEDS_REVIEW 的顯示文字
+    def finding_labels(self, details: Mapping[str, object] | None) -> Mapping[str, str]: ...
+
 # app/schemas/llm_structured.py
 LlmVerdict = Literal["PASS", "WARNING", "NEEDS_REVIEW"]
 
@@ -215,7 +234,7 @@ class RuleOutput(BaseModel):           # 所有規則共同的輸出
     verdict: LlmVerdict
     summary: str
     findings: list[LlmFinding]
-    # 規則專屬欄位由子類別加上，存入 details（例：R01 elements、R04 flagged_items）
+    # 規則專屬欄位由子類別加上，存入 details（例：R01 elements、R04 flagged_items、R06 consultations）
 
 # app/services/audit/registry.py
 RULE_REGISTRY: dict[str, AuditRule]    # 依代碼排序，畫面依此順序顯示
@@ -264,13 +283,17 @@ RULE_REGISTRY: dict[str, AuditRule]    # 依代碼排序，畫面依此順序顯
 | ❌ 禁止 | ✅ 改用 |
 |---|---|
 | 護理師寫錯了 | 入院經過與身體評估內容不一致，請確認 |
-| 沒有寫會診紀錄 | 今日有會診，期限內的護理紀錄中未見相應書寫，請確認 |
+| 沒有寫會診紀錄 | 2026-11-04 有胸腔內科會診，至期限 2026-11-05 的護理紀錄中未見相應紀錄，請確認（範例為虛構） |
 | 抄襲昨天紀錄 | 今日紀錄與前日高度相似，但生命徵象已有變化，請確認是否需更新 |
 | 違規 | 未見必要項目：○○、○○，請確認 |
-| 漏寫、忘記、寫錯（R04 的 `summary` 與 `message` 會被程式檢查） | 未見相應書寫，請確認 |
+| 漏寫、忘記、寫錯（R04、R06 的 `summary` 與 `message` 會被程式檢查） | 未見相應書寫，請確認 |
 
 - 「不一致」「未見紀錄」「請確認」是系統的用語。不得指責護理師。
 - 狀態文字（`status_label`）由後端回傳：`COMPLETED`→已完成、`NOT_APPLICABLE`→當日無此事件、`DATA_UNAVAILABLE`→院方尚未提供資料、`FAILED`→執行失敗（見 `services/audit/labels.py`）。
+- 可稽核性文字（`AVAILABILITY_LABELS`）：`available`→可稽核、`not_applicable`→當日無此事件、`data_unavailable`→院方尚未提供資料、`day_not_ended`→當日尚未結束。
+- 409 的固定訊息（不含病歷內容）：
+  - 稽核日未結束：「當日尚未結束，隔日起才能稽核」（`DayNotEndedError`）。
+  - 一次性規則已完成：「此項為每次入院一次的稽核，已完成，不可重複執行」（`RuleSettledError`）。
 
 ## 新增規則流程
 
@@ -291,7 +314,7 @@ RULE_REGISTRY: dict[str, AuditRule]    # 依代碼排序，畫面依此順序顯
 | R03 | 工作清單（最新一天的檔案）、入院經過 | 沒有「不適用」狀態；「住院經過」以是否有入院經過紀錄判斷 |
 | R04 | 每日身評、護理記錄、生命徵象、會診、用藥 | 院方未標示異常項目，由 LLM 依原文判斷；「防跌」「移動能力」是否納入待確認 |
 | R05 | 轉床資料、護理記錄（轉出／轉入摘要類別）、身評（管路） | 院方沒有轉出／轉入摘要；轉床只有病房內換床（預留） |
-| R06 | 會診、護理記錄（類別：會診、營養照會建議） | 沒有簽收與回覆時間；期限以日期起算（暫定） |
+| R06 | D−N 至 D 的會診及護理記錄（類別：會診、營養照會建議） | 沒有簽收與回覆時間；期限暫定；舊結果未依 `prompt_version` 過濾 |
 | R07 | 用藥（PRN 藥囑）、護理記錄、生命徵象、檢驗 | 沒有給藥執行時間、執行者、高警訊標記（預留） |
 
 - 資料歸日一律依紀錄本身的時間，不依資料夾日期（ADR 0011 決策 5）。
@@ -302,7 +325,7 @@ RULE_REGISTRY: dict[str, AuditRule]    # 依代碼排序，畫面依此順序顯
 | 設定（`core/config.py`） | 預設 | 用途 |
 |---|---|---|
 | `AUDIT_COPY_LOOKBACK_DAYS` | 5 | R02 回溯天數，含當日 |
-| `AUDIT_CONSULT_FOLLOWUP_DAYS` | 1 | R06 追蹤期限，暫定；院方待確認 |
+| `AUDIT_CONSULT_FOLLOWUP_DAYS` | 1 | R06 每筆會診的追蹤期限日曆天數，暫定；院方待確認 |
 | `LLM_MAX_RETRIES` | 2 | 格式不符時的重試次數（不含第一次呼叫） |
 | `LLM_STRUCTURED_NUM_RETRIES` | 2 | 網路錯誤、429、逾時的重試次數（LiteLLM），與格式重試分開 |
 | `LLM_MAX_CONCURRENCY` | 3 | 同時進行中的結構化 LLM 呼叫數 |
@@ -332,7 +355,10 @@ RULE_REGISTRY: dict[str, AuditRule]    # 依代碼排序，畫面依此順序顯
 
 | 項目 | 狀態 |
 |---|---|
-| R06 追蹤期限算法（目前以日期起算，當日到當日加 `AUDIT_CONSULT_FOLLOWUP_DAYS`，暫定 1） | 待院方確認 |
+| R06 追蹤期限天數（`AUDIT_CONSULT_FOLLOWUP_DAYS` 暫定 1；ADR 0012 決策 2） | 待院方確認 |
+| 一次性規則（R01、R03）完成後，入院評估被修改時的重跑入口（ADR 0012 待確認） | 待專案負責人決定 |
+| 改版前 R06 舊結果的處理：清除、依 `prompt_version` 過濾，或維持現狀（ADR 0012 待確認） | 待決 |
+| 未結束日期的病床總覽進度文字是否改為「當日尚未結束」（目前為「今日無可稽核項目」，ADR 0012 影響） | 待決 |
 | R04 是否把「跌倒危險」「移動能力」視為需要追蹤的異常項目 | 待護理長確認 |
 | R05、R07 所需的院方資料（轉出／轉入摘要、給藥執行紀錄） | 待院方確認 |
 | R01、R03 的選項清單與「不適用」狀態 | 待院方確認 |

@@ -1,6 +1,6 @@
 """病患稽核 API：總覽與單項執行的狀態碼、回應結構與錯誤訊息。LLM 一律 mock。"""
 
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Callable
 from datetime import date
 from typing import Any
 
@@ -8,8 +8,9 @@ import pytest
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from app.api.deps import get_db, get_hospital_data_source
+from app.api.deps import get_db, get_hospital_data_source, get_today_provider
 from app.main import app
+from app.services.audit.service import DAY_NOT_ENDED_MESSAGE
 from app.services.hospital_data.source import HospitalDataSource
 from app.services.llm import gateway
 from tests.hospital_data_samples import AUDIT_P3_KEY
@@ -118,3 +119,17 @@ async def test_run_for_date_without_patient_data_is_404(audit_client: AsyncClien
     response = await audit_client.post(f"{BASE}/{date(2026, 3, 1)}/rules/R03/runs")
 
     assert response.status_code == 404
+
+
+def _fixed_today(day: date) -> Callable[[], date]:
+    return lambda: day
+
+
+async def test_run_on_unended_day_is_409_with_reason(audit_client: AsyncClient) -> None:
+    # 注入「今天」為 2026-01-02：所選日期尚未結束，應在呼叫 LLM 前回 409
+    app.dependency_overrides[get_today_provider] = lambda: _fixed_today(date(2026, 1, 2))
+
+    response = await audit_client.post(f"{BASE}/2026-01-02/rules/R03/runs")
+
+    assert response.status_code == 409
+    assert response.json()["detail"] == DAY_NOT_ENDED_MESSAGE

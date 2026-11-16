@@ -29,4 +29,5 @@ AVAILABILITY_LABELS: Final[dict[AvailabilityState, str]] = {
     AvailabilityState.AVAILABLE: "可稽核",
     AvailabilityState.NOT_APPLICABLE: "當日無此事件",
     AvailabilityState.DATA_UNAVAILABLE: "院方尚未提供資料",
+    AvailabilityState.DAY_NOT_ENDED: "當日尚未結束",
 }

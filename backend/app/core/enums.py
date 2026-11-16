@@ -104,7 +104,7 @@ class AuditCycle(StrEnum):
 
     ONCE_PER_ADMISSION = "once_per_admission"  # 固定記在入院日
     DAILY = "daily"  # 畫面所選日期
-    EVENT = "event"  # 事件發生日；當日無事件則不適用
+    EVENT = "event"  # 畫面所選日期（R06 為期限到期日）；當日無對應事件則不適用
 
 
 class AvailabilityState(StrEnum):
@@ -113,6 +113,7 @@ class AvailabilityState(StrEnum):
     AVAILABLE = "available"
     NOT_APPLICABLE = "not_applicable"
     DATA_UNAVAILABLE = "data_unavailable"
+    DAY_NOT_ENDED = "day_not_ended"  # 所選稽核日尚未結束（今天或之後）
 
 
 class Sex(StrEnum):

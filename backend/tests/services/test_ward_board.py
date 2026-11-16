@@ -13,19 +13,25 @@ from app.models.audit import AuditFinding, AuditRun
 from app.schemas.ward_board import WardBedBoardRead
 from app.services.audit.service import AuditService
 from app.services.hospital_data.source import HospitalDataSource
-from app.services.ward_board import get_ward_bed_board
+from app.services.ward_board import BedBoardQuery, get_ward_bed_board
 from tests.hospital_data_samples import AUDIT_P3_KEY, AUDIT_WARD_CODE
 
 BOARD_DAY = date(2026, 1, 1)
+# 測試注入的「今天」：BOARD_DAY 已結束
+BOARD_TODAY = date(2026, 1, 3)
 ADMISSION_DAY = date(2025, 12, 31)
 OLDER = datetime(2026, 1, 1, 10, 0, tzinfo=UTC)
 NEWER = datetime(2026, 1, 1, 11, 0, tzinfo=UTC)
 
 
 async def _board(
-    session: AsyncSession, source: HospitalDataSource, day: date = BOARD_DAY
+    session: AsyncSession,
+    source: HospitalDataSource,
+    day: date | None = BOARD_DAY,
+    today: date = BOARD_TODAY,
 ) -> WardBedBoardRead:
-    return await get_ward_bed_board(session, source, AUDIT_WARD_CODE, day)
+    query = BedBoardQuery(ward_code=AUDIT_WARD_CODE, business_date=day, today=lambda: today)
+    return await get_ward_bed_board(session, source, query)
 
 
 async def _add_run(
@@ -187,9 +193,9 @@ async def test_r01_unmentioned_element_label_matches_patient_page(
     )
 
     board = await _board(session, audit_hospital_data_source)
-    patient_day = await AuditService(audit_hospital_data_source).get_day_overview(
-        session, AUDIT_P3_KEY, BOARD_DAY
-    )
+    patient_day = await AuditService(
+        audit_hospital_data_source, today=lambda: BOARD_TODAY
+    ).get_day_overview(session, AUDIT_P3_KEY, BOARD_DAY)
 
     (bed,) = board.beds
     (finding,) = bed.pending_findings
@@ -218,3 +224,33 @@ async def test_status_counts_and_pending_bed_count_for_warning_bed(
     assert counts[BedBoardStatus.NOT_AUDITED] == 0
     assert board.bed_count == 1
     assert board.pending_bed_count == 1
+
+
+async def test_default_board_date_is_latest_ended_day(
+    session: AsyncSession, audit_hospital_data_source: HospitalDataSource
+) -> None:
+    # 今天是 01-02：01-02 尚未結束，預設為 01-01
+    board = await _board(session, audit_hospital_data_source, day=None, today=date(2026, 1, 2))
+    assert board.business_date == BOARD_DAY
+
+    # 今天是 01-01：沒有已結束的日子，退回最新一天 01-02
+    board = await _board(session, audit_hospital_data_source, day=None, today=date(2026, 1, 1))
+    assert board.business_date == date(2026, 1, 2)
+
+
+async def test_settled_one_time_rule_still_counts_on_board_and_is_not_runnable(
+    session: AsyncSession, audit_hospital_data_source: HospitalDataSource
+) -> None:
+    # 已 settled 的一次性規則：病床總覽仍算「已稽核」，但病患頁不可再執行
+    await _add_run(session, "R03", ADMISSION_DAY, AuditRunStatus.COMPLETED, verdict=Verdict.PASS)
+
+    board = await _board(session, audit_hospital_data_source)
+    patient_day = await AuditService(
+        audit_hospital_data_source, today=lambda: BOARD_TODAY
+    ).get_day_overview(session, AUDIT_P3_KEY, BOARD_DAY)
+
+    (bed,) = board.beds
+    assert bed.audited_rule_count == 1
+    r03 = next(rule for rule in patient_day.rules if rule.rule_code == "R03")
+    assert r03.can_run is False
+    assert r03.include_in_run_all is False

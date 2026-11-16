@@ -11,6 +11,7 @@ from typing import Final
 
 from app.core.exceptions import NotFoundError
 from app.schemas.hospital_data.patients import WorkChecklistRead
+from app.services.audit.clock import default_business_date, taipei_today
 from app.services.audit.records import SourceRecord, from_timeline_event
 from app.services.hospital_data.events import admitted_at_text
 from app.services.hospital_data.index import PatientHistory, find_patient_history
@@ -69,26 +70,38 @@ class AuditContext:
 
 
 async def build_audit_context(
-    source: HospitalDataSource, patient_key: str, business_date: date | None
+    source: HospitalDataSource,
+    patient_key: str,
+    business_date: date | None,
+    today: date | None = None,
 ) -> AuditContext:
-    """備妥病患快照；`business_date` 未指定時為該病人最新一天。
+    """備妥病患快照；`business_date` 未指定時為已結束的最新一天（見 `clock.py`）。
+
+    `today` 未指定時為台北時間的今天。
 
     Raises:
         NotFoundError: 查無病人，或該日沒有此病人的資料。
     """
-    return await asyncio.to_thread(load_audit_context, source, patient_key, business_date)
+    return await asyncio.to_thread(load_audit_context, source, patient_key, business_date, today)
 
 
 def load_audit_context(
-    source: HospitalDataSource, patient_key: str, business_date: date | None
+    source: HospitalDataSource,
+    patient_key: str,
+    business_date: date | None,
+    today: date | None = None,
 ) -> AuditContext:
-    """同步版本的 `build_audit_context`，供已在 thread 中的呼叫端使用（如病床總覽）。"""
+    """同步版本的 `build_audit_context`，供已在 thread 中的呼叫端使用。"""
     history = find_patient_history(source, patient_key)
-    return context_from_history(source, history, business_date)
+    target = business_date
+    if target is None:
+        dates = [appearance.business_date for appearance in history.appearances]
+        target = default_business_date(dates, today or taipei_today())
+    return context_from_history(source, history, target)
 
 
 def context_from_history(
-    source: HospitalDataSource, history: PatientHistory, business_date: date | None
+    source: HospitalDataSource, history: PatientHistory, business_date: date
 ) -> AuditContext:
     """由病人的出現紀錄組出快照；病患頁與病床總覽共用此函式，確保資料與日期決定方式一致。
 
@@ -96,7 +109,7 @@ def context_from_history(
         NotFoundError: 該日沒有此病人的資料。
     """
     patient_dates = tuple(appearance.business_date for appearance in history.appearances)
-    target = business_date or patient_dates[-1]
+    target = business_date
     if target not in patient_dates:
         raise NotFoundError(DATE_WITHOUT_DATA_MESSAGE)
     latest = history.latest

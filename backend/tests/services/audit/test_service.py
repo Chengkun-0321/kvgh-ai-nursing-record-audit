@@ -1,6 +1,6 @@
 """稽核服務的固定流程：狀態、稽核週期的日期、錯誤轉換與持久化。LLM 一律 mock。"""
 
-from datetime import date
+from datetime import date, timedelta
 from typing import Any
 
 import pytest
@@ -9,10 +9,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.enums import AuditCycle, AuditRunStatus, AvailabilityState, Verdict
 from app.core.exceptions import (
+    DayNotEndedError,
     LLMConnectionError,
     LLMNotConfiguredError,
     LLMOutputError,
     NotFoundError,
+    RuleSettledError,
 )
 from app.crud import audit_run as audit_run_crud
 from app.models.audit import AuditRun
@@ -22,7 +24,7 @@ from app.services.audit.context import build_audit_context
 from app.services.audit.registry import RULE_REGISTRY
 from app.services.audit.rules.base import AuditInput, Availability, not_applicable
 from app.services.audit.rules.r03_admission_completeness import R03AdmissionCompleteness
-from app.services.audit.service import AuditService
+from app.services.audit.service import DAY_NOT_ENDED_MESSAGE, AuditService
 from app.services.hospital_data.source import HospitalDataSource
 from app.services.llm import gateway
 from tests.hospital_data_samples import AUDIT_P3_KEY
@@ -31,11 +33,17 @@ from tests.services.llm.gateway_helpers import create_config
 
 ADMISSION_DAY = date(2025, 12, 31)
 SELECTED_DAY = date(2026, 1, 2)
+# 測試注入的「今天」：SELECTED_DAY 已結束，隔日（2026-01-03）起才是今天之後
+TODAY = date(2026, 1, 3)
 
 
 @pytest.fixture
 def service(audit_hospital_data_source: HospitalDataSource) -> AuditService:
-    return AuditService(audit_hospital_data_source)
+    return _service_on(audit_hospital_data_source, TODAY)
+
+
+def _service_on(source: HospitalDataSource, today: date) -> AuditService:
+    return AuditService(source, today=lambda: today)
 
 
 def _fake_llm(
@@ -214,7 +222,8 @@ async def test_overview_shows_rules_dates_and_one_time_result_on_any_day(
     assert list(rules) == [f"R0{number}" for number in range(1, 8)]
     assert (overview.previous_date, overview.next_date) == (None, SELECTED_DAY)
     assert rules["R03"].effective_business_date == ADMISSION_DAY
-    assert rules["R03"].can_run is True
+    # 一次性規則已完成（settled）：不可再執行，但結果仍顯示在總覽
+    assert rules["R03"].can_run is False
     assert rules["R03"].latest_run is not None
     assert rules["R05"].availability.state == AvailabilityState.DATA_UNAVAILABLE
     assert rules["R05"].can_run is False
@@ -263,3 +272,130 @@ async def test_program_facts_are_stored_with_rule_specific_output(
     run = await service.run_rule(session, AUDIT_P3_KEY, SELECTED_DAY, "R03")
 
     assert run.details == {"checked_items": 8, "incomplete_items": []}
+
+
+async def test_selected_today_is_not_auditable_and_run_writes_nothing(
+    audit_hospital_data_source: HospitalDataSource,
+    session: AsyncSession,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """所選日期＝今天（尚未結束）：每項規則都不可稽核，run_rule 回 409 且不呼叫 LLM、不寫入。"""
+    await create_config(session)
+    requests = _fake_llm(monkeypatch)
+    service = _service_on(audit_hospital_data_source, SELECTED_DAY)
+
+    overview = await service.get_day_overview(session, AUDIT_P3_KEY, SELECTED_DAY)
+
+    rules = {rule.rule_code: rule for rule in overview.rules}
+    assert rules["R02"].availability.state == AvailabilityState.DAY_NOT_ENDED
+    assert rules["R02"].availability.label == "當日尚未結束"
+    assert rules["R02"].availability.reason == DAY_NOT_ENDED_MESSAGE
+    assert rules["R02"].can_run is False
+    # 一次性規則的入院日已結束，但判斷依據是畫面所選日期，同樣不可稽核
+    assert rules["R03"].effective_business_date == ADMISSION_DAY
+    assert rules["R03"].can_run is False
+
+    with pytest.raises(DayNotEndedError) as error:
+        await service.run_rule(session, AUDIT_P3_KEY, SELECTED_DAY, "R02")
+
+    assert error.value.status_code == 409
+    assert error.value.message == DAY_NOT_ENDED_MESSAGE
+    assert await _run_count(session) == 0
+    assert requests == []
+
+
+async def test_yesterday_is_auditable_once_today_moves_past_it(
+    audit_hospital_data_source: HospitalDataSource,
+    session: AsyncSession,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    await create_config(session)
+    _fake_llm(monkeypatch, {"verdict": "PASS", "summary": "完整", "findings": []})
+    service = _service_on(audit_hospital_data_source, SELECTED_DAY + timedelta(days=1))
+
+    overview = await service.get_day_overview(session, AUDIT_P3_KEY, SELECTED_DAY)
+    run = await service.run_rule(session, AUDIT_P3_KEY, SELECTED_DAY, "R03")
+
+    rules = {rule.rule_code: rule for rule in overview.rules}
+    assert rules["R03"].can_run is True
+    assert run.status == AuditRunStatus.COMPLETED
+
+
+async def test_default_date_is_latest_ended_day(
+    audit_hospital_data_source: HospitalDataSource, session: AsyncSession
+) -> None:
+    # 今天是 01-02：01-02 尚未結束，預設為已結束的最新一天 01-01
+    on_second = _service_on(audit_hospital_data_source, SELECTED_DAY)
+    overview = await on_second.get_day_overview(session, AUDIT_P3_KEY, None)
+    assert overview.business_date == date(2026, 1, 1)
+
+    # 今天是 01-03：01-02 已結束，預設為 01-02
+    on_third = _service_on(audit_hospital_data_source, TODAY)
+    overview = await on_third.get_day_overview(session, AUDIT_P3_KEY, None)
+    assert overview.business_date == SELECTED_DAY
+
+
+async def test_default_date_falls_back_to_latest_when_no_day_has_ended(
+    audit_hospital_data_source: HospitalDataSource, session: AsyncSession
+) -> None:
+    # 今天是 01-01，兩天都未結束：退回最新一天 01-02（仍為不可稽核）
+    service = _service_on(audit_hospital_data_source, date(2026, 1, 1))
+
+    overview = await service.get_day_overview(session, AUDIT_P3_KEY, None)
+
+    assert overview.business_date == SELECTED_DAY
+    assert {rule.rule_code: rule for rule in overview.rules}["R02"].can_run is False
+
+
+async def test_settled_one_time_rule_cannot_run_again(
+    service: AuditService,
+    session: AsyncSession,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    await create_config(session)
+    requests = _fake_llm(monkeypatch, {"verdict": "PASS", "summary": "完整", "findings": []})
+    await service.run_rule(session, AUDIT_P3_KEY, SELECTED_DAY, "R03")
+
+    overview = await service.get_day_overview(session, AUDIT_P3_KEY, SELECTED_DAY)
+    rule = {item.rule_code: item for item in overview.rules}["R03"]
+    assert rule.can_run is False
+    assert rule.include_in_run_all is False
+    assert rule.availability.state == AvailabilityState.AVAILABLE
+    assert rule.latest_run is not None
+
+    with pytest.raises(RuleSettledError) as error:
+        await service.run_rule(session, AUDIT_P3_KEY, SELECTED_DAY, "R03")
+
+    assert error.value.status_code == 409
+    assert await _run_count(session) == 1
+    assert len(requests) == 1
+
+
+async def test_validation_failure_needs_review_stays_runnable(
+    service: AuditService,
+    session: AsyncSession,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """模型輸出未通過驗證（NEEDS_REVIEW 且有原因）不算 settled，可以重跑。"""
+    await create_config(session)
+    _fake_llm(
+        monkeypatch,
+        {
+            "verdict": "WARNING",
+            "summary": "摘要",
+            "findings": [],
+            "incomplete_items": ["不存在的項目"],
+        },
+    )
+    first = await service.run_rule(session, AUDIT_P3_KEY, SELECTED_DAY, "R03")
+    assert first.verdict == Verdict.NEEDS_REVIEW
+
+    overview = await service.get_day_overview(session, AUDIT_P3_KEY, SELECTED_DAY)
+    assert {item.rule_code: item for item in overview.rules}["R03"].can_run is True
+
+    _fake_llm(monkeypatch, {"verdict": "PASS", "summary": "完整", "findings": []})
+    second = await service.run_rule(session, AUDIT_P3_KEY, SELECTED_DAY, "R03")
+
+    assert second.status == AuditRunStatus.COMPLETED
+    assert second.verdict == Verdict.PASS
+    assert await _run_count(session) == 2

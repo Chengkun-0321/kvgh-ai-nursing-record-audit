@@ -57,15 +57,20 @@
 | 中文       | 英文識別字       | 說明                                                          |
 | ---------- | ---------------- | ------------------------------------------------------------- |
 | 稽核規則   | `audit_rule`     | 代碼 R01–R11。R01–R04、R06 已實作；R05、R07 預留（不呼叫 LLM）；R08–R11 候選。見 [audit-rules.md](conventions/audit-rules.md) |
-| 稽核週期   | `audit_cycle`    | `once_per_admission`（一次性，記在入院日）／`daily`（每日）／`event`（事件，當日有才稽核） |
-| 稽核日     | `effective_business_date` | 稽核結果寫入與查詢的日期：一次性規則為入院日，其餘為畫面所選日期 |
-| 稽核執行   | `audit_run`      | 一次稽核執行，對應 `audit_runs` 一列；重跑新增一列，不覆蓋           |
+| 稽核週期 | `audit_cycle` | `once_per_admission`（一次性）／`daily`（每日）／`event`（事件；R06 依所選稽核日追蹤範圍內會診，ADR 0012） |
+| 稽核日 | `effective_business_date` | 結果寫入與查詢日期：一次性規則為入院日，缺入院日則為所選日期；其他規則為所選日期。所選日期須已結束 |
+| 已結束的稽核日 | `is_day_ended` | 稽核日早於今天（Asia/Taipei）。未結束的日期不可稽核，可稽核性為 `day_not_ended`（「當日尚未結束」），API 回 409 不寫入（ADR 0012；實作於 `services/audit/clock.py`） |
+| 期限到期日 | `deadline` | R06 每筆會診日加追蹤期限天數；不一定等於稽核日 |
+| 會診日 | `business_date`（會診紀錄） | R06 每筆會診的歸日，追蹤期限從此日起算 |
+| 追蹤期限 | `AUDIT_CONSULT_FOLLOWUP_DAYS` | R06 從會診日至會診日加此日曆天數，兩端均含；預設 1，待院方確認 |
+| 稽核執行   | `audit_run`      | 一次稽核執行，對應 `audit_runs` 一列；重跑新增一列，不覆蓋。一次性規則已完成後不新增（ADR 0012）           |
 | 執行狀態   | `audit_run_status` | 一次執行的狀態，四個值：`COMPLETED`（已完成）、`NOT_APPLICABLE`（當日無此事件）、`DATA_UNAVAILABLE`（院方尚未提供資料）、`FAILED`（執行失敗） |
-| 可稽核性   | `availability`   | 規則在某日是否可執行，三個值：`available`、`not_applicable`、`data_unavailable`（規則的 `check_availability` 結果） |
+| 可稽核性 | `availability` | 四個值：`available`、`not_applicable`、`data_unavailable`、`day_not_ended`；最後一項由服務層判斷 |
+| 寬限期中 | `IN_GRACE` | R06 逐筆會診尚未到期且未見對應紀錄的狀態，該筆判定 `PASS`；不是可稽核性 |
 | 稽核發現   | `audit_finding`  | 一次執行中的一個發現（項目、判定、訊息、Evidence），對應 `audit_findings` 一列 |
 | 判定       | `verdict`        | `PASS` / `WARNING` / `NEEDS_REVIEW`；`ERROR` 列舉保留，LLM 不產生（見 ADR 0011） |
 | 最嚴重判定 | `worst_verdict`  | 一床各規則最新一次已完成結果中最嚴重者，決定病床總覽的狀態（嚴重度排序見 `services/audit/severity.py`） |
-| 可稽核規則數 | `auditable_rule_count` | 某床在所選日期可稽核（`check_availability` 為 `available`）的規則數，為稽核進度的分母 |
+| 可稽核規則數 | `auditable_rule_count` | 病床總覽中所選日期已結束且規則可執行的數量；R06 範圍內只有寬限期中會診仍計入 |
 | 已稽核規則數 | `audited_rule_count` | 可稽核規則中，最新一次執行為 `COMPLETED` 的數量（最新一次為 `FAILED` 不算） |
 | 稽核進度   | `audit_progress_text` | 病床上的進度文字，例：「已稽核 4／4 項」，由後端產生            |
 | 病房地圖   | `ward_map`       | 病床總覽的可拖曳、縮放 3D 場景，詳情與篩選控制固定於場景外    |

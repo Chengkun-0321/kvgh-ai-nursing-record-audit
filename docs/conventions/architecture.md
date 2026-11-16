@@ -66,6 +66,7 @@ services/
 │   ├── runs.py            # 核對後的結果 → AuditRun／AuditFinding（不含 DB 操作）
 │   ├── views.py           # ORM → 回應結構
 │   ├── labels.py          # 狀態、週期、可否執行的繁中文字
+│   ├── clock.py           # 「今天」（Asia/Taipei）、已結束的稽核日、預設稽核日（ADR 0012）
 │   └── rules/
 │       ├── base.py        # AuditRule Protocol、Availability、AuditInput
 │       ├── r01_admission_course.py … r07_medication_followup.py
