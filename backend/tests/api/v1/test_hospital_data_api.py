@@ -32,6 +32,8 @@ async def test_bed_board_defaults_to_latest_day_and_is_not_audited(client: Async
         "尚未稽核",
     )
     assert bed["patient"]["length_of_stay_days"] == 3
+    assert bed["audited_rule_count"] == 0
+    assert bed["audit_progress_text"] == f"已稽核 0／{bed['auditable_rule_count']} 項"
     counts = {c["status"]: c["count"] for c in body["status_counts"]}
     assert counts == {"ERROR": 0, "WARNING": 0, "NEEDS_REVIEW": 0, "PASS": 0, "NOT_AUDITED": 1}
 

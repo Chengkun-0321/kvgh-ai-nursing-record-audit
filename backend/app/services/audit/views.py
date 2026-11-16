@@ -1,4 +1,7 @@
-"""ORM 紀錄 → 回應結構；狀態文字在此對照，前端不另算。"""
+"""ORM 紀錄 → 回應結構；狀態文字在此對照，前端不另算。
+
+病患頁（`to_run_read`）與病床總覽（`ward_board_status`）共用發現的顯示文字，不各自複製。
+"""
 
 from collections.abc import Mapping
 
@@ -11,7 +14,7 @@ from app.services.audit.rules.base import AuditRule, LabelsFindings
 
 def to_run_read(run: AuditRun, rule: AuditRule) -> AuditRunRead:
     """一次執行的回應結構（發現需已載入）。"""
-    labels = rule.finding_labels(run.details) if isinstance(rule, LabelsFindings) else {}
+    labels = run_finding_labels(rule, run.details)
     return AuditRunRead(
         id=run.id,
         rule_code=run.rule_code,
@@ -34,20 +37,25 @@ def to_run_read(run: AuditRun, rule: AuditRule) -> AuditRunRead:
     )
 
 
-def _finding_read(finding: AuditFinding, labels: Mapping[str, str]) -> AuditFindingRead:
-    return AuditFindingRead(
-        position=finding.position,
-        item=finding.item,
-        verdict=finding.verdict,
-        verdict_label=_finding_label(finding, labels),
-        message=finding.message,
-        evidence=[Evidence.model_validate(evidence) for evidence in finding.evidence],
-    )
+def run_finding_labels(rule: AuditRule, details: Mapping[str, object] | None) -> Mapping[str, str]:
+    """規則為某次執行的發現指定的專屬文字（「發現項目 → 顯示文字」）；規則沒有指定時為空。"""
+    return rule.finding_labels(details) if isinstance(rule, LabelsFindings) else {}
 
 
-def _finding_label(finding: AuditFinding, labels: Mapping[str, str]) -> str:
+def finding_verdict_label(finding: AuditFinding, labels: Mapping[str, str]) -> str:
     """規則的專屬文字只取代「無法判定」；其他判定一律用共同文字。"""
     default = VERDICT_LABELS[finding.verdict]
     if finding.verdict != Verdict.NEEDS_REVIEW:
         return default
     return labels.get(finding.item, default)
+
+
+def _finding_read(finding: AuditFinding, labels: Mapping[str, str]) -> AuditFindingRead:
+    return AuditFindingRead(
+        position=finding.position,
+        item=finding.item,
+        verdict=finding.verdict,
+        verdict_label=finding_verdict_label(finding, labels),
+        message=finding.message,
+        evidence=[Evidence.model_validate(evidence) for evidence in finding.evidence],
+    )

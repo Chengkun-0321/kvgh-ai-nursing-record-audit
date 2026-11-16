@@ -7,21 +7,13 @@ WARNING 沒有任何有效依據時降為 NEEDS_REVIEW，絕不因此視為 PASS
 
 from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Final
 
 from app.core.enums import Verdict
 from app.schemas.audit import Evidence
 from app.schemas.llm_structured import LlmEvidence, LlmFinding, RuleOutput
 from app.services.audit.records import SourceRecord
+from app.services.audit.severity import most_severe
 from app.services.audit.text import squash
-
-# 嚴重程度由低到高：決定整體判定時取較嚴重者（ERROR 這一版不會出現，LLM 不會產生）
-_SEVERITY: Final[dict[Verdict, int]] = {
-    Verdict.PASS: 0,
-    Verdict.NEEDS_REVIEW: 1,
-    Verdict.WARNING: 2,
-    Verdict.ERROR: 3,
-}
 
 
 @dataclass(frozen=True)
@@ -99,4 +91,4 @@ def _evidence(record: SourceRecord, field: str | None, excerpt: str) -> Evidence
 def _overall_verdict(llm_verdict: str, findings: tuple[VerifiedFinding, ...]) -> Verdict:
     """整體判定取整體與各發現中較嚴重者，避免 LLM 把警示項目標成 PASS。"""
     verdicts = [Verdict(llm_verdict), *(finding.verdict for finding in findings)]
-    return max(verdicts, key=lambda verdict: _SEVERITY[verdict])
+    return most_severe(verdicts)

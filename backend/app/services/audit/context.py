@@ -13,7 +13,7 @@ from app.core.exceptions import NotFoundError
 from app.schemas.hospital_data.patients import WorkChecklistRead
 from app.services.audit.records import SourceRecord, from_timeline_event
 from app.services.hospital_data.events import admitted_at_text
-from app.services.hospital_data.index import find_patient_history
+from app.services.hospital_data.index import PatientHistory, find_patient_history
 from app.services.hospital_data.patients import build_work_checklist
 from app.services.hospital_data.source import HospitalDataSource
 from app.services.hospital_data.timeline import collect_events
@@ -76,13 +76,25 @@ async def build_audit_context(
     Raises:
         NotFoundError: 查無病人，或該日沒有此病人的資料。
     """
-    return await asyncio.to_thread(_build, source, patient_key, business_date)
+    return await asyncio.to_thread(load_audit_context, source, patient_key, business_date)
 
 
-def _build(
+def load_audit_context(
     source: HospitalDataSource, patient_key: str, business_date: date | None
 ) -> AuditContext:
+    """同步版本的 `build_audit_context`，供已在 thread 中的呼叫端使用（如病床總覽）。"""
     history = find_patient_history(source, patient_key)
+    return context_from_history(source, history, business_date)
+
+
+def context_from_history(
+    source: HospitalDataSource, history: PatientHistory, business_date: date | None
+) -> AuditContext:
+    """由病人的出現紀錄組出快照；病患頁與病床總覽共用此函式，確保資料與日期決定方式一致。
+
+    Raises:
+        NotFoundError: 該日沒有此病人的資料。
+    """
     patient_dates = tuple(appearance.business_date for appearance in history.appearances)
     target = business_date or patient_dates[-1]
     if target not in patient_dates:
@@ -93,7 +105,7 @@ def _build(
     )
     admitted_text = admitted_at_text(latest_file)
     return AuditContext(
-        patient_key=patient_key,
+        patient_key=history.patient_key,
         ward_code=history.ward_code,
         bed_code=history.appearance_on(target).bed_code,
         business_date=target,

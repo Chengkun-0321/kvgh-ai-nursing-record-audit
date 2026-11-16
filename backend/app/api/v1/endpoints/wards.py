@@ -5,7 +5,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Path
 
-from app.api.deps import HospitalData
+from app.api.deps import DbSession, HospitalData
 from app.core.config import get_settings
 from app.core.constants import WARD_CODE_PATTERN
 from app.schemas.hospital_data.patients import RawPatientListRead, WardListRead
@@ -25,9 +25,12 @@ async def list_wards(source: HospitalData) -> WardListRead:
 
 @router.get("/{ward_code}/bed-board", response_model=WardBedBoardRead, summary="取得病房的病床總覽")
 async def get_bed_board(
-    ward_code: WardCode, source: HospitalData, business_date: date | None = None
+    ward_code: WardCode,
+    source: HospitalData,
+    session: DbSession,
+    business_date: date | None = None,
 ) -> WardBedBoardRead:
-    return await ward_board.get_ward_bed_board(source, ward_code, business_date)
+    return await ward_board.get_ward_bed_board(session, source, ward_code, business_date)
 
 
 @router.get(

@@ -6,6 +6,7 @@ import { SelectionIndicator } from "@/components/ui/SelectionIndicator";
 import { VerdictIcon } from "@/components/VerdictIcon";
 import { BED_DETAIL_PANEL_ID } from "@/components/bed-board/BedDetailPanel";
 import { useMapKeyframe } from "@/hooks/useMapKeyframe";
+import { getBedAriaLabel } from "@/lib/bedLabels";
 import { cn } from "@/lib/utils";
 import { VERDICT_STYLES } from "@/lib/verdictStyles";
 import { getBedButtonId, type MapPoint } from "@/lib/wardMap";
@@ -45,7 +46,7 @@ export function BedHotspot({
         data-bed-code={bed.bed_code}
         aria-pressed={isSelected}
         aria-controls={isSelected ? BED_DETAIL_PANEL_ID : undefined}
-        aria-label={`${bed.bed_code}，${bed.summary_text}`}
+        aria-label={getBedAriaLabel(bed)}
         onClick={() => onToggle(bed.bed_code)}
         className="group absolute inset-0 rounded-[2rem] outline-none"
       >

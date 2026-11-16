@@ -9,6 +9,7 @@
 """
 
 import logging
+from dataclasses import dataclass
 from datetime import date
 from typing import Final
 
@@ -170,23 +171,41 @@ def _details(output: RuleOutput, audit_input: AuditInput) -> dict[str, object] |
     return {**audit_input.facts, **extra} or None
 
 
+@dataclass(frozen=True)
+class RuleDay:
+    """規則在某病患快照中的稽核日與可否執行；病患頁與病床總覽共用，不各自計算。"""
+
+    business_date: date
+    availability: Availability
+
+    @property
+    def can_run(self) -> bool:
+        return self.availability.state == AvailabilityState.AVAILABLE
+
+
+def rule_day_on(rule: AuditRule, ctx: AuditContext) -> RuleDay:
+    """規則的稽核日（一次性規則為入院日）與該日的可否執行。"""
+    day = effective_business_date(rule, ctx)
+    return RuleDay(business_date=day, availability=rule.check_availability(ctx.for_date(day)))
+
+
 async def _rule_status(
     session: AsyncSession, ctx: AuditContext, rule: AuditRule
 ) -> AuditRuleStatusRead:
-    day = effective_business_date(rule, ctx)
-    availability = rule.check_availability(ctx.for_date(day))
-    latest = await audit_run_crud.get_latest(session, ctx.patient_key, rule.code, day)
-    can_run = availability.state == AvailabilityState.AVAILABLE
+    rule_day = rule_day_on(rule, ctx)
+    latest = await audit_run_crud.get_latest(
+        session, ctx.patient_key, rule.code, rule_day.business_date
+    )
     return AuditRuleStatusRead(
         rule_code=rule.code,
         name=rule.name,
         description=rule.description,
         cycle=rule.cycle,
         cycle_label=AUDIT_CYCLE_LABELS[rule.cycle],
-        effective_business_date=day,
-        availability=_availability_read(availability),
-        can_run=can_run,
-        include_in_run_all=can_run and not _is_settled_once(rule, latest),
+        effective_business_date=rule_day.business_date,
+        availability=_availability_read(rule_day.availability),
+        can_run=rule_day.can_run,
+        include_in_run_all=rule_day.can_run and not _is_settled_once(rule, latest),
         latest_run=to_run_read(latest, rule) if latest is not None else None,
     )
 

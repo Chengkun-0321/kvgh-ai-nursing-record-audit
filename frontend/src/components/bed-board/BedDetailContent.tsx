@@ -47,25 +47,30 @@ export function BedDetailContent({
 
   return (
     <div className="flex flex-col gap-5">
-      <header className="flex items-center gap-3">
-        <h2 id={headingId} className="text-title tabular-nums">
-          {bed.bed_code}
-        </h2>
-        {/* 淡色底疊在液態玻璃上對比不足，先墊一層實色 surface */}
-        <span className="rounded-full bg-surface">
-          <span
-            className={cn(
-              "inline-flex items-center gap-1.5 rounded-full py-1 pr-3 pl-1.5 text-footnote font-semibold",
-              style.tint,
-              style.text,
-            )}
-          >
-            <VerdictIcon verdict={verdict} />
-            {bed.status_label}
+      <div className="flex flex-col gap-1">
+        <header className="flex items-center gap-3">
+          <h2 id={headingId} className="text-title tabular-nums">
+            {bed.bed_code}
+          </h2>
+          {/* 淡色底疊在液態玻璃上對比不足，先墊一層實色 surface */}
+          <span className="rounded-full bg-surface">
+            <span
+              className={cn(
+                "inline-flex items-center gap-1.5 rounded-full py-1 pr-3 pl-1.5 text-footnote font-semibold",
+                style.tint,
+                style.text,
+              )}
+            >
+              <VerdictIcon verdict={verdict} />
+              {bed.status_label}
+            </span>
           </span>
-        </span>
-        {headerAction && <div className="ml-auto">{headerAction}</div>}
-      </header>
+          {headerAction && <div className="ml-auto">{headerAction}</div>}
+        </header>
+        <p className="text-footnote text-ink-secondary tabular-nums">
+          {bed.audit_progress_text}
+        </p>
+      </div>
 
       {/* 院方資料沒有性別、年齡時不顯示示意影像，避免看起來像某位真實病人 */}
       {portraitSrc && (

@@ -4,6 +4,7 @@ import { motion } from "motion/react";
 
 import { SelectionIndicator } from "@/components/ui/SelectionIndicator";
 import { VerdictIcon } from "@/components/VerdictIcon";
+import { getBedAriaLabel } from "@/lib/bedLabels";
 import { getBedSpriteSrc } from "@/lib/bedSprites";
 import { SPRING_DEFAULT } from "@/lib/motion";
 import { cn } from "@/lib/utils";
@@ -40,7 +41,7 @@ export function BedCard({ bed, isSelected, isDimmed, onToggle }: BedCardProps) {
       data-bed-code={bed.bed_code}
       aria-pressed={isSelected}
       aria-controls={isSelected ? BED_DETAIL_PANEL_ID : undefined}
-      aria-label={`${bed.bed_code}，${summary}`}
+      aria-label={getBedAriaLabel(bed)}
       onClick={() => onToggle(bed.bed_code)}
       className={cn(
         "group absolute inset-0 rounded-[5cqw] focus-ring transition-opacity duration-300 ease-apple",

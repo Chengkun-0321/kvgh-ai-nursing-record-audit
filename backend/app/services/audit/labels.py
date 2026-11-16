@@ -17,7 +17,7 @@ AUDIT_CYCLE_LABELS: Final[dict[AuditCycle, str]] = {
     AuditCycle.EVENT: "有事件時",
 }
 
-# 判定的顯示文字；用詞與病床總覽（`ward_board.STATUS_LABELS`）一致
+# 判定的顯示文字；用詞與病床總覽（`ward_board_status.STATUS_LABELS`）一致
 VERDICT_LABELS: Final[dict[Verdict, str]] = {
     Verdict.PASS: "紀錄完整",
     Verdict.WARNING: "需確認",

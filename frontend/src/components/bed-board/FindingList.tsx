@@ -27,9 +27,9 @@ export function FindingList({
 
   return (
     <ul className="divide-y divide-separator rounded-card bg-surface shadow-card">
-      {findings.map((finding) => (
+      {findings.map((finding, index) => (
         <li
-          key={`${finding.rule_code}-${finding.recorded_at}`}
+          key={`${index}-${finding.rule_code}-${finding.recorded_at}`}
           className="flex gap-3 px-4 py-3"
         >
           <VerdictIcon verdict={finding.verdict} className="mt-0.5" />

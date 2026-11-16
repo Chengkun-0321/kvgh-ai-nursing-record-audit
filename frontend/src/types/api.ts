@@ -579,6 +579,12 @@ export interface components {
             pending_findings: components["schemas"]["AuditFindingSummaryRead"][];
             /** Empty Findings Text */
             empty_findings_text: string;
+            /** Audited Rule Count */
+            audited_rule_count: number;
+            /** Auditable Rule Count */
+            auditable_rule_count: number;
+            /** Audit Progress Text */
+            audit_progress_text: string;
         };
         /**
          * CategoryCountRead

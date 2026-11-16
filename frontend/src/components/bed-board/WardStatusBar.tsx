@@ -48,7 +48,7 @@ export function WardStatusBar({
             disabled={count === 0 && !isActive}
             onClick={() => onChange(isActive ? "ALL" : status)}
             className={cn(
-              "relative flex min-h-11 pressable items-center gap-2 rounded-xl px-2 py-2 focus-ring disabled:opacity-40 sm:gap-3 sm:px-3",
+              "relative flex min-h-11 pressable flex-col items-center gap-1 rounded-xl px-1 py-2 focus-ring disabled:opacity-40 sm:flex-row sm:gap-3 sm:px-3",
               !isActive && "hover:bg-fill",
             )}
           >
@@ -58,8 +58,11 @@ export function WardStatusBar({
                 className="rounded-xl bg-fill-strong"
               />
             )}
-            <VerdictIcon verdict={status} className="relative size-7" />
-            <span className="relative flex flex-col items-start">
+            <VerdictIcon
+              verdict={status}
+              className="relative size-6 sm:size-7"
+            />
+            <span className="relative flex flex-col items-center sm:items-start">
               <span className="text-title tabular-nums">{count}</span>
               <span
                 className={cn(

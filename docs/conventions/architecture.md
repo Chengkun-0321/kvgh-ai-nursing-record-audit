@@ -60,6 +60,7 @@ services/
 │   ├── context.py         # build_audit_context：一次備妥病患所有日期的紀錄（不入庫）
 │   ├── records.py         # 院方紀錄 → SourceRecord；渲染 prompt 的 <record> 區塊
 │   ├── evidence.py        # LLM 輸出的 Evidence 核對、WARNING 降級、整體判定
+│   ├── severity.py        # 判定嚴重度排序（整體判定與病床狀態共用）
 │   ├── text.py            # 比對用的文字正規化（去除雜訊字元）
 │   ├── registry.py        # RULE_REGISTRY：新增規則時在此註冊一行
 │   ├── runs.py            # 核對後的結果 → AuditRun／AuditFinding（不含 DB 操作）
@@ -97,7 +98,8 @@ services/
 │   ├── timeline.py        # 跨日合併、篩選、依日分組
 │   ├── patients.py        # 病房清單、病人清單、病人摘要、原文
 │   └── raw_data_service.py  # endpoint 呼叫的入口（同步 I/O 放到 thread）
-├── ward_board.py          # 首頁病床總覽（目前每床為「尚未稽核」）
+├── ward_board.py          # 首頁病床總覽：院方讀取（thread）＋批次查詢最新稽核結果
+├── ward_board_status.py   # 病床狀態、進度、待處理發現（純函式，不碰 DB）
 └── ingestion/
     ├── sources.py         # DataSource Protocol、LocalFixtureSource、RelaySource
     ├── importer.py        # 驗證 → 正規化 → 入庫

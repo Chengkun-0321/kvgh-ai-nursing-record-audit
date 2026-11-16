@@ -45,6 +45,12 @@ class BedStatusRead(BaseModel):
     pending_findings: list[AuditFindingSummaryRead]
     # 沒有待處理稽核結果時，詳情清單顯示的文字
     empty_findings_text: str
+    # 可稽核的規則中，最新一次執行已完成的數量（最新一次為 FAILED 不算）
+    audited_rule_count: int
+    # 該床在所選日期可稽核的規則數量（與病患頁 can_run 同一個判斷）
+    auditable_rule_count: int
+    # 例：「已稽核 4／4 項」；沒有可稽核項目時為「今日無可稽核項目」
+    audit_progress_text: str
 
 
 class StatusCountRead(BaseModel):

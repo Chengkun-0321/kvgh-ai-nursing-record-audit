@@ -5,7 +5,8 @@
 
 > 目前階段：**領域運算與驗證一律在後端，前端只渲染**（[ADR 0009](docs/adr/0009-backend-owns-computation.md)）。
 > - **稽核模組已實作**（[ADR 0011](docs/adr/0011-audit-module.md)）：R01–R04、R06 可執行；R05、R07 為預留（院方資料不足，回「院方尚未提供資料」）。結果存入 `audit_runs`／`audit_findings`，病患頁手動觸發（單項與一鍵稽核）。
-> - **尚未做**：排程與整個病房的批次稽核；首頁病床總覽仍每床「尚未稽核」（尚未改讀稽核結果）；中繼站匯入（`services/ingestion`）。
+> - 首頁病床總覽已改讀稽核結果（每床取各規則最新一次已完成的結果，見 [ADR 0011](docs/adr/0011-audit-module.md) 決策 8）；病床上顯示「已稽核 N／M 項」進度。
+> - **尚未做**：排程與整個病房的批次稽核；中繼站匯入（`services/ingestion`）。
 > - 院方資料（根目錄 `data/` 的去識別化資料）由後端直接讀檔、不入庫，見 [ADR 0010](docs/adr/0010-hospital-raw-data-viewer.md)。首頁病床總覽（Blender 場景模組＋React Three Fiber 的滿版 3D 病房）顯示院方 W63 病房。`/raw-data` 原始資料頁以時間軸、檢驗總表、原文檢視各病人所有日期的資料。
 > - LLM 模型設定見 [ADR 0006](docs/adr/0006-llm-config-settings.md)、[ADR 0007](docs/adr/0007-llm-system-prompt.md)。
 

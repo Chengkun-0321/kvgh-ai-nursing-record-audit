@@ -64,7 +64,10 @@
 | 可稽核性   | `availability`   | 規則在某日是否可執行，三個值：`available`、`not_applicable`、`data_unavailable`（規則的 `check_availability` 結果） |
 | 稽核發現   | `audit_finding`  | 一次執行中的一個發現（項目、判定、訊息、Evidence），對應 `audit_findings` 一列 |
 | 判定       | `verdict`        | `PASS` / `WARNING` / `NEEDS_REVIEW`；`ERROR` 列舉保留，LLM 不產生（見 ADR 0011） |
-| 最嚴重判定 | `worst_verdict`  | 規劃：一床所有稽核結果中最嚴重者，決定病床總覽的狀態顯示（病床總覽尚未改讀稽核結果） |
+| 最嚴重判定 | `worst_verdict`  | 一床各規則最新一次已完成結果中最嚴重者，決定病床總覽的狀態（嚴重度排序見 `services/audit/severity.py`） |
+| 可稽核規則數 | `auditable_rule_count` | 某床在所選日期可稽核（`check_availability` 為 `available`）的規則數，為稽核進度的分母 |
+| 已稽核規則數 | `audited_rule_count` | 可稽核規則中，最新一次執行為 `COMPLETED` 的數量（最新一次為 `FAILED` 不算） |
+| 稽核進度   | `audit_progress_text` | 病床上的進度文字，例：「已稽核 4／4 項」，由後端產生            |
 | 病房地圖   | `ward_map`       | 病床總覽的可拖曳、縮放 3D 場景，詳情與篩選控制固定於場景外    |
 | 病房場景   | `ward_scene`     | 病房地圖底層的 3D 畫面，由場景模組依床數組成                  |
 | 場景模組   | `kit_module`     | Blender 產生的可拼接 GLB（床位空間、側走道、前緣）            |
@@ -73,7 +76,7 @@
 | 床頭隔屏   | `headwall_spine` | 第 1 排起床位背後的矮隔屏（取代後牆），上有設備帶             |
 | 病床總覽   | `bed_board`      | 首頁：病房內各床的稽核狀態                                    |
 | 待處理病床 | `pending_bed`    | 已稽核且最嚴重判定不是 `PASS` 的病床                          |
-| 病床狀態   | `bed_board_status` | 病床總覽每床顯示的狀態：四種判定之一，或 `NOT_AUDITED`        |
+| 病床狀態   | `bed_board_status` | 病床總覽每床顯示的狀態：四種判定之一，或 `NOT_AUDITED`（計算見 `services/ward_board_status.py`） |
 | 尚未稽核   | `not_audited`    | 該床還沒有稽核結果（不是判定等級，Verdict 分級仍待決）        |
 | 紀錄時間   | `recorded_at`    | 稽核結果相關護理紀錄的紀錄時間                                |
 | 證據       | `evidence`       | 判定依據：來源、紀錄 ID、欄位、日期、原文片段。LLM 只給紀錄 ID 與原文片段，其餘由程式依 ID 回填 |

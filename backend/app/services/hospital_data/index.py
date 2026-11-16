@@ -34,6 +34,10 @@ class PatientHistory:
         """最新一天的紀錄。"""
         return self.appearances[-1]
 
+    def appears_on(self, business_date: date) -> bool:
+        """該日的病人清單是否有這位病人。"""
+        return any(appearance.business_date == business_date for appearance in self.appearances)
+
     def appearance_on(self, business_date: date) -> PatientAppearance:
         """指定日期的紀錄；該日沒有這位病人時拋出 `NotFoundError`。"""
         for appearance in self.appearances:
