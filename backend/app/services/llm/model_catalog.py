@@ -233,16 +233,24 @@ def _local_candidates(api_base: str) -> list[tuple[LlmProvider, str]]:
 async def detect_local_models(api_base: str, api_key: str | None) -> LocalServerListing:
     """依序嘗試 Ollama 與 OpenAI 相容的清單 API，回傳第一個成功的結果。
 
-    連不上主機或金鑰錯誤時立即回報，不再嘗試其他路徑。
+    連不上主機時立即回報，不再嘗試其他路徑。
+    金鑰被拒（401／403）時繼續嘗試：Ollama 路徑不帶金鑰，但要求每個路徑都驗證金鑰的閘道
+    （例如 New API）會在該路徑回 401，不代表金鑰本身無效。全部失敗時才回報金鑰錯誤。
 
     Raises:
         LLMConnectionError: 無法連線、金鑰無效，或此位址不是支援的伺服器。
     """
+    unauthorized: ListingUnauthorizedError | None = None
     for provider, base in _local_candidates(api_base):
         target = ListingTarget(provider, api_base=base, api_key=api_key)
         try:
             models = await fetch_models(target)
         except ListingNotFoundError:
             continue
+        except ListingUnauthorizedError as exc:
+            unauthorized = unauthorized or exc
+            continue
         return LocalServerListing(provider=provider, api_base=base, models=models)
+    if unauthorized is not None:
+        raise unauthorized
     raise LLMConnectionError("此位址不是 Ollama 或 OpenAI 相容伺服器，請確認位址與連接埠")

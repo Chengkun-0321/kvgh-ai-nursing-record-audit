@@ -246,6 +246,39 @@ async def test_local_stops_trying_when_host_is_unreachable(
     assert len(requests) == 1
 
 
+async def test_local_continues_past_keyless_ollama_401_to_v1_with_key(
+    session: AsyncSession, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """每個路徑都要金鑰的閘道：Ollama 路徑不帶金鑰回 401，應繼續以金鑰查 /v1/models。"""
+
+    def gateway(request: httpx.Request) -> httpx.Response:
+        if request.headers.get("Authorization") != "Bearer sk-test-gateway-key":
+            return httpx.Response(401, json={"error": {"message": "Invalid API key"}})
+        if request.url.path == "/v1/models":
+            return httpx.Response(200, json={"data": [{"id": "gpt-test"}]})
+        return httpx.Response(404, json={"error": "not found"})
+
+    requests = _use_transport(monkeypatch, gateway)
+
+    result = await _detect(session, api_base="https://gateway.test", api_key="sk-test-gateway-key")
+
+    assert (result.provider, result.api_base) == (
+        LlmProvider.OPENAI_COMPATIBLE,
+        "https://gateway.test/v1",
+    )
+    assert [request.url.path for request in requests] == ["/api/tags", "/v1/models"]
+
+
+async def test_local_reports_invalid_key_after_all_paths_reject_it(
+    session: AsyncSession, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    requests = _use_transport(monkeypatch, lambda _: httpx.Response(401, json={}))
+
+    with pytest.raises(LLMConnectionError, match="API 金鑰無效或已過期"):
+        await _detect(session, api_base="https://gateway.test", api_key="sk-test-wrong-key")
+    assert len(requests) == 3
+
+
 async def test_local_rejects_unrelated_server(
     session: AsyncSession, monkeypatch: pytest.MonkeyPatch
 ) -> None:
