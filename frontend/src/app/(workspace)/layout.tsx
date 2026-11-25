@@ -7,11 +7,14 @@ import { getCurrentUser } from "@/lib/api/users";
 
 type WorkspaceLayoutProps = {
   children: ReactNode;
+  /** 平行路由 `@navContext`：放在頂部左側膠囊的頁面資訊（目前只有首頁的病房資訊） */
+  navContext: ReactNode;
 };
 
 // 登入後的工作區外框；登入頁（待決）之後放在此 route group 之外
 export default async function WorkspaceLayout({
   children,
+  navContext,
 }: WorkspaceLayoutProps) {
   const user = await getCurrentUser();
 
@@ -28,8 +31,8 @@ export default async function WorkspaceLayout({
       >
         跳至主要內容
       </a>
-      <AppTopBar user={user} />
-      <AppNavBar user={user} />
+      <AppTopBar user={user} context={navContext} />
+      <AppNavBar user={user} context={navContext} />
       <main
         id="main-content"
         className="pb-[calc(3.5rem+env(safe-area-inset-bottom))] lg:pt-toolbar lg:pb-0"
