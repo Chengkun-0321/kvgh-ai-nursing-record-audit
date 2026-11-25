@@ -37,16 +37,3 @@ export const getWardBedBoard = cache(
       `${BASE_PATH}/${encodeURIComponent(wardCode)}/bed-board`,
     ),
 );
-
-/**
- * 頂部導覽的待處理床數。外框在每一頁都會呼叫，後端無法連線或沒有院方資料時回傳 0（隱藏徽章），
- * 不讓設定頁等與病房無關的頁面跟著失敗；首頁本身仍會顯示錯誤。
- */
-export async function getPendingBedCount(): Promise<number> {
-  try {
-    const board = await getWardBedBoard(await getDefaultWardCode());
-    return board.pending_bed_count;
-  } catch {
-    return 0;
-  }
-}

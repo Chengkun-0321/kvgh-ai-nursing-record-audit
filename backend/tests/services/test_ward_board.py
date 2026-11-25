@@ -75,7 +75,7 @@ async def test_without_runs_bed_is_not_audited_with_progress(
     assert bed.audited_rule_count == 0
     assert bed.audit_progress_text == f"已稽核 0／{bed.auditable_rule_count} 項"
     assert bed.auditable_rule_count > 0
-    assert board.pending_bed_count == 0
+    assert not bed.is_pending
 
 
 async def test_admission_day_rule_counts_toward_board_day(
@@ -162,7 +162,7 @@ async def test_worst_verdict_wins_and_findings_sorted_by_severity(
     assert bed.status == BedBoardStatus.WARNING
     assert bed.summary_text == "需確認 1 項・無法判定 1 項"
     assert [finding.rule_code for finding in bed.pending_findings] == ["R03", "R02"]
-    assert board.pending_bed_count == 1
+    assert bed.is_pending
     assert board.status_counts[1].count == 1
 
 
@@ -205,7 +205,7 @@ async def test_r01_unmentioned_element_label_matches_patient_page(
     assert r01.latest_run.findings[0].verdict_label == finding.verdict_label
 
 
-async def test_status_counts_and_pending_bed_count_for_warning_bed(
+async def test_status_counts_and_pending_flag_for_warning_bed(
     session: AsyncSession, audit_hospital_data_source: HospitalDataSource
 ) -> None:
     await _add_run(
@@ -223,7 +223,7 @@ async def test_status_counts_and_pending_bed_count_for_warning_bed(
     assert counts[BedBoardStatus.WARNING] == 1
     assert counts[BedBoardStatus.NOT_AUDITED] == 0
     assert board.bed_count == 1
-    assert board.pending_bed_count == 1
+    assert board.beds[0].is_pending
 
 
 async def test_default_board_date_is_latest_ended_day(

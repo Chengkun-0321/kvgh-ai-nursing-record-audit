@@ -70,7 +70,6 @@ async def get_ward_bed_board(
         display_name=ward_display_name(ward_code),
         business_date=snapshot.business_date,
         bed_count=len(beds),
-        pending_bed_count=sum(bed.is_pending for bed in beds),
         status_counts=_status_counts(beds),
         beds=beds,
     )

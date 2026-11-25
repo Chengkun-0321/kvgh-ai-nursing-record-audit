@@ -49,7 +49,6 @@
      與判定藍（verdict-review）使用獨立 token；狀態另以圖示、文字區分 */
   --color-accent: #0e7490;
   --color-accent-contrast: #ffffff;
-  --color-badge: #e0241a;
   /* 淺青底＋深青字：設定頁的主要按鈕、選取狀態與使用者訊息（不使用白字）；
      accent-strong 在 accent-tint-strong 上約 5.7:1、白底約 7.3:1 */
   --color-accent-tint: rgb(14 116 144 / 0.1);

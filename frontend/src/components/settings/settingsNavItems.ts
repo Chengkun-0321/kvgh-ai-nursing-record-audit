@@ -6,6 +6,9 @@ import {
   UsersThreeIcon,
 } from "@/components/ui/icons";
 
+/** 尚未實作的設定頁標示文字 */
+export const NAV_DISABLED_HINT = "即將推出";
+
 export type SettingsNavItemConfig = {
   label: string;
   /** 尚未實作的設定頁為 `null`，以停用狀態顯示 */

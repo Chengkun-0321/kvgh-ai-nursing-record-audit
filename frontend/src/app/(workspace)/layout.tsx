@@ -4,7 +4,6 @@ import { AppNavBar } from "@/components/app-shell/AppNavBar";
 import { AppTopBar } from "@/components/app-shell/AppTopBar";
 import { MobileTabBar } from "@/components/app-shell/MobileTabBar";
 import { getCurrentUser } from "@/lib/api/users";
-import { getPendingBedCount } from "@/lib/api/wards";
 
 type WorkspaceLayoutProps = {
   children: ReactNode;
@@ -14,10 +13,7 @@ type WorkspaceLayoutProps = {
 export default async function WorkspaceLayout({
   children,
 }: WorkspaceLayoutProps) {
-  const [user, pendingBedCount] = await Promise.all([
-    getCurrentUser(),
-    getPendingBedCount(),
-  ]);
+  const user = await getCurrentUser();
 
   return (
     <div className="min-h-dvh">
@@ -32,15 +28,15 @@ export default async function WorkspaceLayout({
       >
         跳至主要內容
       </a>
-      <AppTopBar user={user} pendingBedCount={pendingBedCount} />
-      <AppNavBar user={user} pendingBedCount={pendingBedCount} />
+      <AppTopBar user={user} />
+      <AppNavBar user={user} />
       <main
         id="main-content"
         className="pb-[calc(3.5rem+env(safe-area-inset-bottom))] lg:pt-toolbar lg:pb-0"
       >
         {children}
       </main>
-      <MobileTabBar pendingBedCount={pendingBedCount} />
+      <MobileTabBar />
     </div>
   );
 }

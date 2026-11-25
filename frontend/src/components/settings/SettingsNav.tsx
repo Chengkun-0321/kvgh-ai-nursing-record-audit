@@ -3,12 +3,12 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-import { NAV_DISABLED_HINT } from "@/components/app-shell/navItems";
 import { SelectionIndicator } from "@/components/ui/SelectionIndicator";
 import { cn } from "@/lib/utils";
 
 import {
   isSettingsNavItemActive,
+  NAV_DISABLED_HINT,
   SETTINGS_NAV_ITEMS,
   type SettingsNavItemConfig,
 } from "./settingsNavItems";

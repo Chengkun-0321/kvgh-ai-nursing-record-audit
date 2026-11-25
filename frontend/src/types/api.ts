@@ -1376,8 +1376,6 @@ export interface components {
             business_date: string;
             /** Bed Count */
             bed_count: number;
-            /** Pending Bed Count */
-            pending_bed_count: number;
             /** Status Counts */
             status_counts: components["schemas"]["StatusCountRead"][];
             /** Beds */

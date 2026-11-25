@@ -20,11 +20,7 @@ async def test_bed_board_defaults_to_latest_day_and_is_not_audited(client: Async
     response = await client.get(f"/api/v1/wards/{WARD_CODE}/bed-board")
     body = response.json()
     assert response.status_code == 200
-    assert (body["business_date"], body["bed_count"], body["pending_bed_count"]) == (
-        "2026-01-02",
-        1,
-        0,
-    )
+    assert (body["business_date"], body["bed_count"]) == ("2026-01-02", 1)
     bed = body["beds"][0]
     assert (bed["bed_code"], bed["status"], bed["summary_text"]) == (
         "W99-001",

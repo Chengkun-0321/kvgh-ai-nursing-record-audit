@@ -40,7 +40,6 @@ token 實作在 `frontend/src/app/globals.css` 的 `@theme`；元件只用語意
 | 輸入框   | `field-border`                                                                           | 輸入框外框（白底約 3.5:1，符合非文字 ≥3:1）                                                        |
 | 頁面底色 | `backdrop`、`backdrop-glow`、`backdrop-shade`                                            | 全站暖亞麻底色（含首頁病房外），經 `page-backdrop` utility 使用，由工作區 layout 鋪在最底層         |
 | 狀態色   | `verdict-{error,warning,review,pass,unaudited}` 與 `-strong`                             | 主色用於圖示；`-strong` 為白底 ≥4.5:1 的文字色；`unaudited` 為「尚未稽核」的中性灰（虛線圓圈圖示） |
-| 徽章     | `badge`                                                                                  | 待處理數字徽章（白字 ≥4.5:1）                                                                      |
 | 圓角     | `rounded-card`（20px）、`rounded-panel`（28px）                                          | 卡片／清單、面板／sheet                                                                            |
 | 陰影     | `shadow-card`、`shadow-float`                                                          | 帶暖色調的擴散陰影（與底色同色溫）：一般卡片、浮動層（導覽、面板、狀態列、sheet） |
 | 尺寸     | `topbar`、`nav`、`toolbar`、`detail`                                                     | 手機頂列高度、桌機頂部導覽膠囊高度、桌機導覽下緣（病房安全區與各頁內容由此往下，再留 1rem）、詳情面板寬度 |
@@ -60,7 +59,7 @@ token 實作在 `frontend/src/app/globals.css` 的 `@theme`；元件只用語意
 - 地圖平移縮放期間（`.ward-map[data-moving]`，停止 150ms 後移除）玻璃暫停 `backdrop-filter`、保留半透明底色：3D 畫面每幀重繪時不必重新模糊，弱 GPU／VDI 也能跟手。
 - 對比以最差背景驗證：玻璃下墊純黑，主文字與次要文字都 ≥ 4.5:1（目前 ink 約 5.3:1、ink-secondary 約 4.7:1）。調整玻璃不透明度或文字色時須重新驗證。verdict `-strong` 文字色只放在實色 `surface` 上。
 - `prefers-reduced-transparency` 改為實色；`prefers-contrast: more` 加實線外框（已寫在 utility 內）。
-- 桌機頂部導覽（`AppNavBar`）是三座浮動玻璃膠囊：左為系統標誌、中為主要導覽（置中於視窗）、右為時間／待處理數／使用者（`AppStatusCapsule`）。
+- 桌機頂部導覽（`AppNavBar`）是三座浮動玻璃膠囊：左為系統標誌、中為主要導覽（置中於視窗）、右為時間／使用者（`AppStatusCapsule`）。
   - 外層不接收指標事件，膠囊之間仍可拖曳病房。
   - 浮動層之間與視窗邊緣的間距一律 1rem；頁面內容與病房安全區由 `--spacing-toolbar`（導覽下緣）往下，再留 1rem。
 - 手機頂列底緣以漸層遮罩淡出（`mask-b-*`），大卡捲動區底緣同樣以遮罩淡出，不用 1px 分隔線。
@@ -155,7 +154,7 @@ token 實作在 `frontend/src/app/globals.css` 的 `@theme`；元件只用語意
 
 | 模式       | 規則                                                                                                                                                                                                                                                                                                        |
 | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 頂部導覽   | 桌機中央玻璃膠囊（`MainNavTabs`）：圖示＋文字，目前頁以白色實色膠囊＋主色實心圖示標示，換頁時以 spring 滑動（`layoutId`）；未實作項目停用並標示「即將推出」 |
+| 頂部導覽   | 桌機中央玻璃膠囊（`MainNavTabs`）：圖示＋文字，目前頁以白色實色膠囊＋主色實心圖示標示，換頁時以 spring 滑動（`layoutId`）；只列已實作的頁面（病房總覽、原始資料、設定），未實作的功能不放進主要導覽，手機底部分頁列同一份清單 |
 | 設定分頁   | `components/settings/SettingsNav`：桌機左側 sticky 直欄、手機橫向膠囊列（同一份 DOM）；目前項目為白色膠囊＋主色圖示方塊，未實作的設定頁停用並標示「即將推出」；項目清單在 `settingsNavItems.ts` |
 | 床號標籤   | 白色膠囊＋VerdictIcon＋床號＋判定文字（PASS 不顯示文字），位於床頭上方；選取中以主色外框標示，病床範圍出現選取框（`layoutId` 滑動）                                                                                                                                                                       |
 | 狀態列     | 結構層玻璃；各 Verdict 床數，同時是篩選開關（`aria-pressed`，再點一次回到全部），選取底色（實色白膠囊）以 spring 滑動；精簡尺寸：圖示 20px、床數 `headline`、名稱 `caption`                                                                                                                                                                                       |

@@ -67,6 +67,5 @@ class WardBedBoardRead(BaseModel):
     display_name: str
     business_date: date
     bed_count: int
-    pending_bed_count: int
     status_counts: list[StatusCountRead]
     beds: list[BedStatusRead]
