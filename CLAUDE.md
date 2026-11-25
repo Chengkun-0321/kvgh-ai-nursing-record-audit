@@ -63,6 +63,7 @@
 
 | 任務 | 必讀 |
 |---|---|
+| Docker 容器化與 Linux 部署 | [deployment-docker.md](docs/deployment-docker.md) |
 | 任何程式撰寫 | [clean-code.md](docs/conventions/clean-code.md)、[architecture.md](docs/conventions/architecture.md) |
 | 前端 UI、樣式、動畫 | [ui-design.md](docs/conventions/ui-design.md)（依據 `.claude/skills/apple-design`、`.claude/skills/ui-ux-pro-max`） |
 | 新增／修改稽核規則 | [audit-rules.md](docs/conventions/audit-rules.md)、[llm.md](docs/conventions/llm.md) |
