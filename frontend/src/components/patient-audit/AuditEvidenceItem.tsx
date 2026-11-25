@@ -13,17 +13,21 @@ export function AuditEvidenceItem({ evidence }: AuditEvidenceItemProps) {
   const excerpt = evidence.excerpt.trim();
   return (
     <li className="rounded-xl bg-surface p-3">
-      <p className="text-footnote font-semibold">
-        {evidence.source_label}
-        {evidence.field && (
-          <span className="font-normal text-ink-secondary">
-            ・{evidence.field}
-          </span>
-        )}
-      </p>
-      <p className="mt-0.5 text-caption text-ink-secondary tabular-nums">
+      {/* 來源與時間同一行（時間靠右），窄螢幕放不下時時間換到下一行 */}
+      <p className="flex flex-wrap items-baseline justify-between gap-x-3">
+        <span className="text-footnote font-semibold">
+          {evidence.source_label}
+          {evidence.field && (
+            <span className="font-normal text-ink-secondary">
+              ・{evidence.field}
+            </span>
+          )}
+        </span>
         {/* 院方原始時間字串已含日期；沒有時才退回紀錄的日期 */}
-        <time dateTime={evidence.business_date}>
+        <time
+          dateTime={evidence.business_date}
+          className="text-caption text-ink-secondary tabular-nums"
+        >
           {evidence.time_text || formatDate(evidence.business_date)}
         </time>
       </p>
