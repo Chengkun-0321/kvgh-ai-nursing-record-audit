@@ -33,7 +33,7 @@ export function WardStatusBar({
       role="group"
       aria-label="依稽核狀態篩選病床"
       className={cn(
-        "glass relative grid grid-cols-5 gap-1 rounded-card p-1.5 shadow-float",
+        "glass relative grid grid-cols-5 gap-0.5 rounded-card p-1 shadow-float",
         className,
       )}
     >
@@ -48,7 +48,7 @@ export function WardStatusBar({
             disabled={count === 0 && !isActive}
             onClick={() => onChange(isActive ? "ALL" : status)}
             className={cn(
-              "relative flex min-h-11 pressable flex-col items-center gap-1 rounded-xl px-1 py-2 focus-ring disabled:opacity-40 sm:flex-row sm:gap-3 sm:px-3",
+              "relative flex min-h-11 pressable flex-col items-center gap-0.5 rounded-xl px-1 py-1.5 focus-ring disabled:opacity-40 sm:flex-row sm:gap-1.5 sm:px-2",
               !isActive && "hover:bg-fill",
             )}
           >
@@ -58,15 +58,12 @@ export function WardStatusBar({
                 className="rounded-xl bg-fill-strong"
               />
             )}
-            <VerdictIcon
-              verdict={status}
-              className="relative size-6 sm:size-7"
-            />
+            <VerdictIcon verdict={status} className="relative size-5" />
             <span className="relative flex flex-col items-center sm:items-start">
-              <span className="text-title tabular-nums">{count}</span>
+              <span className="text-headline tabular-nums">{count}</span>
               <span
                 className={cn(
-                  "text-caption font-medium whitespace-nowrap @xl:text-footnote",
+                  "text-caption font-medium whitespace-nowrap",
                   isActive ? "text-ink" : "text-ink-secondary",
                 )}
               >
