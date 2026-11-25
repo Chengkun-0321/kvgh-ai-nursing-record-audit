@@ -170,6 +170,10 @@ def test_prompt_renders_with_build_input_variables() -> None:
     assert 'source="daily_physical_assessment"' in text
     assert f'id="{NURSING_ID}"' in text
     assert "{{" not in text
+    # 2026-11-20 院方討論：NPO 不算異常；容易壓紅部位需追蹤，翻身等描述即為相應紀錄
+    assert "「禁食」「NPO」是醫囑的進食狀態，不是食慾異常" in text
+    assert "容易壓紅部位" in text
+    assert "翻身、擺位、減壓或壓傷（預防）護理" in text
 
 
 def test_valid_not_found_output_passes_and_keeps_flagged_items_in_details() -> None:

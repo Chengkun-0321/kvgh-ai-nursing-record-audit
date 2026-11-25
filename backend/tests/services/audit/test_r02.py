@@ -134,6 +134,31 @@ def test_no_prior_records_are_stated_to_the_model(monkeypatch: pytest.MonkeyPatc
     assert "無法比對" in audit_input.variables["category_alignment_block"]
 
 
+def test_no_prior_records_prompt_says_pass_and_pass_output_is_accepted(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """新入院沒有前日紀錄：prompt 指示不算複製、判 PASS；整體 PASS 的輸出通過驗證。"""
+    _set_lookback(monkeypatch, 5)
+    audit_input = RULE.build_input(_ctx([_note("today", TODAY, "交班", "當日")]))
+    text = render_prompt(
+        RULE.prompt_name,
+        RULE.prompt_version,
+        {**audit_input.variables, "records_block": render_records_block(audit_input.records)},
+    )
+    output = _output(
+        {
+            "verdict": "PASS",
+            "summary": "沒有前幾日紀錄可比對，已檢查時效性",
+            "findings": [],
+            "category_judgements": [{"category": "交班", "judgement": "無法判斷"}],
+        }
+    )
+
+    assert "沒有可比對的前日紀錄就不算複製" in text
+    assert "不因此判 NEEDS_REVIEW" in text
+    RULE.validate_output(output, audit_input)
+
+
 def test_prior_is_nearest_day_with_same_category(monkeypatch: pytest.MonkeyPatch) -> None:
     _set_lookback(monkeypatch, 5)
     records = [
