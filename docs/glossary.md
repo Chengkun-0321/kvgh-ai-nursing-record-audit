@@ -65,6 +65,7 @@
 | 追蹤期限 | `AUDIT_CONSULT_FOLLOWUP_DAYS` | R06 從會診日至會診日加此日曆天數，兩端均含；預設 1，待院方確認 |
 | 稽核執行   | `audit_run`      | 一次稽核執行，對應 `audit_runs` 一列；重跑新增一列，不覆蓋。入院規則已完成後仍可單項重跑（ADR 0013）           |
 | 執行狀態   | `audit_run_status` | 一次執行的狀態，四個值：`COMPLETED`（已完成）、`NOT_APPLICABLE`（當日無此事件）、`DATA_UNAVAILABLE`（院方尚未提供資料）、`FAILED`（執行失敗） |
+| 稽核中     | `is_running`     | 某項稽核正在後端執行、尚未寫入結果；登記在後端記憶體，不是 `audit_run_status` 的值（ADR 0011 決策 9） |
 | 可稽核性 | `availability` | 四個值：`available`、`not_applicable`、`data_unavailable`、`day_not_ended`；最後一項由服務層判斷 |
 | 寬限期中 | `IN_GRACE` | R06 逐筆會診尚未到期且未見對應紀錄的狀態，該筆判定 `PASS`；不是可稽核性 |
 | 稽核發現   | `audit_finding`  | 一次執行中的一個發現（項目、判定、訊息、Evidence），對應 `audit_findings` 一列 |

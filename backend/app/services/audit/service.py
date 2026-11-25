@@ -5,6 +5,7 @@
     → Evidence 核對 → validate_output → 寫入 audit_runs／audit_findings
 
 不適用或資料未提供時在第二步結束並照樣寫一筆紀錄，不呼叫 LLM。
+執行期間登記為「稽核中」（`running.py`）；同一項執行中再送出時回 409，不重複呼叫模型。
 任何非預期例外轉為 FAILED，訊息不含病歷內容；缺少使用中模型設定則直接回 409，不寫入紀錄。
 """
 
@@ -39,6 +40,7 @@ from app.services.audit.labels import AUDIT_CYCLE_LABELS, AVAILABILITY_LABELS
 from app.services.audit.records import render_records_block
 from app.services.audit.registry import RULE_REGISTRY
 from app.services.audit.rules.base import AuditInput, AuditRule, Availability
+from app.services.audit.running import RUNNING_AUDITS, RunningAudits, RunningKey
 from app.services.audit.runs import RunMeta, RunTarget, completed_run, needs_review_run, status_run
 from app.services.audit.views import to_run_read
 from app.services.hospital_data.source import HospitalDataSource
@@ -61,12 +63,19 @@ _COMMON_OUTPUT_FIELDS: Final = frozenset(RuleOutput.model_fields)
 class AuditService:
     """病患稽核的對外入口：每日總覽與單項執行。
 
-    `today` 注入「今天」（測試用固定日期；正式用台北時間）。
+    `today` 注入「今天」（測試用固定日期；正式用台北時間）；
+    `running` 為執行中登記（預設整個行程共用一份，測試可各自建立）。
     """
 
-    def __init__(self, source: HospitalDataSource, today: TodayProvider = taipei_today) -> None:
+    def __init__(
+        self,
+        source: HospitalDataSource,
+        today: TodayProvider = taipei_today,
+        running: RunningAudits = RUNNING_AUDITS,
+    ) -> None:
         self._source = source
         self._today = today
+        self._running = running
 
     async def get_day_overview(
         self, session: AsyncSession, patient_key: str, business_date: date | None
@@ -78,7 +87,9 @@ class AuditService:
         """
         today = self._today()
         ctx = await build_audit_context(self._source, patient_key, business_date, today)
-        rules = [await _rule_status(session, ctx, rule, today) for rule in RULE_REGISTRY.values()]
+        rules = [
+            await self._rule_status(session, ctx, rule, today) for rule in RULE_REGISTRY.values()
+        ]
         previous_date, next_date = _neighbors(ctx.patient_dates, ctx.business_date)
         return PatientAuditDayRead(
             patient_key=ctx.patient_key,
@@ -102,6 +113,7 @@ class AuditService:
             NotFoundError: 查無規則、病人或該日資料。
             DayNotEndedError: 所選日期尚未結束（不寫入紀錄）。
             LLMNotConfiguredError: 需要 LLM 但沒有使用中的模型設定（不寫入紀錄）。
+            AuditAlreadyRunningError: 同一項正在稽核中（不寫入紀錄）。
         """
         rule = _get_rule(rule_code)
         today = self._today()
@@ -111,13 +123,43 @@ class AuditService:
         # 入院規則已完成也可再執行（ADR 0013）：新增一列結果，舊結果保留
         rule_day = rule_day_on(rule, ctx, today)
         target = RunTarget(rule.code, patient_key, rule_day.business_date)
-        run = await _execute(session, rule, ctx, target)
-        await audit_run_crud.add(session, run)
-        await session.commit()
+        # 瀏覽器中止請求後仍會跑完並寫入；登記讓重新載入的畫面知道它還在執行
+        with self._running.hold(_running_key(target)):
+            run = await _execute(session, rule, ctx, target)
+            await audit_run_crud.add(session, run)
+            await session.commit()
         logger.info(
             "稽核完成：patient_key=%s rule=%s status=%s", patient_key, rule.code, run.status.value
         )
         return to_run_read(run, rule)
+
+    async def _rule_status(
+        self, session: AsyncSession, ctx: AuditContext, rule: AuditRule, today: date
+    ) -> AuditRuleStatusRead:
+        rule_day = rule_day_on(rule, ctx, today)
+        latest = await audit_run_crud.get_latest(
+            session, ctx.patient_key, rule.code, rule_day.business_date
+        )
+        is_running = self._running.is_running(
+            RunningKey(ctx.patient_key, rule.code, rule_day.business_date)
+        )
+        # 入院規則已完成仍可單項重跑，但一鍵稽核不納入，避免每次一鍵稽核都重呼叫模型（ADR 0013）
+        can_run = rule_day.can_run
+        return AuditRuleStatusRead(
+            rule_code=rule.code,
+            name=rule.name,
+            description=rule.description,
+            cycle=rule.cycle,
+            cycle_label=AUDIT_CYCLE_LABELS[rule.cycle],
+            effective_business_date=rule_day.business_date,
+            availability=_availability_read(rule_day.availability),
+            can_run=can_run,
+            include_in_run_all=(
+                can_run and not is_running and not _has_settled_admission_result(rule, latest)
+            ),
+            is_running=is_running,
+            latest_run=to_run_read(latest, rule) if latest is not None else None,
+        )
 
 
 def effective_business_date(rule: AuditRule, ctx: AuditContext) -> date:
@@ -217,27 +259,8 @@ def rule_day_on(rule: AuditRule, ctx: AuditContext, today: date) -> RuleDay:
     return RuleDay(business_date=day, availability=rule.check_availability(ctx.for_date(day)))
 
 
-async def _rule_status(
-    session: AsyncSession, ctx: AuditContext, rule: AuditRule, today: date
-) -> AuditRuleStatusRead:
-    rule_day = rule_day_on(rule, ctx, today)
-    latest = await audit_run_crud.get_latest(
-        session, ctx.patient_key, rule.code, rule_day.business_date
-    )
-    # 入院規則已完成仍可單項重跑，但一鍵稽核不納入，避免每次一鍵稽核都重呼叫模型（ADR 0013）
-    can_run = rule_day.can_run
-    return AuditRuleStatusRead(
-        rule_code=rule.code,
-        name=rule.name,
-        description=rule.description,
-        cycle=rule.cycle,
-        cycle_label=AUDIT_CYCLE_LABELS[rule.cycle],
-        effective_business_date=rule_day.business_date,
-        availability=_availability_read(rule_day.availability),
-        can_run=can_run,
-        include_in_run_all=can_run and not _has_settled_admission_result(rule, latest),
-        latest_run=to_run_read(latest, rule) if latest is not None else None,
-    )
+def _running_key(target: RunTarget) -> RunningKey:
+    return RunningKey(target.patient_key, target.rule_code, target.business_date)
 
 
 def _has_settled_admission_result(rule: AuditRule, latest: AuditRun | None) -> bool:

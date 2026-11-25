@@ -8,6 +8,7 @@ import {
 } from "react";
 
 import { toErrorMessage } from "@/lib/api/client";
+import { AUDIT_RUNNING_POLL_MS } from "@/lib/constants";
 import {
   type AuditRuleStatus,
   getPatientAuditDay,
@@ -26,6 +27,7 @@ import {
   scopeKeyOf,
   stateForScope,
 } from "@/lib/patientAuditRunState";
+import { pollUntilAborted } from "@/lib/pollLoop";
 
 export type { AuditRuleView } from "@/lib/patientAuditRunState";
 
@@ -148,6 +150,33 @@ function createRefreshOverview(
   };
 }
 
+/**
+ * 後端回報有項目正在稽核中時，定期重新讀取總覽，直到後端回報全部完成。
+ * 涵蓋重新整理或切換日期前送出、本頁已不在等待回應的稽核；範圍改變或全部完成時停止。
+ */
+function useServerRunningPoll(
+  isServerRunning: boolean,
+  refreshOverview: RefreshOverview,
+  scope: string,
+): void {
+  const refreshRef = useRef(refreshOverview);
+  useEffect(() => {
+    refreshRef.current = refreshOverview;
+  });
+  useEffect(() => {
+    if (!isServerRunning) {
+      return;
+    }
+    const controller = new AbortController();
+    void pollUntilAborted(
+      () => refreshRef.current(),
+      AUDIT_RUNNING_POLL_MS,
+      controller.signal,
+    );
+    return () => controller.abort();
+  }, [isServerRunning, scope]);
+}
+
 function createRunRule(
   day: PatientAuditDay,
   setState: ScopeSetter,
@@ -208,6 +237,11 @@ export function useAuditRuns(day: PatientAuditDay): AuditRunsHook {
   const runRule = createRunRule(day, setState, registry, refreshOverview);
 
   const sourceRules = overview?.scope === scope ? overview.rules : day.rules;
+  useServerRunningPoll(
+    sourceRules.some((rule) => rule.is_running),
+    refreshOverview,
+    scope,
+  );
   const runAll = createRunAll(sourceRules, runRule, registry);
 
   const rules = buildRuleViews(sourceRules, stateForScope(state, scope));

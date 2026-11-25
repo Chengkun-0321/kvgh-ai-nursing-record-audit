@@ -19,6 +19,7 @@ function makeView(
     availability,
     can_run: false,
     include_in_run_all: false,
+    is_running: false,
     latest_run: null,
     displayedRun,
     isRunning: false,

@@ -21,7 +21,10 @@ export type AuditScopeState = {
   rules: Record<string, RuleRunState>;
 };
 
-/** 每項規則目前要顯示的內容：伺服器載入的規則資訊加上本地執行狀態。 */
+/**
+ * 每項規則目前要顯示的內容：伺服器載入的規則資訊加上本地執行狀態。
+ * `isRunning` 為本頁送出的請求尚未回應，或後端回報該項正在稽核中（重新整理、切換日期後仍保留）。
+ */
 export type AuditRuleView = AuditRuleStatus & {
   displayedRun: AuditRun | null;
   isRunning: boolean;
@@ -96,7 +99,7 @@ export function buildRuleViews(
     return {
       ...rule,
       displayedRun: runState?.run ?? rule.latest_run,
-      isRunning: runState?.isRunning ?? false,
+      isRunning: (runState?.isRunning ?? false) || rule.is_running,
       errorMessage: runState?.errorMessage ?? null,
     };
   });

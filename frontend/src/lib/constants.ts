@@ -7,5 +7,8 @@ export const CLOCK_TICK_MS = 30_000;
 // ChatGPT 裝置碼登入：OpenAI 建議的輪詢間隔為 5 秒
 export const CHATGPT_LOGIN_POLL_MS = 5_000;
 
+// 病患稽核頁：後端回報有項目稽核中（例如重新整理前送出的）時，每 3 秒重新讀取總覽，直到全部完成
+export const AUDIT_RUNNING_POLL_MS = 3_000;
+
 // 設定精靈：停止輸入一段時間後才請後端檢查表單（並據以查詢模型清單），避免每打一個字就呼叫一次
 export const DRAFT_CHECK_DEBOUNCE_MS = 500;

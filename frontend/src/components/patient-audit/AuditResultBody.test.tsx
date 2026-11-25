@@ -57,6 +57,7 @@ it("結果顯示 PASS 發現與後端文字、證據，卡片只顯示整體判�
     availability: { state: "available", label: "可執行", reason: null },
     can_run: true,
     include_in_run_all: true,
+    is_running: false,
     latest_run: run,
     displayedRun: run,
     isRunning: false,

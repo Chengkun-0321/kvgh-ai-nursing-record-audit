@@ -445,6 +445,8 @@ export interface components {
             can_run: boolean;
             /** Include In Run All */
             include_in_run_all: boolean;
+            /** Is Running */
+            is_running: boolean;
             latest_run: components["schemas"]["AuditRunRead"] | null;
         };
         /**
