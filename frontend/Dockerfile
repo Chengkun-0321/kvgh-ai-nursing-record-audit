@@ -9,8 +9,8 @@ RUN npm ci
 FROM base AS build
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-ARG NEXT_PUBLIC_API_BASE_URL=http://localhost:8000
-# 瀏覽器位址會內嵌進產物，改值後必須重新建置。
+ARG NEXT_PUBLIC_API_BASE_URL=""
+# 空字串代表同源；直接展開以保留 Compose 傳入的空值。
 ENV NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL}
 RUN npm run build
 

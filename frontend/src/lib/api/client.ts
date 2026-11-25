@@ -12,13 +12,13 @@ export class ApiError extends Error {
   }
 }
 
-/** Server Component 用 `API_BASE_URL`，瀏覽器端用 `NEXT_PUBLIC_API_BASE_URL`（建置時內嵌）。 */
+/** 回傳 API 基底位址；瀏覽器端的空字串代表同源，伺服器端仍須有後端位址。 */
 function resolveBaseUrl(): string {
-  const baseUrl =
-    typeof window === "undefined"
-      ? (process.env.API_BASE_URL ?? process.env.NEXT_PUBLIC_API_BASE_URL)
-      : process.env.NEXT_PUBLIC_API_BASE_URL;
-  if (!baseUrl) {
+  const isServer = typeof window === "undefined";
+  const baseUrl = isServer
+    ? (process.env.API_BASE_URL ?? process.env.NEXT_PUBLIC_API_BASE_URL)
+    : process.env.NEXT_PUBLIC_API_BASE_URL;
+  if (baseUrl === undefined || (isServer && baseUrl === "")) {
     throw new ApiError(0, "尚未設定後端位址，請參考 frontend/.env.example");
   }
   return baseUrl;
