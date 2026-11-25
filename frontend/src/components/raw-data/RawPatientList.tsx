@@ -5,6 +5,8 @@ import { formatShortDateTime } from "@/lib/format";
 import { type RawDataSearch, rawDataHref } from "@/lib/rawDataQuery";
 import { cn } from "@/lib/utils";
 
+import { SelectedScrollList } from "./SelectedScrollList";
+
 type RawPatientListProps = {
   data: RawPatientListData;
   search: RawDataSearch;
@@ -25,7 +27,10 @@ export function RawPatientList({
       <p className="px-2 pt-1 text-footnote font-semibold text-ink-secondary">
         {data.display_name}・{data.patients.length} 位病人
       </p>
-      <ul className="flex max-h-[40dvh] flex-col gap-1 overflow-y-auto lg:max-h-[calc(100dvh-12rem)]">
+      <SelectedScrollList
+        selectedKey={selectedKey}
+        className="flex max-h-[40dvh] flex-col gap-1 overflow-y-auto lg:max-h-[calc(100dvh-12rem)]"
+      >
         {data.patients.map((patient) => {
           const isSelected = patient.patient_key === selectedKey;
           return (
@@ -65,7 +70,7 @@ export function RawPatientList({
             </li>
           );
         })}
-      </ul>
+      </SelectedScrollList>
     </nav>
   );
 }
