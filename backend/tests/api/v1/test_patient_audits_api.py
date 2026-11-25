@@ -13,6 +13,7 @@ from app.main import app
 from app.services.audit.service import DAY_NOT_ENDED_MESSAGE
 from app.services.hospital_data.source import HospitalDataSource
 from app.services.llm import gateway
+from tests.auth_helpers import sign_in
 from tests.hospital_data_samples import AUDIT_P3_KEY
 from tests.services.audit.helpers import make_result, payload_for
 from tests.services.llm.gateway_helpers import create_config
@@ -32,6 +33,7 @@ async def audit_client(
     app.dependency_overrides[get_db] = _override_get_db
     app.dependency_overrides[get_hospital_data_source] = lambda: audit_hospital_data_source
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as http:
+        await sign_in(http)
         yield http
     app.dependency_overrides.clear()
 

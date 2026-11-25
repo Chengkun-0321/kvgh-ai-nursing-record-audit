@@ -27,3 +27,7 @@ RULE_CODE_PATTERN = r"^R\d{2}$"
 
 # 院方資料的時間沒有時區，一律視為台北時間
 BUSINESS_TIMEZONE = "Asia/Taipei"
+
+# Demo 登入表單的長度上限
+LOGIN_USERNAME_MAX_LENGTH = 100
+LOGIN_PASSWORD_MAX_LENGTH = 200

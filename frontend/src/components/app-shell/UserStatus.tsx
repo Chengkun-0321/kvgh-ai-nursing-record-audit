@@ -1,20 +1,20 @@
 import { UserCircleIcon } from "@/components/ui/icons";
-import { USER_ROLE_LABELS } from "@/lib/user";
 import { cn } from "@/lib/utils";
 import type { CurrentUser } from "@/types/user";
 
 import { CurrentTime } from "./CurrentTime";
+import { LogoutButton } from "./LogoutButton";
 
 type UserStatusProps = {
   user: CurrentUser;
-  /** 桌機頂部導覽空間較窄：時間到 2xl、姓名到 xl 才顯示，避免三座膠囊重疊 */
+  /** 桌機頂部導覽空間較窄：時間到 2xl、帳號到 xl 才顯示，避免三座膠囊重疊 */
   isCompact?: boolean;
   className?: string;
 };
 
 /**
- * 目前時間與使用者：手機放在頂列右側，桌機放在頂部導覽右側的玻璃膠囊。
- * 使用者目前只顯示資訊，不做成按鈕，避免看起來可點卻沒有反應。
+ * 目前時間、登入帳號與登出按鈕：手機放在頂列右側，桌機放在頂部導覽右側的玻璃膠囊。
+ * 帳號只顯示資訊（demo 登入沒有角色資料）；登出是旁邊獨立的圖示按鈕。
  */
 export function UserStatus({
   user,
@@ -22,7 +22,7 @@ export function UserStatus({
   className,
 }: UserStatusProps) {
   return (
-    <div className={cn("flex items-center gap-3 sm:gap-4", className)}>
+    <div className={cn("flex items-center gap-2 sm:gap-3", className)}>
       <CurrentTime
         className={cn(
           "hidden text-footnote text-ink-secondary tabular-nums",
@@ -43,9 +43,11 @@ export function UserStatus({
               : "md:not-sr-only md:text-body",
           )}
         >
-          {USER_ROLE_LABELS[user.role]} {user.name}
+          <span className="sr-only">登入帳號：</span>
+          {user.username}
         </span>
       </span>
+      <LogoutButton />
     </div>
   );
 }

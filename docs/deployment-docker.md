@@ -6,7 +6,7 @@
 
 本專案由 FastAPI 後端與 Next.js 16 前端組成。容器化將 Python 3.12、Node 22 與應用程式依賴固定在映像內，讓 Linux 主機不必重建本機 venv／Node 開發環境。後端使用現有 `requirements.txt`，前端使用 `package-lock.json` 與 `npm ci`，不新增應用程式依賴。
 
-這份 Compose 配置使用 SQLite、手動稽核與現有的模型設定功能；沒有新增登入、排程或病房批次稽核。
+這份 Compose 配置使用 SQLite、手動稽核與現有的模型設定功能；登入為 demo 固定帳密（[ADR 0015](adr/0015-demo-login.md)），沒有排程或病房批次稽核。
 
 ## 架構與資料
 
@@ -69,6 +69,15 @@ Compose 以 `environment` 覆寫 `backend/.env` 的 `DATA_DIR=/app/data`、`DATA
    ```
 
    將結果填入 `backend/.env` 的 `LLM_KEY_ENCRYPTION_KEY`。此檔經 `env_file` 注入後端，不會 COPY 進映像。若搬移既有 DB，必須沿用原金鑰；換新金鑰會使已儲存的 API key 無法解密。不要把金鑰貼入 issue 或提交版控。
+
+   同一檔案還要設定 demo 登入帳密（[ADR 0015](adr/0015-demo-login.md)），兩者必填，缺少時後端無法啟動：
+
+   ```dotenv
+   DEMO_LOGIN_USERNAME=<帳號>
+   DEMO_LOGIN_PASSWORD=<密碼>
+   ```
+
+   帳密只放在主機的 `backend/.env`，不要寫進文件或程式碼。改帳密後執行 `docker compose up -d backend`（重建容器以重新讀取 `env_file`）；已登入的使用者在 cookie 到期（預設 12 小時）前仍維持登入。
 
 5. **啟動會執行 migration 並可能更新 DB schema；使用既有資料前先停止寫入並備份。** 檢查與啟動：
 
@@ -237,11 +246,11 @@ chown -R 1000:1000 backend/data
 
 ## 已知限制與維運邊界
 
-- [資安與隱私規範](conventions/security-privacy.md) 明訂目前無登入與權限控管，LLM 設定頁正式上線前須控管權限。本 Compose 只將 nginx 的一個 port 發布到主機所有介面；API 仍可透過 `/api/` 存取，反向代理不提供身分驗證，應只部署於受控網路。CORS 不能取代登入或網路存取限制。
+- 登入只有 demo 等級（[ADR 0015](adr/0015-demo-login.md)）：單一共用帳號、無錯誤次數鎖定、無權限分級；未登入時頁面導向登入頁、API 回 401。正式上線前須依[資安與隱私規範](conventions/security-privacy.md)建立正式登入與權限。CORS 不能取代登入或網路存取限制。
 - SQLite 固定單 worker，不支援藉由增加後端副本擴展；執行中的稽核／登入狀態也在單一程序記憶體內。不要在稽核中任意重新建立後端容器。
 - ChatGPT token 明文留在 bind mount，主機管理者與可讀取備份的人仍能取得；掛載持久化不等於加密。接真實資料或共用主機前的評估見資安規範與 [ADR 0002](adr/0002-llm-phi-policy.md)、[ADR 0006](adr/0006-llm-config-settings.md)。
 - 院方資料以唯讀掛載，沒有新增寫回病歷的途徑；映像建置 context 的 `.dockerignore` 排除所有 `.env*`、資料目錄、DB、憑證與開發產物，後端亦只 COPY 明列的程式路徑。不要自行把敏感檔案放進程式碼或前端 `public/`。
-- `backend/.env` 透過容器環境提供機密，擁有 Docker 管理權限者仍可查看；此配置未提供 Docker secrets、磁碟加密、自動備份、TLS、登入或監控告警。
+- `backend/.env` 透過容器環境提供機密，擁有 Docker 管理權限者仍可查看；此配置未提供 Docker secrets、磁碟加密、自動備份、容器內 TLS（HTTPS 由主機 nginx 處理，見「網域與 HTTPS」）或監控告警。
 - 原先存在 DB 的 Ollama／OpenAI 相容服務位址可能是 `localhost`；容器內 `localhost` 指自己，須改成容器可達的主機／院內服務位址。Linux 上不假設 `host.docker.internal` 自動可用。
 - 基底映像使用版本系列標籤，未鎖定 digest；重建可能取得新版系統套件或間接依賴。正式環境應保留已驗證映像與資料備份，以便回復。
 - 驗證範圍（2026-11-25，Mac、無 Docker）：執行前端 lint、型別檢查，使用 Python 解析 Compose YAML 並檢查三個服務、唯一 port、空字串 build arg、CORS 預設與依賴條件；另於容器外驗證 API client 的空字串／未設定值與伺服器位址，以及空 CORS 清單的 middleware 行為。**未驗證**：Docker 映像建置、實際 Compose 插值與啟動、nginx 語法與端到端轉送、非 root 與 bind mount 權限、healthcheck、`down` 後重新 `up` 的資料保存。部署主機仍須依上述步驟實測。

@@ -49,8 +49,9 @@ class _DisconnectingClient:
     2.4 以上則以 send 拋出 OSError 判斷斷線。兩種都測。
     """
 
-    def __init__(self, spec_version: str) -> None:
+    def __init__(self, spec_version: str, cookie_header: bytes) -> None:
         self.spec_version = spec_version
+        self.cookie_header = cookie_header
         self.is_send_raising = spec_version == "2.4"
         self.has_received_body = False
         self._is_request_sent = False
@@ -67,7 +68,11 @@ class _DisconnectingClient:
             "raw_path": path.encode(),
             "query_string": b"",
             "root_path": "",
-            "headers": [(b"host", b"test"), (b"content-type", b"application/json")],
+            "headers": [
+                (b"host", b"test"),
+                (b"content-type", b"application/json"),
+                (b"cookie", self.cookie_header),
+            ],
             "client": ("127.0.0.1", 50000),
             "server": ("test", 80),
         }
@@ -105,6 +110,11 @@ def _install_upstream(monkeypatch: pytest.MonkeyPatch) -> _FastUpstream:
     return upstream
 
 
+def _cookie_header(client: AsyncClient) -> bytes:
+    # 直接呼叫 ASGI 介面不經 httpx，要自行帶上已登入 client 的 session cookie
+    return "; ".join(f"{name}={value}" for name, value in client.cookies.items()).encode()
+
+
 async def _call_app(client: _DisconnectingClient, path: str) -> None:
     # spec 2.4 的斷線以例外結束請求（FastAPI 的 SSE task group 會包成 ExceptionGroup），屬預期；
     # Python 3.12 起 suppress 也能從 ExceptionGroup 中排除指定例外
@@ -118,7 +128,7 @@ async def test_client_disconnect_closes_upstream_before_request_ends(
 ) -> None:
     config_id = await _create_config(client)
     upstream = _install_upstream(monkeypatch)
-    disconnecting = _DisconnectingClient(spec_version)
+    disconnecting = _DisconnectingClient(spec_version, _cookie_header(client))
 
     await _call_app(disconnecting, f"{_BASE}/{config_id}/chat")
 

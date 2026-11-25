@@ -14,6 +14,12 @@ class AppError(Exception):
         self.message = message
 
 
+class AuthenticationError(AppError):
+    """未登入、登入已失效，或帳號密碼錯誤。"""
+
+    status_code = 401
+
+
 class NotFoundError(AppError):
     """查無資料。"""
 

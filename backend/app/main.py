@@ -97,6 +97,8 @@ def create_app() -> FastAPI:
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.CORS_ORIGINS,
+        # 登入 session 存在 cookie；本機開發前端（3000）跨來源呼叫後端（8000）時要帶上
+        allow_credentials=True,
         allow_methods=_ALLOWED_METHODS,
         allow_headers=["Content-Type"],
     )

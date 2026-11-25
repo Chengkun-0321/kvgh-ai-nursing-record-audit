@@ -26,7 +26,8 @@
 | 住院       | `admission`           | 一次住院期間                                                            |
 | 護理長     | `head_nurse`          |                                                                         |
 | 護理師     | `nurse`               |                                                                         |
-| 目前使用者 | `current_user`        | 登入的使用者（登入機制待決，目前為虛構資料）                            |
+| 目前使用者 | `current_user`        | 登入的使用者；目前為 demo 固定帳號（[ADR 0015](adr/0015-demo-login.md)），正式權限待決 |
+| 登入狀態   | `session`             | 登入後由後端發出的簽章 cookie `kvgh_session`，有效期 `SESSION_MAX_AGE_SECONDS` |
 
 ## 護理紀錄與臨床資料
 

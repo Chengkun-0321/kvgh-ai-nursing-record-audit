@@ -3,7 +3,7 @@
 from functools import lru_cache
 from pathlib import Path
 
-from pydantic import SecretStr
+from pydantic import Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 BACKEND_ROOT = Path(__file__).resolve().parents[2]
@@ -36,6 +36,12 @@ class Settings(BaseSettings):
     LLM_STRUCTURED_NUM_RETRIES: int = 2
     # 同時進行中的結構化 LLM 呼叫數（一鍵稽核時多張卡片同時送出）
     LLM_MAX_CONCURRENCY: int = 3
+
+    # Demo 登入：固定一組帳密，只來自環境變數；未設定時後端無法啟動（fail closed）
+    DEMO_LOGIN_USERNAME: str = Field(min_length=1)
+    DEMO_LOGIN_PASSWORD: SecretStr = Field(min_length=1)
+    # 登入 session 的有效秒數（預設 12 小時）；cookie 與 token 到期時間共用
+    SESSION_MAX_AGE_SECONDS: int = Field(default=43200, gt=0)
 
     # ChatGPT 訂閱登入的 token 檔目錄；含登入憑證，只能放在不進版控的 data/
     CHATGPT_TOKEN_DIR: Path = DATA_DIR / "chatgpt"

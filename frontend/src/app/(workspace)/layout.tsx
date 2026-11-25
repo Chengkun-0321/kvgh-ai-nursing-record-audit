@@ -11,7 +11,8 @@ type WorkspaceLayoutProps = {
   navContext: ReactNode;
 };
 
-// 登入後的工作區外框；登入頁（待決）之後放在此 route group 之外
+// 登入後的工作區外框；登入頁（`app/login`）在此 route group 之外。未登入時 proxy 已導向登入頁，
+// 登入失效（後端 401）時由 `getCurrentUser` 經 API client 導向登入頁
 export default async function WorkspaceLayout({
   children,
   navContext,

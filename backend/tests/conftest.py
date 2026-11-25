@@ -7,9 +7,13 @@ from pathlib import Path
 import pytest
 from cryptography.fernet import Fernet
 
+from tests.auth_helpers import TEST_PASSWORD, TEST_USERNAME, sign_in
+
 # 必須在 import app 之前設定，Settings 會快取第一次讀到的值
 os.environ["LLM_KEY_ENCRYPTION_KEY"] = Fernet.generate_key().decode()
 os.environ["DATABASE_URL"] = "sqlite+aiosqlite://"
+os.environ["DEMO_LOGIN_USERNAME"] = TEST_USERNAME
+os.environ["DEMO_LOGIN_PASSWORD"] = TEST_PASSWORD
 
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import (
@@ -70,10 +74,12 @@ async def session(
 
 
 @pytest.fixture
-async def client(
+async def anonymous_client(
     session_factory: async_sessionmaker[AsyncSession],
     hospital_data_source: HospitalDataSource,
 ) -> AsyncIterator[AsyncClient]:
+    """未登入的 client。"""
+
     async def _override_get_db() -> AsyncIterator[AsyncSession]:
         async with session_factory() as db_session:
             yield db_session
@@ -83,3 +89,10 @@ async def client(
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as http:
         yield http
     app.dependency_overrides.clear()
+
+
+@pytest.fixture
+async def client(anonymous_client: AsyncClient) -> AsyncClient:
+    """已用測試帳密登入的 client（cookie 保存在 client 內）。"""
+    await sign_in(anonymous_client)
+    return anonymous_client

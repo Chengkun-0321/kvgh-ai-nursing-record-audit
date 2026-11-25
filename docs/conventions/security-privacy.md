@@ -37,7 +37,9 @@
 
 ## 身分驗證與操作紀錄
 
-- 登入與權限機制**待決**（開發階段無登入）；上線前 LLM 設定頁必須有權限控管
+- 目前為 demo 固定帳密登入（[ADR 0015](../adr/0015-demo-login.md)）：帳密只放 `backend/.env`（`DEMO_LOGIN_USERNAME`、`DEMO_LOGIN_PASSWORD`），不得寫進程式碼或文件；所有 API 未登入回 401
+- 正式的使用者登入與權限**待決**；demo 登入沒有權限分級，正式上線前 LLM 設定頁必須有權限控管
+- log 不得輸出密碼或 session token
 - LLM 設定變更寫入 `setting_change_logs`：時間、操作者、變更欄位（不含 key 值）
 
 ## 依賴

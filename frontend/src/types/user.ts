@@ -1,8 +1,4 @@
-// TODO(待決): 登入與權限機制確定後，改用後端回傳的使用者型別
+import type { AuthSession } from "./auth";
 
-export type UserRole = "nurse" | "head_nurse";
-
-export type CurrentUser = {
-  name: string;
-  role: UserRole;
-};
+/** 目前登入的使用者；demo 登入只有帳號，後端尚未提供姓名與角色。 */
+export type CurrentUser = AuthSession;
