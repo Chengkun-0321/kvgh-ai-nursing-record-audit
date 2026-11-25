@@ -29,7 +29,7 @@ Compose 以 `environment` 覆寫 `backend/.env` 的 `DATA_DIR=/app/data`、`DATA
 
 `CORS_ORIGINS` 預設為 `[]`。`backend/app/core/config.py` 的 `list[str]` 接受空清單，`backend/app/main.py` 直接交給 `CORSMiddleware`，沒有非空限制。middleware 對不帶 `Origin` 的請求直接放行；一般請求即使帶同源 `Origin` 仍會交給路由，只是不加跨來源授權標頭，瀏覽器同源請求不需要這些標頭。特殊跨來源情境才在根目錄設定 `CORS_ALLOWED_ORIGINS` JSON 陣列，精確列出協定、主機與連接埠，不得使用 `*`；只改 `backend/.env` 的 CORS 不會生效，因為 Compose 的 `environment` 優先。
 
-後端先執行 `alembic upgrade head`，成功後才以單一 worker 啟動 uvicorn。健康檢查使用映像內 Python GET `/api/v1/llm-providers`，不依賴院方資料或外部 LLM；成功後前端才啟動，nginx 等待後端健康與前端程序啟動。這只證明後端 HTTP 服務可回應，不代表 DB 查詢、院方資料或模型連線都正常；前端未就緒時入口可能短暫回 502。`depends_on` 的條件用於啟動，不會在後端日後變成 unhealthy 時自動停止其他服務。nginx 以 Docker 內建 DNS（`resolver 127.0.0.11 valid=10s`）在請求時解析 `backend`／`frontend`，單獨重建前端或後端容器、內網 IP 改變後，最多 10 秒內自動連到新容器，不必重啟 nginx。
+後端先執行 `alembic upgrade head`，成功後才以單一 worker 啟動 uvicorn。健康檢查使用映像內 Python GET `/openapi.json`：不需登入（`/api/v1/*` 未登入回 401，不能當健康檢查）、不依賴院方資料或外部 LLM，且 nginx 只轉送 `/api/`，此路徑不對外；成功後前端才啟動，nginx 等待後端健康與前端程序啟動。這只證明後端 HTTP 服務可回應，不代表 DB 查詢、院方資料或模型連線都正常；前端未就緒時入口可能短暫回 502。`depends_on` 的條件用於啟動，不會在後端日後變成 unhealthy 時自動停止其他服務。nginx 以 Docker 內建 DNS（`resolver 127.0.0.11 valid=10s`）在請求時解析 `backend`／`frontend`，單獨重建前端或後端容器、內網 IP 改變後，最多 10 秒內自動連到新容器，不必重啟 nginx。
 
 三個容器的執行程序都不是 root。後端 builder 產生 wheel 並安裝到暫存前綴，runtime 只複製已安裝套件、程式、prompt 與 migration；編譯工具不進 runtime。runtime 安裝系統 `tzdata`，提供稽核使用的 Asia/Taipei 時區。前端只帶 standalone、`.next/static` 與 `public`，保留 3D 模型等本地資源。
 

@@ -18,8 +18,8 @@ services:
       - "${BACKEND_DATA_DIR:-./backend/data}:/app/data"
       - "${HOSPITAL_DATA_HOST_DIR:-./data}:/hospital-data:ro"
     healthcheck:
-      # 此目錄 API 不需院方資料，也不呼叫外部模型。
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/v1/llm-providers', timeout=3).close()"]
+      # /api/v1/* 需登入會回 401；openapi.json 不需登入、不碰 DB 與外部模型，且 nginx 不對外轉送此路徑
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/openapi.json', timeout=3).close()"]
       interval: 15s
       timeout: 5s
       retries: 5
