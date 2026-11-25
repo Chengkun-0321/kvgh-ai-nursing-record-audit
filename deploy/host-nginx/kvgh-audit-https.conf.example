@@ -1,0 +1,40 @@
+# 主機 nginx 的 HTTPS 入口範本：以既有網域憑證對外提供 HTTPS，轉給本機的 Docker 入口（nginx 容器）。
+# 使用方式見 docs/deployment-docker.md「網域與 HTTPS」。複製到 /etc/nginx/conf.d/ 前，替換以下佔位字：
+#   <PUBLIC_PORT>  對外 HTTPS 連接埠（路由器轉送到本機同號連接埠）
+#   <DOMAIN>       網域名稱
+#   <CERT_FULLCHAIN>、<CERT_KEY>  網域憑證（含中繼鏈）與私鑰的絕對路徑
+#   <DOCKER_PORT>  根目錄 .env 的 FRONTEND_PORT（需搭配 FRONTEND_BIND_ADDRESS=127.0.0.1）
+# 本系統沒有登入機制：經此入口連得到的人即可使用全部功能。
+
+server {
+    listen <PUBLIC_PORT> ssl http2;
+    listen [::]:<PUBLIC_PORT> ssl http2;
+    server_name <DOMAIN>;
+
+    ssl_certificate <CERT_FULLCHAIN>;
+    ssl_certificate_key <CERT_KEY>;
+    ssl_protocols TLSv1.2 TLSv1.3;
+
+    access_log /var/log/nginx/kvgh-audit-access.log;
+    error_log /var/log/nginx/kvgh-audit-error.log;
+
+    # 以 http:// 連到 HTTPS 連接埠時（nginx 回 497），導向同一連接埠的 https://
+    error_page 497 =301 https://$host:$server_port$request_uri;
+
+    client_max_body_size 10m;
+
+    location / {
+        proxy_pass http://127.0.0.1:<DOCKER_PORT>;
+        proxy_http_version 1.1;
+        proxy_set_header Host $http_host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        # LLM 稽核請求可能很久；與容器內 nginx 的 600 秒一致
+        proxy_read_timeout 600s;
+        proxy_send_timeout 600s;
+        proxy_buffering off;
+    }
+}

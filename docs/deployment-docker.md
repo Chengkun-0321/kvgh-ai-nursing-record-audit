@@ -120,6 +120,53 @@ docker compose up -d
 
 本 Compose 提供 HTTP 反向代理，沒有 TLS。若前方另有 HTTPS 終止代理，前端相對 API 路徑會沿用瀏覽器的 HTTPS 來源；目前 nginx 以 `$scheme` 傳送它收到的連線協定，不會自動信任外部傳入的協定標頭，須依受信任代理拓樸另外評估。
 
+## 網域與 HTTPS（主機已有 nginx 與網域憑證時）
+
+若部署主機已用系統 nginx 以網域憑證提供其他 HTTPS 服務，可再加一個 HTTPS 入口轉給本系統，不必在容器內處理憑證：
+
+```
+瀏覽器 https://<網域>:<PUBLIC_PORT>
+  → 路由器轉送到主機同號連接埠
+  → 主機 nginx（TLS 終止，/etc/nginx/conf.d/kvgh-audit-https.conf）
+  → http://127.0.0.1:<FRONTEND_PORT>（nginx 容器，只綁本機）
+  → frontend／backend 容器
+```
+
+1. 根目錄 `.env` 改為只綁本機，並換一個未被占用、外部也不需要連到的連接埠（`PUBLIC_PORT` 要留給主機 nginx）：
+
+   ```dotenv
+   FRONTEND_PORT=25301
+   FRONTEND_BIND_ADDRESS=127.0.0.1
+   ```
+
+   ```bash
+   docker compose up -d
+   ```
+
+   之後外部直接連 `http://<主機>:<PUBLIC_PORT>` 不再有回應，直到下一步完成；`docker compose ps` 的 PORTS 應顯示 `127.0.0.1:25301->8080/tcp`。不需重建映像。
+
+2. 由範本產生主機 nginx 設定，替換佔位字後複製到 `/etc/nginx/conf.d/`（需 sudo），先檢查語法再重新載入：
+
+   ```bash
+   sudo cp kvgh-audit-https.conf /etc/nginx/conf.d/kvgh-audit-https.conf
+   ```
+
+   ```bash
+   sudo nginx -t && sudo systemctl reload nginx
+   ```
+
+   範本為 [deploy/host-nginx/kvgh-audit-https.conf.example](../deploy/host-nginx/kvgh-audit-https.conf.example)。主機 nginx 通常同時服務其他系統：**`nginx -t` 未通過時不要 reload**；`reload` 不中斷既有連線，語法錯誤時舊設定會繼續運作。
+
+3. 驗證：
+
+   ```bash
+   curl -sI https://<網域>:<PUBLIC_PORT>/ | head -3
+   ```
+
+   瀏覽器開啟 `https://<網域>:<PUBLIC_PORT>`，首頁與病患頁可載入；`http://` 連到同一連接埠會被導向 `https://`。
+
+憑證到期由主機既有的憑證續期流程負責，本專案不處理。若憑證檔換了路徑，須同步修改此設定並 reload。復原方式：刪除 `/etc/nginx/conf.d/kvgh-audit-https.conf` 並 reload，再把 `.env` 改回 `FRONTEND_BIND_ADDRESS=0.0.0.0`、`FRONTEND_PORT=<PUBLIC_PORT>` 後 `docker compose up -d`。
+
 ## 從 Mac 搬移既有 SQLite 與憑證
 
 搬移資料前，Linux 應使用與 Mac 資料庫相容的專案版本。不要讓兩個後端同時操作同一份 SQLite；不要只複製正在寫入的 `app.db`，否則可能漏掉 WAL 內資料。
