@@ -27,7 +27,7 @@ DATE_WITHOUT_DATA_MESSAGE: Final = "此病人在該日沒有院方資料"
 class AuditContext:
     """一位病患在某個稽核日的資料快照（不可變）。
 
-    `business_date` 是規則要使用的日期；一次性規則會用 `for_date` 換成入院日後再傳給規則。
+    `business_date` 是規則要使用的日期；入院規則會用 `for_date` 換成入院日後再傳給規則。
     """
 
     patient_key: str

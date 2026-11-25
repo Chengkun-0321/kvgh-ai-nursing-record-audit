@@ -1,4 +1,4 @@
-"""病床總覽讀取稽核結果：狀態、進度、待處理發現與一次性規則的入院日歸日。
+"""病床總覽讀取稽核結果：狀態、進度、待處理發現與入院規則的入院日歸日。
 
 稽核結果直接寫入 `audit_runs`（不呼叫 LLM）；資料來源為虛構的 W98 病房（一床、兩天）。
 """
@@ -81,7 +81,7 @@ async def test_without_runs_bed_is_not_audited_with_progress(
 async def test_admission_day_rule_counts_toward_board_day(
     session: AsyncSession, audit_hospital_data_source: HospitalDataSource
 ) -> None:
-    # R03 是一次性規則，結果記在入院日；查詢當日的病床總覽時仍應計入
+    # R03 是入院規則，結果記在入院日；查詢當日的病床總覽時仍應計入
     await _add_run(session, "R03", ADMISSION_DAY, AuditRunStatus.COMPLETED, verdict=Verdict.PASS)
 
     board = await _board(session, audit_hospital_data_source)
@@ -238,10 +238,10 @@ async def test_default_board_date_is_latest_ended_day(
     assert board.business_date == date(2026, 1, 2)
 
 
-async def test_settled_one_time_rule_still_counts_on_board_and_is_not_runnable(
+async def test_settled_admission_rule_still_counts_on_board_and_is_rerunnable(
     session: AsyncSession, audit_hospital_data_source: HospitalDataSource
 ) -> None:
-    # 已 settled 的一次性規則：病床總覽仍算「已稽核」，但病患頁不可再執行
+    # 已完成的入院規則：病床總覽仍算「已稽核」；病患頁可單項重跑，但一鍵稽核不納入
     await _add_run(session, "R03", ADMISSION_DAY, AuditRunStatus.COMPLETED, verdict=Verdict.PASS)
 
     board = await _board(session, audit_hospital_data_source)
@@ -252,5 +252,5 @@ async def test_settled_one_time_rule_still_counts_on_board_and_is_not_runnable(
     (bed,) = board.beds
     assert bed.audited_rule_count == 1
     r03 = next(rule for rule in patient_day.rules if rule.rule_code == "R03")
-    assert r03.can_run is False
+    assert r03.can_run is True
     assert r03.include_in_run_all is False

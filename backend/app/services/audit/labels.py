@@ -12,7 +12,7 @@ AUDIT_RUN_STATUS_LABELS: Final[dict[AuditRunStatus, str]] = {
 }
 
 AUDIT_CYCLE_LABELS: Final[dict[AuditCycle, str]] = {
-    AuditCycle.ONCE_PER_ADMISSION: "一次性",
+    AuditCycle.ONCE_PER_ADMISSION: "入院時",
     AuditCycle.DAILY: "每日",
     AuditCycle.EVENT: "有事件時",
 }

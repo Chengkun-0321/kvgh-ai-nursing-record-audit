@@ -19,7 +19,7 @@
 | 性別       | `sex`                 | `M` / `F`                                                               |
 | 年齡       | `age_years`           |                                                                         |
 | 年齡層     | `age_group`           | `young`（< 45）/ `middle`（45–64）/ `elder`（≥ 65），僅用於選擇病床圖片 |
-| 入院日期   | `admission_date`      | 只有日期（病床總覽、住院天數用）；一次性稽核規則的稽核日                |
+| 入院日期   | `admission_date`      | 只有日期（病床總覽、住院天數用）；入院規則的稽核日                |
 | 入院時間   | `admitted_at`         | 含時刻的入院時間（院方「入院時間」）；`admitted_at_text` 為院方原文     |
 | 住院天數   | `length_of_stay_days` | 業務日期與入院日期相差的日數                                            |
 | 診斷       | `diagnosis`           |                                                                         |
@@ -57,13 +57,13 @@
 | 中文       | 英文識別字       | 說明                                                          |
 | ---------- | ---------------- | ------------------------------------------------------------- |
 | 稽核規則   | `audit_rule`     | 代碼 R01–R11。R01–R04、R06 已實作；R05、R07 預留（不呼叫 LLM）；R08–R11 候選。見 [audit-rules.md](conventions/audit-rules.md) |
-| 稽核週期 | `audit_cycle` | `once_per_admission`（一次性）／`daily`（每日）／`event`（事件；R06 依所選稽核日追蹤範圍內會診，ADR 0012） |
-| 稽核日 | `effective_business_date` | 結果寫入與查詢日期：一次性規則為入院日，缺入院日則為所選日期；其他規則為所選日期。所選日期須已結束 |
+| 稽核週期 | `audit_cycle` | `once_per_admission`（入院時；R01、R03 稱「入院規則」，ADR 0013）／`daily`（每日）／`event`（事件；R06 依所選稽核日追蹤範圍內會診，ADR 0012） |
+| 稽核日 | `effective_business_date` | 結果寫入與查詢日期：入院規則為入院日，缺入院日則為所選日期；其他規則為所選日期。所選日期須已結束 |
 | 已結束的稽核日 | `is_day_ended` | 稽核日早於今天（Asia/Taipei）。未結束的日期不可稽核，可稽核性為 `day_not_ended`（「當日尚未結束」），API 回 409 不寫入（ADR 0012；實作於 `services/audit/clock.py`） |
 | 期限到期日 | `deadline` | R06 每筆會診日加追蹤期限天數；不一定等於稽核日 |
 | 會診日 | `business_date`（會診紀錄） | R06 每筆會診的歸日，追蹤期限從此日起算 |
 | 追蹤期限 | `AUDIT_CONSULT_FOLLOWUP_DAYS` | R06 從會診日至會診日加此日曆天數，兩端均含；預設 1，待院方確認 |
-| 稽核執行   | `audit_run`      | 一次稽核執行，對應 `audit_runs` 一列；重跑新增一列，不覆蓋。一次性規則已完成後不新增（ADR 0012）           |
+| 稽核執行   | `audit_run`      | 一次稽核執行，對應 `audit_runs` 一列；重跑新增一列，不覆蓋。入院規則已完成後仍可單項重跑（ADR 0013）           |
 | 執行狀態   | `audit_run_status` | 一次執行的狀態，四個值：`COMPLETED`（已完成）、`NOT_APPLICABLE`（當日無此事件）、`DATA_UNAVAILABLE`（院方尚未提供資料）、`FAILED`（執行失敗） |
 | 可稽核性 | `availability` | 四個值：`available`、`not_applicable`、`data_unavailable`、`day_not_ended`；最後一項由服務層判斷 |
 | 寬限期中 | `IN_GRACE` | R06 逐筆會診尚未到期且未見對應紀錄的狀態，該筆判定 `PASS`；不是可稽核性 |

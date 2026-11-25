@@ -38,7 +38,7 @@ class AuditRun(IdMixin, CreatedAtMixin, Base):
 
     rule_code: Mapped[str] = mapped_column(String(_RULE_CODE_MAX_LENGTH))
     patient_key: Mapped[str] = mapped_column(String(_PATIENT_KEY_MAX_LENGTH))
-    # 一次性規則固定記在入院日；其他規則為畫面所選日期（見 service）
+    # 入院規則固定記在入院日；其他規則為畫面所選日期（見 service）
     business_date: Mapped[date] = mapped_column(Date)
     status: Mapped[AuditRunStatus] = mapped_column(
         Enum(

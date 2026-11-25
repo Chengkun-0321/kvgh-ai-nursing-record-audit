@@ -64,7 +64,7 @@ describe("resolveAuditDisplay", () => {
     expect(display.label).toBe("院方尚未提供資料");
   });
 
-  it("一次性規則已有完成結果時顯示判定，不看可稽核狀態", () => {
+  it("入院規則已有完成結果時顯示判定，不看可稽核狀態", () => {
     const run: AuditRun = {
       id: "run-1",
       rule_code: "R01",

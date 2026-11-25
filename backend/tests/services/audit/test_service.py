@@ -14,7 +14,6 @@ from app.core.exceptions import (
     LLMNotConfiguredError,
     LLMOutputError,
     NotFoundError,
-    RuleSettledError,
 )
 from app.crud import audit_run as audit_run_crud
 from app.models.audit import AuditRun
@@ -222,8 +221,9 @@ async def test_overview_shows_rules_dates_and_one_time_result_on_any_day(
     assert list(rules) == [f"R0{number}" for number in range(1, 8)]
     assert (overview.previous_date, overview.next_date) == (None, SELECTED_DAY)
     assert rules["R03"].effective_business_date == ADMISSION_DAY
-    # 一次性規則已完成（settled）：不可再執行，但結果仍顯示在總覽
-    assert rules["R03"].can_run is False
+    # 入院規則已完成：仍可單項重新稽核，但一鍵稽核不納入；結果顯示在總覽
+    assert rules["R03"].can_run is True
+    assert rules["R03"].include_in_run_all is False
     assert rules["R03"].latest_run is not None
     assert rules["R05"].availability.state == AvailabilityState.DATA_UNAVAILABLE
     assert rules["R05"].can_run is False
@@ -291,7 +291,7 @@ async def test_selected_today_is_not_auditable_and_run_writes_nothing(
     assert rules["R02"].availability.label == "當日尚未結束"
     assert rules["R02"].availability.reason == DAY_NOT_ENDED_MESSAGE
     assert rules["R02"].can_run is False
-    # 一次性規則的入院日已結束，但判斷依據是畫面所選日期，同樣不可稽核
+    # 入院規則的入院日已結束，但判斷依據是畫面所選日期，同樣不可稽核
     assert rules["R03"].effective_business_date == ADMISSION_DAY
     assert rules["R03"].can_run is False
 
@@ -347,7 +347,7 @@ async def test_default_date_falls_back_to_latest_when_no_day_has_ended(
     assert {rule.rule_code: rule for rule in overview.rules}["R02"].can_run is False
 
 
-async def test_settled_one_time_rule_cannot_run_again(
+async def test_settled_admission_rule_can_rerun_but_not_in_run_all(
     service: AuditService,
     session: AsyncSession,
     monkeypatch: pytest.MonkeyPatch,
@@ -358,17 +358,21 @@ async def test_settled_one_time_rule_cannot_run_again(
 
     overview = await service.get_day_overview(session, AUDIT_P3_KEY, SELECTED_DAY)
     rule = {item.rule_code: item for item in overview.rules}["R03"]
-    assert rule.can_run is False
+    assert rule.can_run is True
     assert rule.include_in_run_all is False
     assert rule.availability.state == AvailabilityState.AVAILABLE
     assert rule.latest_run is not None
 
-    with pytest.raises(RuleSettledError) as error:
-        await service.run_rule(session, AUDIT_P3_KEY, SELECTED_DAY, "R03")
+    # 重新稽核新增一列，舊結果保留；總覽改顯示最新一列
+    second = await service.run_rule(session, AUDIT_P3_KEY, SELECTED_DAY, "R03")
 
-    assert error.value.status_code == 409
-    assert await _run_count(session) == 1
-    assert len(requests) == 1
+    assert second.status == AuditRunStatus.COMPLETED
+    assert await _run_count(session) == 2
+    assert len(requests) == 2
+    overview = await service.get_day_overview(session, AUDIT_P3_KEY, SELECTED_DAY)
+    latest = {item.rule_code: item for item in overview.rules}["R03"].latest_run
+    assert latest is not None
+    assert latest.id == second.id
 
 
 async def test_validation_failure_needs_review_stays_runnable(
@@ -376,7 +380,7 @@ async def test_validation_failure_needs_review_stays_runnable(
     session: AsyncSession,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """模型輸出未通過驗證（NEEDS_REVIEW 且有原因）不算 settled，可以重跑。"""
+    """模型輸出未通過驗證（NEEDS_REVIEW 且有原因）不算完成，一鍵稽核仍納入。"""
     await create_config(session)
     _fake_llm(
         monkeypatch,
@@ -391,7 +395,9 @@ async def test_validation_failure_needs_review_stays_runnable(
     assert first.verdict == Verdict.NEEDS_REVIEW
 
     overview = await service.get_day_overview(session, AUDIT_P3_KEY, SELECTED_DAY)
-    assert {item.rule_code: item for item in overview.rules}["R03"].can_run is True
+    rule = {item.rule_code: item for item in overview.rules}["R03"]
+    assert rule.can_run is True
+    assert rule.include_in_run_all is True
 
     _fake_llm(monkeypatch, {"verdict": "PASS", "summary": "完整", "findings": []})
     second = await service.run_rule(session, AUDIT_P3_KEY, SELECTED_DAY, "R03")

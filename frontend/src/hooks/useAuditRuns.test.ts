@@ -97,7 +97,7 @@ beforeEach(() => {
   getPatientAuditDayMock.mockRejectedValue(new Error("未設定"));
 });
 
-it("一次性規則執行成功後重新讀取總覽，can_run 變為 false 且不再可一鍵稽核", async () => {
+it("入院規則執行成功後重新讀取總覽，仍可重新稽核但不再納入一鍵稽核", async () => {
   const harness = await renderHookHarness(
     useAuditRuns,
     makeDay("2026-11-16", [makeRule("R01", { can_run: true })]),
@@ -106,7 +106,7 @@ it("一次性規則執行成功後重新讀取總覽，can_run 變為 false 且�
   getPatientAuditDayMock.mockResolvedValue(
     makeDay("2026-11-16", [
       makeRule("R01", {
-        can_run: false,
+        can_run: true,
         include_in_run_all: false,
         latest_run: makeRun("R01", "2026-11-16"),
       }),
@@ -121,7 +121,7 @@ it("一次性規則執行成功後重新讀取總覽，can_run 變為 false 且�
     "2026-11-16",
     expect.any(AbortSignal),
   );
-  expect(harness.current.rules[0]?.can_run).toBe(false);
+  expect(harness.current.rules[0]?.can_run).toBe(true);
   expect(harness.current.canRunAll).toBe(false);
   expect(harness.current.rules[0]?.displayedRun?.summary).toBe("R01 結果");
 });

@@ -81,7 +81,7 @@ class AuditRuleStatusRead(BaseModel):
     effective_business_date: date
     availability: AvailabilityRead
     can_run: bool
-    # 一鍵稽核是否包含此項：可執行，且一次性規則尚未有已完成的結果
+    # 一鍵稽核是否包含此項：可執行，且入院規則尚未有已完成的結果
     include_in_run_all: bool
     latest_run: AuditRunRead | None
 

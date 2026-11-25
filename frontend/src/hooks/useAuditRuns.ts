@@ -114,8 +114,8 @@ async function fetchRunPatch(
 }
 
 /**
- * 執行成功後重新讀取總覽。一次性規則執行完成後，後端的 can_run 會變成 false，
- * 不重讀的話畫面會留著稽核按鈕，再按就收到 409。讀取失敗時保留目前畫面。
+ * 執行成功後重新讀取總覽，取得後端最新的 can_run 與 include_in_run_all
+ * （例如入院規則完成後不再納入一鍵稽核）。讀取失敗時保留目前畫面。
  */
 function createRefreshOverview(
   day: PatientAuditDay,

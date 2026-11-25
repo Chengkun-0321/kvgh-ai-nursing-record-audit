@@ -146,7 +146,7 @@ async def _latest_runs(session: AsyncSession, beds: list[BedSnapshot]) -> dict[R
 
 
 def _candidate_days(beds: list[BedSnapshot]) -> list[date]:
-    """規則可能使用的稽核日（一次性規則為入院日，其餘為所選日期）。"""
+    """規則可能使用的稽核日（入院規則為入院日，其餘為所選日期）。"""
     return sorted(
         {effective_business_date(rule, bed.ctx) for bed in beds for rule in RULE_REGISTRY.values()}
     )

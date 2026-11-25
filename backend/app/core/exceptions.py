@@ -52,10 +52,6 @@ class DayNotEndedError(ConflictError):
     """所選稽核日尚未結束（今天或之後），不可稽核。"""
 
 
-class RuleSettledError(ConflictError):
-    """一次性規則已有完成的稽核結果，不可再執行。"""
-
-
 class LLMOutputError(AppError):
     """模型輸出經重試後仍不符合要求的格式；稽核規則會轉為 NEEDS_REVIEW，不視為 PASS。"""
 
