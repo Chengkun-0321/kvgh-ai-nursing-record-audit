@@ -120,6 +120,7 @@
 | 輸入摘要         | `input_digest`       | 渲染後 prompt 的 sha256；只存摘要，不存全文                          |
 | 格式重試         | `LLM_MAX_RETRIES`    | 輸出不符合 `output_schema` 時附上錯誤重試的次數（不含第一次呼叫）     |
 | 網路重試         | `LLM_STRUCTURED_NUM_RETRIES` | 網路錯誤、429、逾時的重試次數（LiteLLM `num_retries`），與格式重試分開 |
+| 輸出上限         | `LLM_MAX_OUTPUT_TOKENS` | 稽核每次呼叫模型的輸出 token 上限；達上限被截斷時不重試，該項判為需人工確認（NEEDS_REVIEW） |
 
 ## 院方原始資料（見 [ADR 0010](adr/0010-hospital-raw-data-viewer.md)）
 

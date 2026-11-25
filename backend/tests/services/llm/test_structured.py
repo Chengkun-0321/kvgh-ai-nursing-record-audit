@@ -21,18 +21,21 @@ REQUEST = LLMRequest(
 VALID_OUTPUT = {"verdict": "PASS", "summary": "完整", "findings": []}
 
 
-def _response(content: str | None) -> SimpleNamespace:
+def _response(content: str | None, finish_reason: str = "stop") -> SimpleNamespace:
     message = SimpleNamespace(content=content)
     usage = SimpleNamespace(prompt_tokens=11, completion_tokens=7)
-    return SimpleNamespace(choices=[SimpleNamespace(message=message)], usage=usage)
+    choice = SimpleNamespace(message=message, finish_reason=finish_reason)
+    return SimpleNamespace(choices=[choice], usage=usage)
 
 
-def _fake_acompletion(responses: list[str | None], calls: list[dict[str, Any]]) -> Any:
+def _fake_acompletion(
+    responses: list[str | None], calls: list[dict[str, Any]], finish_reason: str = "stop"
+) -> Any:
     queue = list(responses)
 
     async def fake(**kwargs: Any) -> SimpleNamespace:
         calls.append(kwargs)
-        return _response(queue.pop(0))
+        return _response(queue.pop(0), finish_reason)
 
     return fake
 
@@ -113,6 +116,42 @@ async def test_retries_are_exhausted_then_output_error_is_raised(
 
     # 第一次呼叫加上 LLM_MAX_RETRIES（預設 2）次重試
     assert len(calls) == 3
+
+
+async def test_output_token_limit_is_sent_on_every_call(
+    session: AsyncSession, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    await create_config(session)
+    calls: list[dict[str, Any]] = []
+    monkeypatch.setattr(
+        structured.litellm,
+        "acompletion",
+        _fake_acompletion(["not json", json.dumps(VALID_OUTPUT)], calls),
+    )
+
+    await structured.complete_structured(session, REQUEST, RuleOutput)
+
+    limit = structured.get_settings().LLM_MAX_OUTPUT_TOKENS
+    assert [call["max_tokens"] for call in calls] == [limit, limit]
+
+
+async def test_truncated_output_fails_at_once_without_format_retry(
+    session: AsyncSession, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    await create_config(session)
+    calls: list[dict[str, Any]] = []
+    # 即使被截斷的內容剛好是合法 JSON，也不採用：模型並未自行結束
+    monkeypatch.setattr(
+        structured.litellm,
+        "acompletion",
+        _fake_acompletion([json.dumps(VALID_OUTPUT)] * 3, calls, finish_reason="length"),
+    )
+
+    with pytest.raises(LLMOutputError, match="長度上限"):
+        await structured.complete_structured(session, REQUEST, RuleOutput)
+
+    # 截斷時重試多半再被截斷，只呼叫一次
+    assert len(calls) == 1
 
 
 async def test_missing_active_config_raises_not_configured(

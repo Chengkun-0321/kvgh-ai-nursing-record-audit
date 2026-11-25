@@ -87,11 +87,11 @@ async def complete_structured[T: BaseModel](
 
 1. 讀取使用中的模型設定（`crud/llm_config.get_active`）與共用 system prompt 快照（`read_call_snapshot`）。讀完即結束交易，呼叫期間不占 DB 連線。
 2. ChatGPT 訂閱：呼叫前確認 token 可用（`ensure_access_token`）。
-3. 組呼叫參數（`call_support.prepare_call`）：`timeout` 取自該設定的逾時秒數、`drop_params=True`、`temperature=0`、`num_retries` 取 `LLM_STRUCTURED_NUM_RETRIES`。
+3. 組呼叫參數（`call_support.prepare_call`）：`timeout` 取自該設定的逾時秒數、`drop_params=True`、`temperature=0`、`num_retries` 取 `LLM_STRUCTURED_NUM_RETRIES`、`max_tokens` 取 `LLM_MAX_OUTPUT_TOKENS`（預設 4096；Ollama 由 LiteLLM 轉成 `num_predict`，ChatGPT 訂閱不接受此參數而被略過）。
 4. 渲染規則 prompt（`prompt_loader.render_prompt`，`StrictUndefined`，缺變數直接失敗）。`input_digest` 為渲染後 prompt 的 sha256，不存全文。
 5. 訊息順序：共用 system prompt（有設定時）→ 規則 prompt。
 6. 非串流呼叫 `litellm.acompletion`，帶 `response_format={"type": "json_object"}`，受 `LLM_MAX_CONCURRENCY` 限制。
-7. 以 `output_schema.model_validate_json` 驗證（先去除外層的 ```` ```json ```` 圍欄）。不符時把錯誤位置與錯誤類型（不含輸入值）附在對話中重試，最多 `LLM_MAX_RETRIES` 次。
+7. 以 `output_schema.model_validate_json` 驗證（先去除外層的 ```` ```json ```` 圍欄）。不符時把錯誤位置與錯誤類型（不含輸入值）附在對話中重試，最多 `LLM_MAX_RETRIES` 次。回應的 `finish_reason` 為 `length`（達輸出上限被截斷）時不做格式重試，直接以 `LLMOutputError`「模型輸出超過長度上限而被截斷…」結束：同一模型、同一輸入重試多半再被截斷，只會拖到逾時（2026-11-25 Ollama 模型單次輸出逾 4,800 tokens 未停的事件）。log 只記截斷時的輸出 token 數，不記內容。
 8. 仍不符 → 拋出 `LLMOutputError`。
 9. 記錄 model、prompt_version、system_prompt_version、token 用量、成本（`litellm.completion_cost`，查不到時為 `None`，不影響結果）、耗時、attempts。
 

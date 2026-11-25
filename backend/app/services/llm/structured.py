@@ -35,6 +35,9 @@ logger = logging.getLogger(__name__)
 
 NOT_CONFIGURED_MESSAGE: Final = "尚未設定使用中的模型，請先至 LLM 設定頁新增並啟用一組模型"
 OUTPUT_INVALID_MESSAGE: Final = "模型輸出未符合要求的格式，無法判定，請人工確認或更換模型"
+OUTPUT_TRUNCATED_MESSAGE: Final = "模型輸出超過長度上限而被截斷，無法判定，請人工確認或更換模型"
+# 回應因達到輸出上限而結束時的 finish_reason（LiteLLM 統一為 OpenAI 的值）
+_FINISH_REASON_LENGTH: Final = "length"
 # 回饋給模型的錯誤說明最多列幾項，避免重試訊息過長
 _MAX_ERROR_ITEMS: Final = 5
 _CORRECTION_TEMPLATE: Final = (
@@ -120,6 +123,8 @@ async def complete_structured[T: BaseModel](
     call = prepare_call(snapshot.config, snapshot.system_prompt)
     call.kwargs["temperature"] = 0
     call.kwargs["num_retries"] = get_settings().LLM_STRUCTURED_NUM_RETRIES
+    # Ollama 由 LiteLLM 轉成 num_predict；不支援的服務因 drop_params 而略過
+    call.kwargs["max_tokens"] = get_settings().LLM_MAX_OUTPUT_TOKENS
     prompt = _preprocess(
         prompt_loader.render_prompt(request.prompt_name, request.prompt_version, request.variables)
     )
@@ -163,6 +168,16 @@ async def _run_attempts[T: BaseModel](
     for attempt in range(1, max_attempts + 1):
         response = await _call_model(call, snapshot_prompt, history)
         usage.add(response)
+        if _is_truncated(response):
+            # 同一模型、同一輸入重試多半再被截斷，只會多耗時間；直接結束，不做格式重試
+            logger.warning(
+                "結構化輸出達上限被截斷：attempt=%s/%s completion_tokens=%s max_tokens=%s",
+                attempt,
+                max_attempts,
+                getattr(getattr(response, "usage", None), "completion_tokens", None),
+                call.kwargs.get("max_tokens"),
+            )
+            raise LLMOutputError(OUTPUT_TRUNCATED_MESSAGE)
         text = _message_text(response)
         try:
             return output_schema.model_validate_json(_strip_code_fence(text)), usage
@@ -206,6 +221,11 @@ def _message_text(response: Any) -> str:
     """取出第一個回應的文字；沒有內容時為空字串（之後會被判為格式不符）。"""
     content = response.choices[0].message.content
     return content if isinstance(content, str) else ""
+
+
+def _is_truncated(response: Any) -> bool:
+    """回應是否因達到輸出 token 上限而結束（而非模型自行結束）。"""
+    return getattr(response.choices[0], "finish_reason", None) == _FINISH_REASON_LENGTH
 
 
 def _strip_code_fence(text: str) -> str:

@@ -34,6 +34,9 @@ class Settings(BaseSettings):
     LLM_MAX_RETRIES: int = 2
     # 結構化輸出遇到網路錯誤、429、逾時的重試次數（LiteLLM 指數退避），與格式重試分開計算
     LLM_STRUCTURED_NUM_RETRIES: int = 2
+    # 結構化輸出（稽核）每次呼叫的輸出 token 上限；防止模型停不下來而卡到逾時。
+    # 正常稽核回應約 500 tokens。ChatGPT 訂閱的 API 不接受此參數，由 LiteLLM 略過
+    LLM_MAX_OUTPUT_TOKENS: int = Field(default=4096, gt=0)
     # 同時進行中的結構化 LLM 呼叫數（一鍵稽核時多張卡片同時送出）
     LLM_MAX_CONCURRENCY: int = 3
 
