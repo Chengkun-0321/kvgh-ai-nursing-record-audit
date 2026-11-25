@@ -11,6 +11,7 @@ import {
   NAV_DISABLED_HINT,
   NAV_ITEMS,
   type NavItemConfig,
+  navItemHref,
 } from "./navItems";
 import { PendingBadge } from "./PendingBadge";
 
@@ -20,6 +21,8 @@ type MainNavTabsProps = {
 
 type NavTabProps = {
   item: NavItemConfig;
+  /** 依目前頁面算出的連結；`null` 表示尚未推出 */
+  href: string | null;
   isActive: boolean;
   badgeCount: number;
 };
@@ -30,7 +33,7 @@ const INDICATOR_LAYOUT_ID = "main-nav-indicator";
 const TAB_CLASS =
   "relative flex min-h-11 items-center gap-2 rounded-full px-4 text-body whitespace-nowrap";
 
-function NavTab({ item, isActive, badgeCount }: NavTabProps) {
+function NavTab({ item, href, isActive, badgeCount }: NavTabProps) {
   const Icon = item.icon;
   const content = (
     <>
@@ -53,7 +56,7 @@ function NavTab({ item, isActive, badgeCount }: NavTabProps) {
     </>
   );
 
-  if (item.href === null) {
+  if (href === null) {
     return (
       <span
         aria-disabled="true"
@@ -66,7 +69,7 @@ function NavTab({ item, isActive, badgeCount }: NavTabProps) {
   }
   return (
     <Link
-      href={item.href}
+      href={href}
       aria-current={isActive ? "page" : undefined}
       className={cn(
         TAB_CLASS,
@@ -93,6 +96,7 @@ export function MainNavTabs({ pendingBedCount }: MainNavTabsProps) {
           <li key={item.label}>
             <NavTab
               item={item}
+              href={navItemHref(item, pathname)}
               isActive={isNavItemActive(item, pathname)}
               badgeCount={item.hasPendingBadge ? pendingBedCount : 0}
             />

@@ -10,6 +10,7 @@ import {
   NAV_DISABLED_HINT,
   NAV_ITEMS,
   type NavItemConfig,
+  navItemHref,
 } from "./navItems";
 import { PendingBadge } from "./PendingBadge";
 
@@ -19,6 +20,8 @@ type MobileTabBarProps = {
 
 type TabItemProps = {
   item: NavItemConfig;
+  /** 依目前頁面算出的連結；`null` 表示尚未推出 */
+  href: string | null;
   isActive: boolean;
   badgeCount: number;
 };
@@ -26,7 +29,7 @@ type TabItemProps = {
 const TAB_CLASS =
   "relative flex min-h-12 flex-col items-center justify-center gap-0.5 text-tab whitespace-nowrap";
 
-function TabItem({ item, isActive, badgeCount }: TabItemProps) {
+function TabItem({ item, href, isActive, badgeCount }: TabItemProps) {
   const Icon = item.icon;
   const content = (
     <>
@@ -43,7 +46,7 @@ function TabItem({ item, isActive, badgeCount }: TabItemProps) {
     </>
   );
 
-  if (item.href === null) {
+  if (href === null) {
     return (
       <span
         aria-disabled="true"
@@ -56,7 +59,7 @@ function TabItem({ item, isActive, badgeCount }: TabItemProps) {
   }
   return (
     <Link
-      href={item.href}
+      href={href}
       aria-current={isActive ? "page" : undefined}
       className={cn(
         TAB_CLASS,
@@ -83,6 +86,7 @@ export function MobileTabBar({ pendingBedCount }: MobileTabBarProps) {
           <li key={item.label}>
             <TabItem
               item={item}
+              href={navItemHref(item, pathname)}
               isActive={isNavItemActive(item, pathname)}
               badgeCount={item.hasPendingBadge ? pendingBedCount : 0}
             />
