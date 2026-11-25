@@ -8,7 +8,7 @@ from app.core.enums import AgeGroup, BedBoardStatus, Sex, Verdict
 
 
 class PatientSummaryRead(BaseModel):
-    """病床上的病患摘要；院方資料沒有的欄位為 null（目前姓名、性別、年齡、診斷皆無）。"""
+    """病床上的病患摘要；院方資料沒有的欄位為 null（目前姓名、性別、年齡皆無）。"""
 
     patient_key: str
     name: str | None
@@ -17,7 +17,6 @@ class PatientSummaryRead(BaseModel):
     age_group: AgeGroup | None
     admission_date: date | None
     length_of_stay_days: int | None
-    diagnosis: str | None
 
 
 class AuditFindingSummaryRead(BaseModel):

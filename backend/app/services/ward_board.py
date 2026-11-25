@@ -127,7 +127,6 @@ def _bed_snapshot(
         age_group=None,
         admission_date=admission_date,
         length_of_stay_days=_length_of_stay_days(admission_date, target),
-        diagnosis=None,
     )
     return BedSnapshot(bed_code=appearance.bed_code, patient=patient, ctx=ctx)
 

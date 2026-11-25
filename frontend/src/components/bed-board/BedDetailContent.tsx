@@ -1,12 +1,6 @@
-"use client";
-
 import Image from "next/image";
-import { type ReactNode, useId, useState } from "react";
+import type { ReactNode } from "react";
 
-import {
-  type SegmentOption,
-  SegmentedControl,
-} from "@/components/ui/SegmentedControl";
 import { VerdictIcon } from "@/components/VerdictIcon";
 import { getPatientPortraitSrc } from "@/lib/bedSprites";
 import { cn } from "@/lib/utils";
@@ -16,16 +10,6 @@ import type { BedStatus } from "@/lib/api/wards";
 import { FindingList } from "./FindingList";
 import { PatientFacts } from "./PatientFacts";
 
-type DetailTab = "findings" | "records" | "vitals" | "more";
-
-// TODO(待決): 護理紀錄、生命徵象、更多資訊的內容待病患頁面討論後提供，目前停用
-const DETAIL_TABS: readonly SegmentOption<DetailTab>[] = [
-  { value: "findings", label: "異常摘要" },
-  { value: "records", label: "護理紀錄", disabledHint: "即將推出" },
-  { value: "vitals", label: "生命徵象", disabledHint: "即將推出" },
-  { value: "more", label: "更多資訊", disabledHint: "即將推出" },
-];
-
 type BedDetailContentProps = {
   bed: BedStatus;
   headingId: string;
@@ -33,14 +17,12 @@ type BedDetailContentProps = {
   headerAction?: ReactNode;
 };
 
-/** 病床詳情：狀態、病床圖、病患資料與稽核結果；桌機大卡與手機 sheet 共用（進入病患頁面按鈕由外層放置）。 */
+/** 病床詳情：狀態、病床圖、病患資料與異常摘要；桌機大卡與手機 sheet 共用（進入病患頁面按鈕由外層放置）。 */
 export function BedDetailContent({
   bed,
   headingId,
   headerAction,
 }: BedDetailContentProps) {
-  const [activeTab, setActiveTab] = useState<DetailTab>("findings");
-  const panelId = useId();
   const verdict = bed.status;
   const style = VERDICT_STYLES[verdict];
   const portraitSrc = getPatientPortraitSrc(bed.patient);
@@ -90,20 +72,12 @@ export function BedDetailContent({
 
       <PatientFacts patient={bed.patient} />
 
-      <SegmentedControl
-        options={DETAIL_TABS}
-        value={activeTab}
-        onChange={setActiveTab}
-        ariaLabel="病床詳情分類"
-        panelId={panelId}
+      {/* 只顯示異常摘要；護理紀錄、生命徵象等其他內容待決定後再加入 */}
+      <FindingList
+        findings={bed.pending_findings}
+        emptyText={bed.empty_findings_text}
+        emptyStatus={bed.status}
       />
-      <div id={panelId} role="tabpanel">
-        <FindingList
-          findings={bed.pending_findings}
-          emptyText={bed.empty_findings_text}
-          emptyStatus={bed.status}
-        />
-      </div>
     </div>
   );
 }

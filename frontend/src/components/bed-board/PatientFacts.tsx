@@ -6,7 +6,7 @@ type PatientFactsProps = {
 };
 
 const SEX_LABELS = { M: "男", F: "女" } as const;
-// 院方資料沒有的欄位（目前姓名、性別、年齡、診斷皆無）
+// 沒有入院日時顯示的文字
 const MISSING = "—";
 
 function describeAdmission(patient: PatientSummary): string {
@@ -20,7 +20,7 @@ function describeAdmission(patient: PatientSummary): string {
   return `${formatDate(patient.admission_date)}${stay}`;
 }
 
-/** 病患基本資料：姓名、性別、年齡、入院日與住院天數、診斷；數值由後端算好，缺的欄位顯示「—」。 */
+/** 病患基本資料：姓名、性別、年齡、入院日與住院天數；數值由後端算好，院方沒提供的姓名、性別、年齡不顯示。 */
 export function PatientFacts({ patient }: PatientFactsProps) {
   const sexAndAge = [
     patient.sex ? SEX_LABELS[patient.sex] : null,
@@ -42,8 +42,6 @@ export function PatientFacts({ patient }: PatientFactsProps) {
       <dl className="mt-3 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 text-body first:mt-0">
         <dt className="text-ink-secondary">入院日</dt>
         <dd className="tabular-nums">{describeAdmission(patient)}</dd>
-        <dt className="text-ink-secondary">診斷</dt>
-        <dd>{patient.diagnosis ?? MISSING}</dd>
       </dl>
     </div>
   );

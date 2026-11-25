@@ -49,7 +49,7 @@ frontend/
 └── src/
     ├── app/              # 路由；登入後頁面放 (workspace)/，共用工作區外框
     ├── components/
-    │   ├── ui/           # 通用元件，無業務邏輯（SegmentedControl、icons…）
+    │   ├── ui/           # 通用元件，無業務邏輯（TextField、icons…）
     │   ├── app-shell/    # 工作區外框：桌機頂部導覽、手機頂列與底部分頁列
     │   ├── settings/     # 設定頁共用：左側設定分頁導覽
     │   ├── ward-scene/   # 病房 3D 場景（R3F）、DOM 病床按鈕層、地圖控制與視窗

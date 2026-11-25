@@ -1121,7 +1121,7 @@ export interface components {
         };
         /**
          * PatientSummaryRead
-         * @description 病床上的病患摘要；院方資料沒有的欄位為 null（目前姓名、性別、年齡、診斷皆無）。
+         * @description 病床上的病患摘要；院方資料沒有的欄位為 null（目前姓名、性別、年齡皆無）。
          */
         PatientSummaryRead: {
             /** Patient Key */
@@ -1136,8 +1136,6 @@ export interface components {
             admission_date: string | null;
             /** Length Of Stay Days */
             length_of_stay_days: number | null;
-            /** Diagnosis */
-            diagnosis: string | null;
         };
         /**
          * PatientTimelineRead
