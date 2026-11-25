@@ -45,6 +45,7 @@ class R03AdmissionCompleteness:
 
     code: ClassVar[str] = "R03"
     name: ClassVar[str] = "入院護理評估完整性"
+    short_name: ClassVar[str] = "入院評估"
     description: ClassVar[str] = (
         "入院護理評估的工作清單各項與住院經過是否都已填寫，列出未完成的項目。"
     )

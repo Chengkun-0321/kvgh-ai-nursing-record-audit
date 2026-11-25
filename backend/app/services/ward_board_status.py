@@ -5,18 +5,24 @@
 同一位病患在病患頁看到的結果與這裡使用的是同一組執行紀錄（同一套稽核日與查詢條件）。
 """
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import date
 from typing import Final
 
-from app.core.enums import AuditRunStatus, BedBoardStatus, Verdict
+from app.core.enums import AuditRunStatus, AvailabilityState, BedBoardStatus, RuleCellState, Verdict
 from app.models.audit import AuditRun
-from app.schemas.ward_board import AuditFindingSummaryRead, BedStatusRead, PatientSummaryRead
+from app.schemas.ward_board import (
+    AuditFindingSummaryRead,
+    BedStatusRead,
+    PatientSummaryRead,
+    RuleCellRead,
+)
 from app.services.audit.context import AuditContext
-from app.services.audit.labels import VERDICT_LABELS
+from app.services.audit.labels import AUDIT_RUN_STATUS_LABELS, AVAILABILITY_LABELS, VERDICT_LABELS
 from app.services.audit.registry import RULE_REGISTRY
 from app.services.audit.rules.base import AuditRule
+from app.services.audit.running import RunningKey
 from app.services.audit.service import RuleDay, rule_day_on
 from app.services.audit.severity import VERDICT_SEVERITY, most_severe
 from app.services.audit.views import finding_verdict_label, run_finding_labels
@@ -35,6 +41,12 @@ STATUS_LABELS: Final[dict[BedBoardStatus, str]] = {
 }
 # 摘要文字中依嚴重度列出的判定
 _SUMMARY_VERDICTS: Final = (Verdict.ERROR, Verdict.WARNING, Verdict.NEEDS_REVIEW)
+# 尚無執行紀錄且當日不可稽核時，格子狀態對應可用性（AVAILABLE 不會用到）
+_AVAILABILITY_CELL_STATES: Final[dict[AvailabilityState, RuleCellState]] = {
+    AvailabilityState.NOT_APPLICABLE: RuleCellState.NOT_APPLICABLE,
+    AvailabilityState.DATA_UNAVAILABLE: RuleCellState.DATA_UNAVAILABLE,
+    AvailabilityState.DAY_NOT_ENDED: RuleCellState.DAY_NOT_ENDED,
+}
 # 待處理病床：已稽核且最嚴重判定不是 PASS
 _PENDING_STATUSES: Final = frozenset(
     {BedBoardStatus.ERROR, BedBoardStatus.WARNING, BedBoardStatus.NEEDS_REVIEW}
@@ -56,11 +68,12 @@ class BedSnapshot:
 
 @dataclass(frozen=True)
 class _RuleOutcome:
-    """一項規則在某床的結果：稽核日、可否執行，以及最新一次「已完成」的執行紀錄。"""
+    """保留最新執行供格子顯示，已完成結果則供既有床位狀態與進度使用。"""
 
     rule: AuditRule
     rule_day: RuleDay
     completed_run: AuditRun | None
+    latest_run: AuditRun | None
 
     @property
     def is_audited(self) -> bool:
@@ -73,9 +86,12 @@ def run_key(run: AuditRun) -> RunKey:
 
 
 def build_bed_status(
-    bed: BedSnapshot, latest: Mapping[RunKey, AuditRun], today: date
+    bed: BedSnapshot,
+    latest: Mapping[RunKey, AuditRun],
+    today: date,
+    is_running: Callable[[RunningKey], bool],
 ) -> BedStatusRead:
-    """組出一張病床的狀態；`latest` 依查詢鍵索引，`today` 與病患頁相同。"""
+    """組出床位與格子狀態；日期、最新紀錄與執行中查詢皆由呼叫端注入。"""
     outcomes = [_outcome(rule, bed.ctx, latest, today) for rule in RULE_REGISTRY.values()]
     completed = [o.completed_run for o in outcomes if o.completed_run is not None]
     status = _status_of(completed)
@@ -94,6 +110,15 @@ def build_bed_status(
         audited_rule_count=audited,
         auditable_rule_count=auditable,
         audit_progress_text=_progress_text(audited, auditable),
+        rule_cells=[
+            _rule_cell(
+                outcome,
+                is_running(
+                    RunningKey(bed.patient_key, outcome.rule.code, outcome.rule_day.business_date)
+                ),
+            )
+            for outcome in outcomes
+        ],
     )
 
 
@@ -104,7 +129,53 @@ def _outcome(
     run = latest.get((ctx.patient_key, rule.code, rule_day.business_date))
     # 最新一次為 FAILED、NOT_APPLICABLE 或 DATA_UNAVAILABLE 都不算已完成
     completed = run if run is not None and run.status == AuditRunStatus.COMPLETED else None
-    return _RuleOutcome(rule=rule, rule_day=rule_day, completed_run=completed)
+    return _RuleOutcome(rule=rule, rule_day=rule_day, completed_run=completed, latest_run=run)
+
+
+def _rule_cell(outcome: _RuleOutcome, is_running: bool) -> RuleCellRead:
+    """依執行中、最新結果、可用性順序顯示；已完成結果不受當日可用性影響。"""
+    cell = RuleCellRead(
+        rule_code=outcome.rule.code,
+        state=RuleCellState.NOT_AUDITED,
+        label=NOT_AUDITED_LABEL,
+        verdict=None,
+        finding_count=0,
+    )
+    if is_running:
+        return cell.model_copy(update={"state": RuleCellState.RUNNING, "label": "稽核中"})
+    run = outcome.latest_run
+    if run is not None:
+        return _run_cell(cell, run)
+    availability = outcome.rule_day.availability.state
+    if availability != AvailabilityState.AVAILABLE:
+        return cell.model_copy(
+            update={
+                "state": _AVAILABILITY_CELL_STATES[availability],
+                "label": AVAILABILITY_LABELS[availability],
+            }
+        )
+    return cell
+
+
+def _run_cell(cell: RuleCellRead, run: AuditRun) -> RuleCellRead:
+    """最新執行的格子只在已完成時帶判定與發現數，其餘使用執行狀態標籤。"""
+    if run.status == AuditRunStatus.COMPLETED:
+        if run.verdict is None:
+            return cell
+        return cell.model_copy(
+            update={
+                "state": RuleCellState(run.verdict.value),
+                "label": VERDICT_LABELS[run.verdict],
+                "verdict": run.verdict,
+                "finding_count": sum(finding.verdict != Verdict.PASS for finding in run.findings),
+            }
+        )
+    return cell.model_copy(
+        update={
+            "state": RuleCellState(run.status.value),
+            "label": AUDIT_RUN_STATUS_LABELS[run.status],
+        }
+    )
 
 
 def _status_of(runs: list[AuditRun]) -> BedBoardStatus:

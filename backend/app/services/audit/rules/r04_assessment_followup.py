@@ -40,6 +40,7 @@ class R04AssessmentFollowup:
 
     code: ClassVar[str] = "R04"
     name: ClassVar[str] = "身評異常追蹤"
+    short_name: ClassVar[str] = "異常追蹤"
     description: ClassVar[str] = "當日每日身體評估的異常項目，在護理紀錄中是否有描述、處置或追蹤。"
     cycle: ClassVar[AuditCycle] = AuditCycle.DAILY
     prompt_name: ClassVar[str] = "r04_assessment_followup"

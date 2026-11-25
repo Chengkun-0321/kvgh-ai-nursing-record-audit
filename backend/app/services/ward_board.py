@@ -16,12 +16,14 @@ from app.models.audit import AuditRun
 from app.schemas.ward_board import (
     BedStatusRead,
     PatientSummaryRead,
+    RuleColumnRead,
     StatusCountRead,
     WardBedBoardRead,
 )
 from app.services.audit.clock import TodayProvider, default_business_date
 from app.services.audit.context import context_from_history
 from app.services.audit.registry import RULE_REGISTRY
+from app.services.audit.running import RUNNING_AUDITS
 from app.services.audit.service import effective_business_date
 from app.services.hospital_data.events import admitted_at_text
 from app.services.hospital_data.index import PatientHistory, list_ward_dates, list_ward_histories
@@ -61,7 +63,10 @@ async def get_ward_bed_board(
     )
     latest = await _latest_runs(session, snapshot.beds)
     beds = sorted(
-        (build_bed_status(bed, latest, today_date) for bed in snapshot.beds),
+        (
+            build_bed_status(bed, latest, today_date, RUNNING_AUDITS.is_running)
+            for bed in snapshot.beds
+        ),
         key=lambda bed: bed.bed_code,
     )
     ward_code = query.ward_code
@@ -72,6 +77,10 @@ async def get_ward_bed_board(
         bed_count=len(beds),
         status_counts=_status_counts(beds),
         beds=beds,
+        rules=[
+            RuleColumnRead(rule_code=rule.code, name=rule.name, short_name=rule.short_name)
+            for rule in RULE_REGISTRY.values()
+        ],
     )
 
 

@@ -587,6 +587,8 @@ export interface components {
             auditable_rule_count: number;
             /** Audit Progress Text */
             audit_progress_text: string;
+            /** Rule Cells */
+            rule_cells: components["schemas"]["RuleCellRead"][];
         };
         /**
          * CategoryCountRead
@@ -1265,6 +1267,38 @@ export interface components {
             content: string;
         };
         /**
+         * RuleCellRead
+         * @description 一位病患的一項稽核狀態；只有已完成結果帶有判定與非 PASS 發現數。
+         */
+        RuleCellRead: {
+            /** Rule Code */
+            rule_code: string;
+            state: components["schemas"]["RuleCellState"];
+            /** Label */
+            label: string;
+            verdict: components["schemas"]["Verdict"] | null;
+            /** Finding Count */
+            finding_count: number;
+        };
+        /**
+         * RuleCellState
+         * @description 首頁逐項稽核格的顯示狀態；不改變執行紀錄或判定分級。
+         * @enum {string}
+         */
+        RuleCellState: "RUNNING" | "PASS" | "WARNING" | "NEEDS_REVIEW" | "ERROR" | "FAILED" | "NOT_APPLICABLE" | "DATA_UNAVAILABLE" | "DAY_NOT_ENDED" | "NOT_AUDITED";
+        /**
+         * RuleColumnRead
+         * @description 病患清單的稽核欄標題，順序由規則註冊表決定。
+         */
+        RuleColumnRead: {
+            /** Rule Code */
+            rule_code: string;
+            /** Name */
+            name: string;
+            /** Short Name */
+            short_name: string;
+        };
+        /**
          * Sex
          * @description 性別。
          * @enum {string}
@@ -1382,6 +1416,8 @@ export interface components {
             status_counts: components["schemas"]["StatusCountRead"][];
             /** Beds */
             beds: components["schemas"]["BedStatusRead"][];
+            /** Rules */
+            rules: components["schemas"]["RuleColumnRead"][];
         };
         /**
          * WardListRead

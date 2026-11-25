@@ -115,6 +115,10 @@
   [data-detail-open="true"] .map-controls {
     right: calc(var(--spacing-detail) + 2rem);
   }
+  /* 清單縮出詳情卡的空間，仍可水平捲動查看所有稽核欄位。 */
+  [data-detail-open="true"] .patient-list {
+    right: calc(var(--spacing-detail) + 2rem);
+  }
 }
 /* 詳情卡左側放不下「狀態列＋地圖控制」（約 79.5rem 以下）時，地圖控制才移到狀態列上方 */
 @media (min-width: 64rem) and (max-width: 79.49rem) {

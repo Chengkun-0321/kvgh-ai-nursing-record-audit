@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 
+import { NAV_PAGE_ACTIONS_SLOT_ID } from "@/lib/navSlots";
 import type { CurrentUser } from "@/types/user";
 
 import { BrandLink } from "./BrandLink";
@@ -21,7 +22,10 @@ export function AppTopBar({ user, context }: AppTopBarProps) {
       {/* 手機上有頁面資訊時，系統名稱只留給螢幕閱讀器，讓病房資訊完整顯示 */}
       <BrandLink labelClassName="max-sm:group-has-[[data-nav-context]]/topbar:sr-only" />
       {context}
-      <UserStatus user={user} className="ml-auto" />
+      <div className="ml-auto flex items-center gap-2">
+        <div id={NAV_PAGE_ACTIONS_SLOT_ID.mobile} className="empty:hidden" />
+        <UserStatus user={user} />
+      </div>
     </header>
   );
 }

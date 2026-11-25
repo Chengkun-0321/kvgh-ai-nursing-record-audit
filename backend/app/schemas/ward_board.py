@@ -4,7 +4,25 @@ from datetime import date, datetime
 
 from pydantic import BaseModel
 
-from app.core.enums import AgeGroup, BedBoardStatus, Sex, Verdict
+from app.core.enums import AgeGroup, BedBoardStatus, RuleCellState, Sex, Verdict
+
+
+class RuleColumnRead(BaseModel):
+    """病患清單的稽核欄標題，順序由規則註冊表決定。"""
+
+    rule_code: str
+    name: str
+    short_name: str
+
+
+class RuleCellRead(BaseModel):
+    """一位病患的一項稽核狀態；只有已完成結果帶有判定與非 PASS 發現數。"""
+
+    rule_code: str
+    state: RuleCellState
+    label: str
+    verdict: Verdict | None
+    finding_count: int
 
 
 class PatientSummaryRead(BaseModel):
@@ -50,6 +68,7 @@ class BedStatusRead(BaseModel):
     auditable_rule_count: int
     # 例：「已稽核 4／4 項」；沒有可稽核項目時為「今日無可稽核項目」
     audit_progress_text: str
+    rule_cells: list[RuleCellRead]
 
 
 class StatusCountRead(BaseModel):
@@ -69,3 +88,4 @@ class WardBedBoardRead(BaseModel):
     bed_count: int
     status_counts: list[StatusCountRead]
     beds: list[BedStatusRead]
+    rules: list[RuleColumnRead]

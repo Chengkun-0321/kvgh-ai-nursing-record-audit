@@ -56,6 +56,7 @@ class R02CopyPaste:
 
     code: ClassVar[str] = "R02"
     name: ClassVar[str] = "紀錄複製／一成不變／時效性"
+    short_name: ClassVar[str] = "複製／時效"
     description: ClassVar[str] = (
         "近幾日護理紀錄是否與前日幾乎相同，且生命徵象等臨床資料已變化卻未反映。"
     )

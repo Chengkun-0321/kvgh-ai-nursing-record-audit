@@ -3,10 +3,10 @@
 import { AnimatePresence } from "motion/react";
 import { useRef, useState } from "react";
 
-import { WardMap } from "@/components/ward-scene/WardMap";
 import { type DismissReason, useDismissable } from "@/hooks/useDismissable";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
-import { useWardSceneMode } from "@/hooks/useWebGLSupport";
+import { useWardBoardView } from "@/hooks/useWardBoardView";
+import { useWardRunningPoll } from "@/hooks/useWardRunningPoll";
 import { DESKTOP_MEDIA_QUERY } from "@/lib/constants";
 import type { BedFilterValue } from "@/lib/verdict";
 import { getBedButtonId } from "@/lib/wardMap";
@@ -14,9 +14,11 @@ import type { WardBedBoard } from "@/lib/api/wards";
 
 import { BedDetailPanel } from "./BedDetailPanel";
 import { BedDetailSheet } from "./BedDetailSheet";
-import { WardBedGrid } from "./WardBedGrid";
+import { WardPatientList } from "./WardPatientList";
+import { WardRoomView } from "./WardRoomView";
 import { WardTitle } from "./WardTitle";
 import { WardStatusBar } from "./WardStatusBar";
+import { WardViewTogglePortal } from "./WardViewToggle";
 
 type BedBoardProps = {
   board: WardBedBoard;
@@ -25,16 +27,22 @@ type BedBoardProps = {
 // 點到病床或狀態列不算「點外部」：切換病床、篩選時大卡保持開啟
 const KEEP_DETAIL_SELECTOR = "[data-keep-detail]";
 
-/** 病房總覽：3D 病房地圖（不支援 WebGL 時改用 2D 清單）＋狀態列篩選＋詳情卡。 */
+/**
+ * 病房總覽預設清單，可切換 3D 病房；兩種檢視共用選取、詳情與執行中輪詢。
+ * 狀態列（依判定篩選）只在 3D 病房顯示；清單本身已逐格列出結果，不篩選。
+ * 檢視切換以 portal 放進頂部導覽的插槽（桌機與手機各一個）。
+ */
 export function BedBoard({ board }: BedBoardProps) {
   const isDesktop = useMediaQuery(DESKTOP_MEDIA_QUERY);
-  const { mode: sceneMode, reportSceneError } = useWardSceneMode();
+  const { view, setView } = useWardBoardView();
+  useWardRunningPoll(board);
   const [activeFilter, setActiveFilter] = useState<BedFilterValue>("ALL");
   const [selectedBedCode, setSelectedBedCode] = useState<string>();
   const panelRef = useRef<HTMLElement>(null);
   const selectedBed = board.beds.find(
     (bed) => bed.bed_code === selectedBedCode,
   );
+  const hasDesktopDetail = isDesktop && selectedBed !== undefined;
 
   function closeDetail(reason: DismissReason | "button") {
     // 以按鈕或 Esc 關閉時把焦點送回原病床，鍵盤使用者不會失去位置
@@ -46,7 +54,7 @@ export function BedBoard({ board }: BedBoardProps) {
     setSelectedBedCode(undefined);
   }
   useDismissable({
-    isActive: isDesktop && selectedBed !== undefined,
+    isActive: hasDesktopDetail,
     containerRef: panelRef,
     keepSelector: KEEP_DETAIL_SELECTOR,
     onDismiss: closeDetail,
@@ -61,43 +69,41 @@ export function BedBoard({ board }: BedBoardProps) {
   return (
     <div
       className="ward-stage relative isolate"
-      data-detail-open={isDesktop && selectedBed ? "true" : "false"}
+      data-detail-open={hasDesktopDetail}
     >
-      {sceneMode === "2d" ? (
-        <div className="ward-safe">
-          <WardBedGrid
-            board={board}
-            selectedBedCode={selectedBedCode}
-            activeFilter={activeFilter}
-            onToggle={handleToggleBed}
-          />
-        </div>
-      ) : (
-        <WardMap
+      {view === "3d" && (
+        <WardRoomView
           board={board}
           selectedBedCode={selectedBedCode}
           activeFilter={activeFilter}
-          isSceneEnabled={sceneMode === "3d"}
           onToggle={handleToggleBed}
           onBackgroundClick={() => closeDetail("outside")}
-          onSceneError={reportSceneError}
         />
       )}
       {/* 固定介面放在安全區內：病房鋪滿整個視窗，頂部導覽（手機為頂列）疊在場景上 */}
       <div className="ward-safe">
         <WardTitle board={board} />
-        <div
-          data-keep-detail
-          className="ward-status pointer-events-auto absolute bottom-4 left-4 z-20"
-        >
-          <WardStatusBar
-            statusCounts={board.status_counts}
-            value={activeFilter}
-            onChange={setActiveFilter}
+        {view === "list" && (
+          <WardPatientList
+            board={board}
+            selectedBedCode={selectedBedCode}
+            onToggle={handleToggleBed}
           />
-        </div>
+        )}
+        {view === "3d" && (
+          <div
+            data-keep-detail
+            className="ward-status pointer-events-auto absolute bottom-4 left-4 z-20"
+          >
+            <WardStatusBar
+              statusCounts={board.status_counts}
+              value={activeFilter}
+              onChange={setActiveFilter}
+            />
+          </div>
+        )}
         <AnimatePresence>
-          {isDesktop && selectedBed && (
+          {hasDesktopDetail && (
             <BedDetailPanel
               key="bed-detail"
               ref={panelRef}
@@ -107,6 +113,11 @@ export function BedBoard({ board }: BedBoardProps) {
           )}
         </AnimatePresence>
       </div>
+      <WardViewTogglePortal
+        isDesktop={isDesktop}
+        value={view}
+        onChange={setView}
+      />
       <BedDetailSheet
         bed={selectedBed}
         isOpen={!isDesktop && selectedBed !== undefined}

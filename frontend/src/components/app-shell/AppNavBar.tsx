@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 
+import { NAV_PAGE_ACTIONS_SLOT_ID } from "@/lib/navSlots";
 import type { CurrentUser } from "@/types/user";
 
 import { AppStatusCapsule } from "./AppStatusCapsule";
@@ -13,7 +14,7 @@ type AppNavBarProps = {
 };
 
 /**
- * 桌機頂部導覽：三座浮動玻璃膠囊（左標誌＋頁面資訊、中導覽、右狀態），導覽置中於視窗。
+ * 桌機頂部導覽：三座浮動玻璃膠囊（左標誌＋頁面資訊、中導覽、右頁面操作＋狀態），導覽置中於視窗。
  * 外層不接收指標事件，膠囊之間仍可拖曳下方的病房；lg 以下改用頂列與底部分頁列。
  */
 export function AppNavBar({ user, context }: AppNavBarProps) {
@@ -24,7 +25,14 @@ export function AppNavBar({ user, context }: AppNavBarProps) {
         {context}
       </div>
       <MainNavTabs />
-      <AppStatusCapsule user={user} />
+      {/* 頁面操作插槽（首頁的檢視切換）以 portal 放進來，排在狀態膠囊左側 */}
+      <div className="flex min-w-0 items-center gap-3 justify-self-end">
+        <div
+          id={NAV_PAGE_ACTIONS_SLOT_ID.desktop}
+          className="pointer-events-auto empty:hidden"
+        />
+        <AppStatusCapsule user={user} />
+      </div>
     </div>
   );
 }

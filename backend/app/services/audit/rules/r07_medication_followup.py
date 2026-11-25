@@ -61,6 +61,7 @@ class R07MedicationFollowup:
 
     code: ClassVar[str] = "R07"
     name: ClassVar[str] = "給藥後療效與不良反應追蹤"
+    short_name: ClassVar[str] = "給藥追蹤"
     description: ClassVar[str] = (
         "需追蹤之給藥後，療效、副作用與不良反應是否有通知、處理與紀錄。"
         "院方目前只有 PRN 藥囑，本項不判斷。"

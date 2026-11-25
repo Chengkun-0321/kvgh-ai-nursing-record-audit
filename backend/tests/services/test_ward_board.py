@@ -4,13 +4,19 @@
 """
 
 from datetime import UTC, date, datetime
+from unittest.mock import AsyncMock
 
+import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.enums import AuditRunStatus, BedBoardStatus, Verdict
+from app.core.enums import AuditRunStatus, AvailabilityState, BedBoardStatus, RuleCellState, Verdict
 from app.crud import audit_run as audit_run_crud
 from app.models.audit import AuditFinding, AuditRun
 from app.schemas.ward_board import WardBedBoardRead
+from app.services.audit.labels import AVAILABILITY_LABELS, VERDICT_LABELS
+from app.services.audit.registry import RULE_REGISTRY
+from app.services.audit.rules.base import not_applicable
+from app.services.audit.running import RUNNING_AUDITS, RunningKey
 from app.services.audit.service import AuditService
 from app.services.hospital_data.source import HospitalDataSource
 from app.services.ward_board import BedBoardQuery, get_ward_bed_board
@@ -254,3 +260,175 @@ async def test_settled_admission_rule_still_counts_on_board_and_is_rerunnable(
     r03 = next(rule for rule in patient_day.rules if rule.rule_code == "R03")
     assert r03.can_run is True
     assert r03.include_in_run_all is False
+
+
+async def test_rule_columns_and_cells_follow_registry_order(
+    session: AsyncSession, audit_hospital_data_source: HospitalDataSource
+) -> None:
+    board = await _board(session, audit_hospital_data_source)
+
+    expected = [
+        ("R01", "入院經過↔身體評估一致性", "經過↔身評"),
+        ("R02", "紀錄複製／一成不變／時效性", "複製／時效"),
+        ("R03", "入院護理評估完整性", "入院評估"),
+        ("R04", "身評異常追蹤", "異常追蹤"),
+        ("R05", "轉入／轉出摘要完整性", "轉出入摘要"),
+        ("R06", "會診資訊↔護理紀錄", "會診"),
+        ("R07", "給藥後療效與不良反應追蹤", "給藥追蹤"),
+    ]
+    assert [(rule.rule_code, rule.name, rule.short_name) for rule in board.rules] == expected
+    assert [cell.rule_code for cell in board.beds[0].rule_cells] == [row[0] for row in expected]
+
+
+async def test_running_admission_cell_uses_admission_day_and_preserves_bed_status(
+    session: AsyncSession, audit_hospital_data_source: HospitalDataSource
+) -> None:
+    await _add_run(session, "R03", ADMISSION_DAY, AuditRunStatus.COMPLETED, verdict=Verdict.PASS)
+    before = await _board(session, audit_hospital_data_source)
+    key = RunningKey(AUDIT_P3_KEY, "R03", ADMISSION_DAY)
+
+    with RUNNING_AUDITS.hold(key):
+        board = await _board(session, audit_hospital_data_source)
+        cell = next(cell for cell in board.beds[0].rule_cells if cell.rule_code == "R03")
+        assert cell.state == RuleCellState.RUNNING
+        assert cell.label == "稽核中"
+        assert cell.verdict is None
+        assert cell.finding_count == 0
+        assert board.beds[0].model_dump(exclude={"rule_cells"}) == before.beds[0].model_dump(
+            exclude={"rule_cells"}
+        )
+
+    after = await _board(session, audit_hospital_data_source)
+    assert after.beds[0].rule_cells == before.beds[0].rule_cells
+    # 錯誤日期、病患或規則的登記不能影響這個格子
+    for other in (
+        RunningKey(AUDIT_P3_KEY, "R03", BOARD_DAY),
+        RunningKey("fictional-other-patient", "R03", ADMISSION_DAY),
+        RunningKey(AUDIT_P3_KEY, "R02", ADMISSION_DAY),
+    ):
+        with RUNNING_AUDITS.hold(other):
+            unaffected = await _board(session, audit_hospital_data_source)
+            assert unaffected.beds[0].rule_cells == before.beds[0].rule_cells
+
+
+@pytest.mark.parametrize("verdict", list(Verdict))
+async def test_completed_cell_uses_verdict_label_and_counts_only_non_pass_findings(
+    session: AsyncSession, audit_hospital_data_source: HospitalDataSource, verdict: Verdict
+) -> None:
+    findings = [_finding(0, "完整項目", Verdict.PASS, "紀錄完整")]
+    if verdict != Verdict.PASS:
+        findings.extend(
+            [
+                _finding(1, "項目一", verdict, "請確認"),
+                _finding(2, "項目二", verdict, "請確認"),
+            ]
+        )
+    await _add_run(
+        session, "R03", ADMISSION_DAY, AuditRunStatus.COMPLETED, verdict=verdict, findings=findings
+    )
+
+    board = await _board(session, audit_hospital_data_source)
+
+    cell = board.beds[0].rule_cells[2]
+    assert cell.state == RuleCellState(verdict.value)
+    assert cell.verdict == verdict
+    assert cell.label == VERDICT_LABELS[verdict]
+    assert cell.finding_count == (0 if verdict == Verdict.PASS else 2)
+
+
+@pytest.mark.parametrize(
+    ("status", "state", "label"),
+    [
+        (AuditRunStatus.FAILED, RuleCellState.FAILED, "執行失敗"),
+        (AuditRunStatus.NOT_APPLICABLE, RuleCellState.NOT_APPLICABLE, "當日無此事件"),
+        (AuditRunStatus.DATA_UNAVAILABLE, RuleCellState.DATA_UNAVAILABLE, "院方尚未提供資料"),
+    ],
+)
+async def test_latest_non_completed_cell_replaces_previous_verdict(
+    session: AsyncSession,
+    audit_hospital_data_source: HospitalDataSource,
+    status: AuditRunStatus,
+    *,
+    state: RuleCellState,
+    label: str,
+) -> None:
+    await _add_run(
+        session,
+        "R03",
+        ADMISSION_DAY,
+        AuditRunStatus.COMPLETED,
+        verdict=Verdict.WARNING,
+        created_at=OLDER,
+        findings=[_finding(0, "項目", Verdict.WARNING, "請確認")],
+    )
+    await _add_run(session, "R03", ADMISSION_DAY, status)
+
+    board = await _board(session, audit_hospital_data_source)
+
+    cell = board.beds[0].rule_cells[2]
+    assert (cell.state, cell.label, cell.verdict, cell.finding_count) == (state, label, None, 0)
+    assert board.beds[0].status == BedBoardStatus.NOT_AUDITED
+    assert board.beds[0].pending_findings == []
+
+
+async def test_unrun_cells_show_availability_or_not_audited(
+    session: AsyncSession, audit_hospital_data_source: HospitalDataSource
+) -> None:
+    board = await _board(session, audit_hospital_data_source)
+
+    cells = {cell.rule_code: cell for cell in board.beds[0].rule_cells}
+    assert cells["R03"].state == RuleCellState.NOT_AUDITED
+    assert cells["R03"].label == "尚未稽核"
+    for code in ("R05", "R07"):
+        assert cells[code].state == RuleCellState.DATA_UNAVAILABLE
+        assert cells[code].label == "院方尚未提供資料"
+    assert all(cell.verdict is None and cell.finding_count == 0 for cell in cells.values())
+
+
+async def test_completed_cell_precedes_day_not_ended_availability(
+    session: AsyncSession, audit_hospital_data_source: HospitalDataSource
+) -> None:
+    await _add_run(session, "R03", ADMISSION_DAY, AuditRunStatus.COMPLETED, verdict=Verdict.WARNING)
+
+    board = await _board(session, audit_hospital_data_source, today=BOARD_DAY)
+
+    cells = {cell.rule_code: cell for cell in board.beds[0].rule_cells}
+    assert cells["R03"].state == RuleCellState.WARNING
+    assert cells["R03"].label == "需確認"
+    assert cells["R02"].state == RuleCellState.DAY_NOT_ENDED
+    assert cells["R02"].label == AVAILABILITY_LABELS[AvailabilityState.DAY_NOT_ENDED]
+    assert board.beds[0].status == BedBoardStatus.WARNING
+    assert board.beds[0].audited_rule_count == 0
+    assert board.beds[0].auditable_rule_count == 0
+
+
+async def test_unrun_not_applicable_cell_uses_availability_label(
+    session: AsyncSession,
+    audit_hospital_data_source: HospitalDataSource,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    rule = RULE_REGISTRY["R02"]
+    monkeypatch.setattr(rule, "check_availability", lambda _: not_applicable("當日無此事件"))
+
+    board = await _board(session, audit_hospital_data_source)
+
+    cell = board.beds[0].rule_cells[1]
+    assert cell.state == RuleCellState.NOT_APPLICABLE
+    assert cell.label == AVAILABILITY_LABELS[AvailabilityState.NOT_APPLICABLE]
+    assert cell.verdict is None
+    assert cell.finding_count == 0
+
+
+async def test_board_uses_one_batch_query_for_all_rule_cells(
+    session: AsyncSession,
+    audit_hospital_data_source: HospitalDataSource,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    latest_runs = AsyncMock(wraps=audit_run_crud.list_latest_runs)
+    monkeypatch.setattr(audit_run_crud, "list_latest_runs", latest_runs)
+
+    board = await _board(session, audit_hospital_data_source)
+
+    assert len(board.beds[0].rule_cells) == len(RULE_REGISTRY)
+    latest_runs.assert_awaited_once()
+    assert latest_runs.call_args.kwargs["rule_codes"] == list(RULE_REGISTRY)

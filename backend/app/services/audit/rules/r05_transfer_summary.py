@@ -83,6 +83,7 @@ class R05TransferSummary:
 
     code: ClassVar[str] = "R05"
     name: ClassVar[str] = "轉入／轉出摘要完整性"
+    short_name: ClassVar[str] = "轉出入摘要"
     description: ClassVar[str] = (
         "轉入或轉出時，摘要是否包含必要項目。院方目前沒有轉出／轉入摘要，本項不判斷。"
     )

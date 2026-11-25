@@ -9,6 +9,8 @@ export type WardBedBoard = components["schemas"]["WardBedBoardRead"];
 export type BedStatus = components["schemas"]["BedStatusRead"];
 export type BedBoardStatus = components["schemas"]["BedBoardStatus"];
 export type StatusCount = components["schemas"]["StatusCountRead"];
+export type RuleCell = components["schemas"]["RuleCellRead"];
+export type RuleCellState = components["schemas"]["RuleCellState"];
 export type PatientSummary = components["schemas"]["PatientSummaryRead"];
 export type AuditFindingSummary =
   components["schemas"]["AuditFindingSummaryRead"];

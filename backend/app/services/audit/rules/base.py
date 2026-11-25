@@ -56,6 +56,7 @@ class AuditRule(Protocol):
 
     code: ClassVar[str]
     name: ClassVar[str]
+    short_name: ClassVar[str]
     description: ClassVar[str]
     cycle: ClassVar[AuditCycle]
     prompt_name: ClassVar[str]

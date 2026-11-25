@@ -51,6 +51,7 @@ class R01AdmissionCourse:
 
     code: ClassVar[str] = "R01"
     name: ClassVar[str] = "入院經過↔身體評估一致性"
+    short_name: ClassVar[str] = "經過↔身評"
     description: ClassVar[str] = "入院經過與入院身體評估是否相符，並檢查五項必要要素是否提及。"
     cycle: ClassVar[AuditCycle] = AuditCycle.ONCE_PER_ADMISSION
     prompt_name: ClassVar[str] = "r01_admission_course"

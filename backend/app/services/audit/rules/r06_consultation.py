@@ -69,6 +69,7 @@ class R06Consultation:
 
     code: ClassVar[str] = "R06"
     name: ClassVar[str] = "會診資訊↔護理紀錄"
+    short_name: ClassVar[str] = "會診"
     description: ClassVar[str] = (
         "截至稽核日，追蹤範圍內的會診是否已見期限內對應護理紀錄；"
         "寬限期中不是缺漏，已到期而未見紀錄時提醒確認（只看有無，不比對建議內容）。"

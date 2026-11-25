@@ -99,6 +99,21 @@ class AuditRunStatus(StrEnum):
     FAILED = "FAILED"
 
 
+class RuleCellState(StrEnum):
+    """首頁逐項稽核格的顯示狀態；不改變執行紀錄或判定分級。"""
+
+    RUNNING = "RUNNING"
+    PASS = "PASS"  # noqa: S105 判定名稱，不是密碼
+    WARNING = "WARNING"
+    NEEDS_REVIEW = "NEEDS_REVIEW"
+    ERROR = "ERROR"
+    FAILED = "FAILED"
+    NOT_APPLICABLE = "NOT_APPLICABLE"
+    DATA_UNAVAILABLE = "DATA_UNAVAILABLE"
+    DAY_NOT_ENDED = "DAY_NOT_ENDED"
+    NOT_AUDITED = "NOT_AUDITED"
+
+
 class AuditCycle(StrEnum):
     """稽核週期：決定稽核日期與畫面上的呈現方式。"""
 
