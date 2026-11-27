@@ -16,7 +16,7 @@ const LEGEND: { state: RuleCellState; label: string }[] = [
   { state: "NOT_AUDITED", label: "尚未稽核" },
 ];
 
-/** 狀態圖例與發現數說明，維持在可捲動表格之外。 */
+/** 狀態圖例，維持在可捲動表格之外。 */
 export function RuleCellLegend() {
   return (
     <div
@@ -38,9 +38,6 @@ export function RuleCellLegend() {
           </li>
         ))}
       </ul>
-      <p className="mt-2 text-ink-secondary">
-        數字為非紀錄完整的發現數；點選病患列可查看詳情。
-      </p>
     </div>
   );
 }
