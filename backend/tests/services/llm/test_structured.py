@@ -5,9 +5,10 @@ from types import SimpleNamespace
 from typing import Any
 
 import pytest
+from litellm import exceptions as litellm_errors
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.exceptions import LLMNotConfiguredError, LLMOutputError
+from app.core.exceptions import LLMConnectionError, LLMNotConfiguredError, LLMOutputError
 from app.schemas.llm_structured import LLMRequest, RuleOutput
 from app.services.llm import prompt_loader, structured
 from tests.services.llm.gateway_helpers import create_config
@@ -152,6 +153,22 @@ async def test_truncated_output_fails_at_once_without_format_retry(
 
     # 截斷時重試多半再被截斷，只呼叫一次
     assert len(calls) == 1
+
+
+async def test_model_service_error_becomes_readable_connection_error(
+    session: AsyncSession, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    await create_config(session)
+
+    async def fake(**_: Any) -> None:
+        raise litellm_errors.RateLimitError(message="quota", model="x", llm_provider="gemini")
+
+    monkeypatch.setattr(structured.litellm, "acompletion", fake)
+
+    with pytest.raises(LLMConnectionError) as error:
+        await structured.complete_structured(session, REQUEST, RuleOutput)
+
+    assert "額度上限" in error.value.message
 
 
 async def test_missing_active_config_raises_not_configured(

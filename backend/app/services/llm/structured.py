@@ -17,14 +17,16 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import get_settings
 from app.core.enums import LlmProvider
-from app.core.exceptions import LLMNotConfiguredError, LLMOutputError
+from app.core.exceptions import LLMConnectionError, LLMNotConfiguredError, LLMOutputError
 from app.crud import llm_config as llm_config_crud
 from app.schemas.llm_structured import LLMRequest, LLMResult
 from app.services.llm import chatgpt_auth, prompt_loader
 from app.services.llm.call_support import (
     CHATGPT_INSTRUCTIONS_LOCK,
+    LITELLM_ERRORS,
     PreparedCall,
     apply_chatgpt_instructions,
+    describe_error,
     prepare_call,
     prepend_system_prompt,
     read_call_snapshot,
@@ -204,12 +206,17 @@ async def _call_model(
         **call.kwargs,
     }
     gate = _GATE.for_running_loop(get_settings().LLM_MAX_CONCURRENCY)
-    async with gate:
-        if call.config.provider != LlmProvider.CHATGPT:
-            return await litellm.acompletion(**request)
-        async with CHATGPT_INSTRUCTIONS_LOCK:
-            apply_chatgpt_instructions(system_prompt)
-            return await litellm.acompletion(**request)
+    try:
+        async with gate:
+            if call.config.provider != LlmProvider.CHATGPT:
+                return await litellm.acompletion(**request)
+            async with CHATGPT_INSTRUCTIONS_LOCK:
+                apply_chatgpt_instructions(system_prompt)
+                return await litellm.acompletion(**request)
+    except LITELLM_ERRORS as exc:
+        # 只記例外類型；轉成帶可操作訊息的 LLMConnectionError，稽核結果才看得出原因
+        logger.warning("結構化呼叫失敗：model=%s error=%s", call.litellm_model, type(exc).__name__)
+        raise LLMConnectionError(describe_error(exc, call)) from exc
 
 
 def _preprocess(prompt: str) -> str:

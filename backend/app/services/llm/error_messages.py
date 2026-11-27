@@ -80,13 +80,23 @@ def is_wrapped_connection_error(exc: Exception) -> bool:
     return "connection error" in str(getattr(exc, "message", "")).lower()
 
 
+def unwrap_error(exc: Exception) -> Exception:
+    """取出被包裝的原始例外。
+
+    LiteLLM 把串流途中的錯誤包成 `MidStreamFallbackError`（`ServiceUnavailableError` 的子類別），
+    原始例外放在 `original_exception`；不先取出，額度上限等錯誤都會被誤報成「服務暫時無法使用」。
+    """
+    inner = getattr(exc, "original_exception", None)
+    return inner if isinstance(inner, Exception) else exc
+
+
 def describe_error(
     exc: Exception, catalog: ErrorCatalog, config: StoredLlmConfig, api_key: str | None
 ) -> str:
     """把模型服務的例外轉成可操作的繁中訊息。
 
     Args:
-        exc: LiteLLM 拋出的例外。
+        exc: LiteLLM 拋出的例外；被包裝的例外以原始例外判斷。
         catalog: gateway 提供的例外對照表。
         config: 這次呼叫的模型設定（訊息會帶模型名稱、位址、逾時秒數）。
         api_key: 這次呼叫的明文金鑰；只用來從服務說明中遮蔽，不會出現在訊息裡。
@@ -94,6 +104,7 @@ def describe_error(
     Returns:
         繁中訊息；不含原始例外字串，服務說明經遮蔽後才附上。
     """
+    exc = unwrap_error(exc)
     for rule in catalog.rules:
         if isinstance(exc, rule.error_type) and rule.matches(exc):
             return rule.describe(config)

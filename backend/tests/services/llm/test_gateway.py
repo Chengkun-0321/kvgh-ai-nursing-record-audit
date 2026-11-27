@@ -148,6 +148,26 @@ async def test_mid_stream_error_becomes_error_event(
     assert "秒沒有回應" in events[-1].message
 
 
+async def test_mid_stream_fallback_reports_the_wrapped_rate_limit(
+    session: AsyncSession, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    config = await create_config(session)
+    rate_limit = litellm_errors.RateLimitError(message="quota", model="x", llm_provider="gemini")
+    wrapped = litellm_errors.MidStreamFallbackError(
+        message="quota", model="x", llm_provider="gemini", original_exception=rate_limit
+    )
+
+    async def fake_acompletion(**_: Any) -> AsyncIterator[Any]:
+        return fake_stream(error=wrapped)
+
+    monkeypatch.setattr(gateway.litellm, "acompletion", fake_acompletion)
+
+    events = await collect(await gateway.open_chat_stream(session, config.id, MESSAGES))
+
+    assert isinstance(events[-1], ChatErrorEvent)
+    assert "額度上限" in events[-1].message
+
+
 async def test_chatgpt_without_login_is_rejected_before_calling_litellm(
     session: AsyncSession, monkeypatch: pytest.MonkeyPatch
 ) -> None:
